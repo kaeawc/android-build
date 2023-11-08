@@ -42,8 +42,7 @@ jobs:
           # Don't reuse cache entries from any other Job.
           gradle-home-cache-strict-match: true
 
-      - name: "Run Unit Tests via Gradle"
-        run: ./gradlew testDebugUnitTest
+          arguments: testDebugUnitTest --continue --stacktrace --scan
 
       - name: "Publish Test Report"
         uses: mikepenz/action-junit-report@v4
