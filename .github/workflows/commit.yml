@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED: true
+    permissions:
+      checks: write
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
