@@ -3,19 +3,19 @@ name: "Commit"
 on:
   push:
     paths:
-      - '.github'
-      - 'app'
+      - '.github/'
+      - 'app/'
       - 'build.gradle.kts'
       - 'settings.gradle.kts'
-      - 'gradle'
+      - 'gradle/wrapper/'
       - 'gradle.properties'
   pull_request:
     paths:
-      - '.github'
-      - 'app'
+      - '.github/'
+      - 'app/'
       - 'build.gradle.kts'
       - 'settings.gradle.kts'
-      - 'gradle'
+      - 'gradle/wrapper/'
       - 'gradle.properties'
 
 jobs:
