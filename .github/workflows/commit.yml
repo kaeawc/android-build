@@ -1,0 +1,52 @@
+name: "Validate Gradle Wrapper"
+
+on:
+  push:
+    paths:
+      - '.github'
+      - 'app'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle'
+      - 'gradle.properties'
+  pull_request:
+    paths:
+      - '.github'
+      - 'app'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle'
+      - 'gradle.properties'
+
+jobs:
+  unit_tests:
+    name: "Unit Tests"
+    runs-on: ubuntu-latest
+    env:
+      GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED: true
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Gradle Wrapper Validation
+        uses: gradle/wrapper-validation-action@v1
+
+      - name: Install JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '20'
+
+      - uses: gradle/gradle-build-action@v2
+        with:
+          # This ages all gc.properties files in the Gradle User Home cache.
+          gradle-home-cache-cleanup: true
+
+          # Always save the Gradle User Home cache.
+          cache-read-only: false
+
+          # Don't reuse cache entries from any other Job.
+          gradle-home-cache-strict-match: true
+
+      - name: "Run Unit Tests via Gradle"
+        run: ./gradlew testDebugUnitTest
