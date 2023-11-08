@@ -43,12 +43,12 @@ jobs:
           cache-read-only: false
 
           # Don't reuse cache entries from any other Job.
-          gradle-home-cache-strict-match: true
+          # gradle-home-cache-strict-match: true
 
           # This includes all the directories required for Gradle Configuration Cache
           # that are not cached by default.
           gradle-home-cache-includes:
-            caches/*/cc-keystore
+            caches/8.4/cc-keystore
 
           arguments: testDebugUnitTest --continue --stacktrace --scan
 
