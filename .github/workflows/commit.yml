@@ -12,14 +12,15 @@ on:
       - 'gradle/wrapper/'
       - 'gradle.properties'
 
+permissions:
+  checks: write
+
 jobs:
   unit_tests:
     name: "Unit Tests"
     runs-on: ubuntu-latest
     env:
       GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED: true
-    permissions:
-      checks: write
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
