@@ -61,6 +61,7 @@ jobs:
           echo "GRADLE_FLAGS: $GRADLE_FLAGS"
 
       - name: Restore Gradle Wrapper
+        id: cache-gradle-wrapper
         uses: actions/cache/restore@v3
         with:
           path: |
@@ -68,6 +69,7 @@ jobs:
           key: v1-${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Restore Gradle Home & Project Caches
+        id: cache-gradle-home-project
         uses: actions/cache/restore@v3
         with:
           path: |
@@ -91,6 +93,7 @@ jobs:
           report_paths: '**/build/test-results/testDebugUnitTest/TEST-*.xml'
 
       - uses: actions/cache/save@v3
+        if: steps.cache-gradle-wrapper.outputs.cache-hit != 'true'
         with:
           path: |
             ~/.gradle/wrapper
@@ -98,6 +101,7 @@ jobs:
             v1-${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: "Clean Gradle Caches"
+        if: steps.cache-gradle-home-project.outputs.cache-hit != 'true'
         run: |
 
             echo "Preserve project Gradle cache"
@@ -129,6 +133,7 @@ jobs:
             rm -rf gradle-plugin/build/kotlin
 
       - uses: actions/cache/save@v3
+        if: steps.cache-gradle-home-project.outputs.cache-hit != 'true'
         with:
           path: |
             ~/.gradle/caches
@@ -137,6 +142,7 @@ jobs:
             v1-${{ runner.os }}-gradle-complete-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles('**/*.gradle*') }}
 
       - uses: actions/cache/save@v3
+        if: steps.cache-gradle-home-project.outputs.cache-hit != 'true'
         with:
           path: |
             ~/.gradle/caches
