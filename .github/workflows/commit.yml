@@ -149,7 +149,7 @@ jobs:
             ~/.gradle/caches
             .gradle
           key:
-            v1-${{ runner.os }}-gradle-complete-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles('**/*.gradle*') }}
+            v1-${{ runner.os }}-gradle-complete-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles('**/*.gradle.kts') }}
 
       - uses: actions/cache/save@v3
         if: steps.cache-gradle-home-project-complete.outputs.cache-hit != 'true' && steps.cache-gradle-home-project-partial.outputs.cache-hit != 'true'
