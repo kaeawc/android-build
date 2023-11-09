@@ -74,12 +74,12 @@ jobs:
             ~/.gradle/caches
             .gradle
           key:
-            v1-${{ runner.os }}-gradle-complete-${{ github.context.job }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles('**/*.gradle*') }}
+            v1-${{ runner.os }}-gradle-complete-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
-            v1-${{ runner.os }}-gradle-partial-${{ github.context.job }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}
-            v1-${{ runner.os }}-gradle-partial-${{ github.context.job }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}
-            v1-${{ runner.os }}-gradle-partial-${{ github.context.job }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-            v1-${{ runner.os }}-gradle-partial-${{ github.context.job }}
+            v1-${{ runner.os }}-gradle-partial-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}
+            v1-${{ runner.os }}-gradle-partial-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}
+            v1-${{ runner.os }}-gradle-partial-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+            v1-${{ runner.os }}-gradle-partial-${{ vars.JOB_NAME }}
 
       - name: "Run Unit Tests via Gradle"
         run: ./gradlew testDebugUnitTest $GRADLE_FLAGS
@@ -130,17 +130,17 @@ jobs:
 
       - uses: actions/cache/save@v3
         with:
-          paths:
+          path: |
             ~/.gradle/caches
             .gradle
           key:
-            v1-${{ runner.os }}-gradle-complete-${{ github.context.job }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles('**/*.gradle*') }}
+            v1-${{ runner.os }}-gradle-complete-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles('**/*.gradle*') }}
 
       - uses: actions/cache/save@v3
         with:
-          paths:
+          path: |
             ~/.gradle/caches
           key:
-            v1-${{ runner.os }}-gradle-partial-${{ github.context.job }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}
+            v1-${{ runner.os }}-gradle-partial-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}
 
  # find build/reports/configuration-cache -type f -name "configuration-cache-report.html" -exec cp {} /tmp/configuration-cache-data/ \;
