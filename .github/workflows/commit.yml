@@ -69,7 +69,7 @@ jobs:
           key: v1-${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Restore Gradle Home & Project Caches
-        id: cache-gradle-home-project
+        id: cache-gradle-home-project-complete
         uses: actions/cache/restore@v3
         with:
           path: |
@@ -77,8 +77,18 @@ jobs:
             .gradle
           key:
             v1-${{ runner.os }}-gradle-complete-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: |
+
+      - name: Restore Gradle Home & Project Caches
+        if: steps.cache-gradle-home-project-complete.outputs.cache-hit != 'true'
+        id: cache-gradle-home-project-partial
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            .gradle
+          key:
             v1-${{ runner.os }}-gradle-partial-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}
+          restore-keys: |
             v1-${{ runner.os }}-gradle-partial-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}
             v1-${{ runner.os }}-gradle-partial-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
             v1-${{ runner.os }}-gradle-partial-${{ vars.JOB_NAME }}
@@ -133,7 +143,7 @@ jobs:
             rm -rf gradle-plugin/build/kotlin
 
       - uses: actions/cache/save@v3
-        if: steps.cache-gradle-home-project.outputs.cache-hit != 'true'
+        if: steps.cache-gradle-home-project-complete.outputs.cache-hit != 'true'
         with:
           path: |
             ~/.gradle/caches
@@ -142,7 +152,7 @@ jobs:
             v1-${{ runner.os }}-gradle-complete-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles('**/*.gradle*') }}
 
       - uses: actions/cache/save@v3
-        if: steps.cache-gradle-home-project.outputs.cache-hit != 'true'
+        if: steps.cache-gradle-home-project-complete.outputs.cache-hit != 'true' && steps.cache-gradle-home-project-partial.outputs.cache-hit != 'true'
         with:
           path: |
             ~/.gradle/caches
