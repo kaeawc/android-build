@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -59,6 +61,19 @@ kotlin {
     jvmToolchain {
         vendor.set(JvmVendorSpec.AZUL)
         languageVersion.set(JavaLanguageVersion.of(libs.versions.build.java.targetVersion.get().toInt()))
+    }
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions {
+        languageVersion = libs.versions.build.kotlin.languageVersion.get()
+        jvmTarget = libs.versions.build.java.targetVersion.get()
+        freeCompilerArgs += listOf(
+            "-opt-in=kotlin.time.ExperimentalTime,kotlin.RequiresOptIn",
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-opt-in=kotlinx.coroutines.FlowPreview",
+            "-Xcontext-receivers"
+        )
     }
 }
 
