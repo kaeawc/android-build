@@ -194,7 +194,7 @@ jobs:
           find ~/.gradle/caches -maxdepth 1 -type d \
             -regex ".*/caches/.*" \
             -not -regex ".*/8.4" \
-            -not -regex ".*/modules-2" \
+            -not -regex ".*/modules-2" | \
             xargs rm -rf
           
           echo " "
