@@ -36,6 +36,16 @@ jobs:
           distribution: 'zulu'
           java-version: '20'
 
+      - name: "Install jemalloc"
+        run: |
+          curl -Ls https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2 -o jemalloc-5.3.0.tar.bz2
+          tar zxvf jemalloc-5.3.0.tar.bz2
+          cd jemalloc-5.3.0
+          ./configure
+          make
+          make install
+          echo 'export LD_PRELOAD=`jemalloc-config --libdir`/libjemalloc.so.`jemalloc-config --revision` app' >> $GITHUB_ENV
+
       - name: "Print Java Flags & version"
         run: |
           java -XX:+UseParallelGC -XX:+UnlockExperimentalVMOptions -XX:+PrintFlagsFinal -version
@@ -61,6 +71,9 @@ jobs:
 
           echo "Printing evaluated Gradle flags"
           echo "GRADLE_FLAGS: $GRADLE_FLAGS"
+          
+          echo "Printing LD_PRELOAD"
+          echo "LD_PRELOAD: $LD_PRELOAD"
 
       - name: "Restore Gradle Wrapper"
         id: cache-gradle-wrapper
