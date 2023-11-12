@@ -31,11 +31,18 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.toVersion(libs.versions.build.java.compileVersion.get())
-        targetCompatibility = JavaVersion.toVersion(libs.versions.build.java.compileVersion.get())
+        isCoreLibraryDesugaringEnabled = true
+
+        /**
+         * Normally we would only want to target Java 8 or 11, but since minSdk for this project
+         * is as high as I want it to be I can target more recent JDK versions and use
+         * desugaring + ASM to ensure older Android devices can run this just fine.
+         */
+        sourceCompatibility = JavaVersion.toVersion(libs.versions.build.java.targetVersion.get())
+        targetCompatibility = JavaVersion.toVersion(libs.versions.build.java.targetVersion.get())
     }
     kotlinOptions {
-        jvmTarget = libs.versions.build.java.compileVersion.get()
+        jvmTarget = libs.versions.build.java.targetVersion.get()
     }
     buildFeatures {
         compose = true
@@ -64,4 +71,8 @@ dependencies {
     androidTestImplementation(libs.bundles.compose.ui.espresso.test)
 
     debugImplementation(libs.bundles.compose.ui.debug)
+
+    // Needed for reading Java 19+ class files due to JVM target higher than 11
+    implementation(platform(libs.asm.bom))
+    coreLibraryDesugaring(libs.desugar)
 }

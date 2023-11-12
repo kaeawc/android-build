@@ -9,7 +9,7 @@ build-kotlin-stdlibVersion = "1.9.0"
 build-kotlin-languageVersion = "1.9"
 build-kotlin-kspVersion = "1.9.0-1.0.13"
 build-java-asmVersion = "9.6"
-build-java-compileVersion = "20"
+build-java-targetVersion = "20"
 build-compose-kotlinCompilerVersion = "1.5.1"
 
 androidx-core = "1.12.0"
@@ -24,6 +24,9 @@ test-androidx-espresso = "3.5.1"
 [libraries]
 kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "build-kotlin-stdlibVersion" }
 agp = { module = "com.android.tools.build:gradle", version.ref = "build-android-agpVersion" }
+
+asm-bom = { module = "org.ow2.asm:asm-bom", version.ref = "build-java-asmVersion" }
+desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "build-android-desugarVersion" }
 
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle-runtime" }
