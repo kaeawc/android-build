@@ -41,9 +41,6 @@ android {
         sourceCompatibility = JavaVersion.toVersion(libs.versions.build.java.targetVersion.get())
         targetCompatibility = JavaVersion.toVersion(libs.versions.build.java.targetVersion.get())
     }
-    kotlinOptions {
-        jvmTarget = libs.versions.build.java.targetVersion.get()
-    }
     buildFeatures {
         compose = true
     }
@@ -55,6 +52,13 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+kotlin {
+    jvmToolchain {
+        vendor.set(JvmVendorSpec.AZUL)
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.build.java.targetVersion.get().toInt()))
     }
 }
 
