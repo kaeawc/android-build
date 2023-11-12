@@ -9,7 +9,7 @@ build-kotlin-stdlibVersion = "1.9.0"
 build-kotlin-languageVersion = "1.9"
 build-kotlin-kspVersion = "1.9.0-1.0.13"
 build-java-asmVersion = "9.6"
-build-java-compileVersion = "1.8"
+build-java-compileVersion = "20"
 build-compose-kotlinCompilerVersion = "1.5.1"
 
 androidx-core = "1.12.0"
