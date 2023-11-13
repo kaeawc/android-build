@@ -163,7 +163,7 @@ jobs:
             v2-${{ runner.os }}-gradle-build-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: "Run Unit Tests via Gradle"
-        run: ./gradlew testDebugUnitTest $GRADLE_FLAGS
+        run: gradle-profiler --project-dir ./ --profile chrome-trace --output-dir /tmp/ testDebugUnitTest $GRADLE_FLAGS
 
       - name: "Publish Test Report"
         uses: mikepenz/action-junit-report@v4
