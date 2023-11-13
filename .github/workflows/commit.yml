@@ -46,7 +46,15 @@ jobs:
         run: |
           cd jemalloc-5.3.0
           ./configure
+
+      - name: "Make jemalloc"
+        run: |
+          cd jemalloc-5.3.0
           make
+
+      - name: "Install jemalloc"
+        run: |
+          cd jemalloc-5.3.0
           sudo make install
 
       - name: "Configure LD_PRELOAD"
