@@ -168,9 +168,8 @@ jobs:
             --gradle-user-home ~/.gradle \
             --measure-config-time \
             --measure-gc \
-            --benchmark \
             --iterations 1 \
-            --warmups 1 \
+            --warmups 0 \
             --measure-local-build-cache \
             testDebugUnitTest $GRADLE_FLAGS
 
