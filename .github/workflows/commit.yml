@@ -169,7 +169,7 @@ jobs:
         run: ls /usr/local/lib
 
       - name: "Run Unit Tests via Gradle"
-        run: gradle-profiler --project-dir ./ --profile chrome-trace --output-dir build/reports/gradle-profiler testDebugUnitTest $GRADLE_FLAGS
+        run: /usr/local/lib/gradle-profiler --project-dir ./ --profile chrome-trace --output-dir build/reports/gradle-profiler testDebugUnitTest $GRADLE_FLAGS
 
       - name: "Publish Test Report"
         uses: mikepenz/action-junit-report@v4
