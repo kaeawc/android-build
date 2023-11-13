@@ -165,6 +165,9 @@ jobs:
             v2-${{ runner.os }}-gradle-build-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}
             v2-${{ runner.os }}-gradle-build-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
+      - name: "Look in local/lib directory"
+        run: ls /usr/local/lib
+
       - name: "Run Unit Tests via Gradle"
         run: gradle-profiler --project-dir ./ --profile chrome-trace --output-dir build/reports/gradle-profiler testDebugUnitTest $GRADLE_FLAGS
 
