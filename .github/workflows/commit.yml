@@ -77,15 +77,11 @@ jobs:
 
       - name: "Download Gradle Profiler"
         if: steps.cache-gradle-profiler.outputs.cache-hit != 'true'
-        run: curl -Ls https://repo1.maven.org/maven2/org/gradle/profiler/gradle-profiler/0.20.0/gradle-profiler-0.20.0.zip -o gradle-profiler-0.20.0.zip
+        run: curl -Ls https://repo1.maven.org/maven2/org/gradle/profiler/gradle-profiler/0.20.0/gradle-profiler-0.20.0.zip -o /tmp/gradle-profiler-0.20.0.zip
 
       - name: "Unzip Gradle Profiler"
         if: steps.cache-gradle-profiler.outputs.cache-hit != 'true'
-        run: unzip gradle-profiler-0.20.0.zip
-
-      - name: "Relocate Gradle Profiler"
-        if: steps.cache-gradle-profiler.outputs.cache-hit != 'true'
-        run: sudo mv gradle-profiler-0.20.0/bin/gradle-profiler /usr/local/lib/
+        run: unzip /tmp/gradle-profiler-0.20.0.zip
 
       - name: "Create Gradle Profiler Report Directory"
         run: mkdir -p build/reports/gradle-profiler
@@ -165,11 +161,8 @@ jobs:
             v2-${{ runner.os }}-gradle-build-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}
             v2-${{ runner.os }}-gradle-build-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: "Look in local/lib directory"
-        run: ls /usr/local/lib
-
       - name: "Run Unit Tests via Gradle"
-        run: /usr/local/lib/gradle-profiler --project-dir ./ --profile chrome-trace --output-dir build/reports/gradle-profiler testDebugUnitTest $GRADLE_FLAGS
+        run: /tmp/gradle-profiler-0.20.0/bin/gradle-profiler --project-dir ./ --profile chrome-trace --output-dir build/reports/gradle-profiler testDebugUnitTest $GRADLE_FLAGS
 
       - name: "Publish Test Report"
         uses: mikepenz/action-junit-report@v4
