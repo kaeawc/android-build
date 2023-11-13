@@ -76,12 +76,10 @@ jobs:
           key: v2-${{ runner.os }}-jemalloc-test
 
       - name: "Download Gradle Profiler"
-        if: steps.cache-gradle-profiler.outputs.cache-hit != 'true'
         run: curl -Ls https://repo1.maven.org/maven2/org/gradle/profiler/gradle-profiler/0.20.0/gradle-profiler-0.20.0.zip -o /tmp/gradle-profiler-0.20.0.zip
 
       - name: "Unzip Gradle Profiler"
-        if: steps.cache-gradle-profiler.outputs.cache-hit != 'true'
-        run: unzip /tmp/gradle-profiler-0.20.0.zip
+        run: unzip /tmp/gradle-profiler-0.20.0.zip -d /tmp/gradle-profiler-0.20.0
 
       - name: "Create Gradle Profiler Report Directory"
         run: mkdir -p build/reports/gradle-profiler
