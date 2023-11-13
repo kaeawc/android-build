@@ -43,6 +43,10 @@ jobs:
           path: /tmp/libjemalloc.so.2
           key: v2-${{ runner.os }}-jemalloc-test
 
+      - name: "Relocate jemalloc to expected directory"
+        if: steps.cache-jemalloc.outputs.cache-hit == 'true'
+        run: mv /tmp/libjemalloc.so.2 /usr/local/lib/
+
       - name: "Download jemalloc"
         if: steps.cache-jemalloc.outputs.cache-hit != 'true'
         run: curl -Ls https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2 -o jemalloc-5.3.0.tar.bz2
