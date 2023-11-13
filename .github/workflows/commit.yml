@@ -44,27 +44,27 @@ jobs:
           key: v2-${{ runner.os }}-jemalloc-test
 
       - name: "Download jemalloc"
-        if: cache-jemalloc.outputs.cache-hit != 'true'
+        if: steps.cache-jemalloc.outputs.cache-hit != 'true'
         run: curl -Ls https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2 -o jemalloc-5.3.0.tar.bz2
 
       - name: "Unzip jemalloc"
-        if: cache-jemalloc.outputs.cache-hit != 'true'
+        if: steps.cache-jemalloc.outputs.cache-hit != 'true'
         run: tar xvf jemalloc-5.3.0.tar.bz2
 
       - name: "Configure jemalloc"
-        if: cache-jemalloc.outputs.cache-hit != 'true'
+        if: steps.cache-jemalloc.outputs.cache-hit != 'true'
         run: |
           cd jemalloc-5.3.0
           ./configure
 
       - name: "Make jemalloc"
-        if: cache-jemalloc.outputs.cache-hit != 'true'
+        if: steps.cache-jemalloc.outputs.cache-hit != 'true'
         run: |
           cd jemalloc-5.3.0
           make
 
       - name: "Install jemalloc"
-        if: cache-jemalloc.outputs.cache-hit != 'true'
+        if: steps.cache-jemalloc.outputs.cache-hit != 'true'
         run: |
           cd jemalloc-5.3.0
           sudo make install
@@ -74,7 +74,7 @@ jobs:
 
       - name: "Save jemalloc"
         uses: actions/cache/save@v3
-        if: cache-jemalloc.outputs.cache-hit != 'true'
+        if: steps.cache-jemalloc.outputs.cache-hit != 'true'
         with:
           path: /usr/local/lib/libjemalloc.so.2
           key: v2-${{ runner.os }}-jemalloc-test
