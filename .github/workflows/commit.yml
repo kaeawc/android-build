@@ -79,7 +79,7 @@ jobs:
         run: curl -Ls https://repo1.maven.org/maven2/org/gradle/profiler/gradle-profiler/0.20.0/gradle-profiler-0.20.0.zip -o /tmp/gradle-profiler-0.20.0.zip
 
       - name: "Unzip Gradle Profiler"
-        run: unzip /tmp/gradle-profiler-0.20.0.zip -d /tmp/gradle-profiler-0.20.0
+        run: unzip /tmp/gradle-profiler-0.20.0.zip -d /tmp
 
       - name: "Create Gradle Profiler Report Directory"
         run: mkdir -p build/reports/gradle-profiler
