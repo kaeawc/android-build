@@ -75,9 +75,17 @@ jobs:
           path: /tmp/libjemalloc.so.2
           key: v2-${{ runner.os }}-jemalloc-test
 
-      - name: "Install Gradle Profiler"
-        run: |
-          sdk install gradleprofiler 0.20.0
+      - name: "Download Gradle Profiler"
+        if: steps.cache-gradle-profiler.outputs.cache-hit != 'true'
+        run: curl -Ls https://repo1.maven.org/maven2/org/gradle/profiler/gradle-profiler/0.20.0/gradle-profiler-0.20.0.zip -o gradle-profiler-0.20.0.zip
+
+      - name: "Unzip Gradle Profiler"
+        if: steps.cache-gradle-profiler.outputs.cache-hit != 'true'
+        run: tar xvf gradle-profiler-0.20.0.zip
+
+      - name: "Relocate Gradle Profiler"
+        if: steps.cache-gradle-profiler.outputs.cache-hit != 'true'
+        run: mv gradle-profiler-0.20.0/bin/gradle-profiler /usr/local/lib/
 
       - name: "Print Java Flags & version"
         run: |
