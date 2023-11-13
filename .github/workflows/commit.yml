@@ -36,15 +36,21 @@ jobs:
           distribution: 'zulu'
           java-version: '20'
 
-      - name: "Install jemalloc"
+      - name: "Download jemalloc"
+        run: curl -Ls https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2 -o jemalloc-5.3.0.tar.bz2
+
+      - name: "Unzip jemalloc"
+        run: tar zxvf jemalloc-5.3.0.tar.bz2
+
+      - name: "Configure jemalloc"
         run: |
-          curl -Ls https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2 -o jemalloc-5.3.0.tar.bz2
-          tar zxvf jemalloc-5.3.0.tar.bz2
           cd jemalloc-5.3.0
           ./configure
           make
           make install
-          echo 'export LD_PRELOAD=`jemalloc-config --libdir`/libjemalloc.so.`jemalloc-config --revision` app' >> $GITHUB_ENV
+
+      - name: "Configure LD_PRELOAD"
+        run: echo 'export LD_PRELOAD=`jemalloc-config --libdir`/libjemalloc.so.`jemalloc-config --revision` app' >> $GITHUB_ENV
 
       - name: "Print Java Flags & version"
         run: |
