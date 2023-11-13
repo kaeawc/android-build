@@ -40,7 +40,7 @@ jobs:
         id: cache-jemalloc
         uses: actions/cache/restore@v3
         with:
-          path: `jemalloc-config --libdir`/libjemalloc.so.`jemalloc-config --revision`
+          path: /usr/local/lib/libjemalloc.so.2
           key: v2-${{ runner.os }}-jemalloc-test
 
       - name: "Download jemalloc"
@@ -76,7 +76,7 @@ jobs:
         uses: actions/cache/save@v3
         if: cache-jemalloc.outputs.cache-hit != 'true'
         with:
-          path: `jemalloc-config --libdir`/libjemalloc.so.`jemalloc-config --revision`
+          path: /usr/local/lib/libjemalloc.so.2
           key: v2-${{ runner.os }}-jemalloc-test
 
       - name: "Print Java Flags & version"
