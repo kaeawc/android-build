@@ -47,7 +47,7 @@ jobs:
           cd jemalloc-5.3.0
           ./configure
           make
-          make install
+          sudo make install
 
       - name: "Configure LD_PRELOAD"
         run: echo 'export LD_PRELOAD=`jemalloc-config --libdir`/libjemalloc.so.`jemalloc-config --revision` app' >> $GITHUB_ENV
