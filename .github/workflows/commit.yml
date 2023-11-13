@@ -45,7 +45,7 @@ jobs:
 
       - name: "Relocate jemalloc to expected directory"
         if: steps.cache-jemalloc.outputs.cache-hit == 'true'
-        run: mv /tmp/libjemalloc.so.2 /usr/local/lib/
+        run: sudo mv /tmp/libjemalloc.so.2 /usr/local/lib/
 
       - name: "Download jemalloc"
         if: steps.cache-jemalloc.outputs.cache-hit != 'true'
