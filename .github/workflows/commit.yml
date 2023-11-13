@@ -81,7 +81,7 @@ jobs:
 
       - name: "Unzip Gradle Profiler"
         if: steps.cache-gradle-profiler.outputs.cache-hit != 'true'
-        run: tar xvf gradle-profiler-0.20.0.zip
+        run: unzip gradle-profiler-0.20.0.zip
 
       - name: "Relocate Gradle Profiler"
         if: steps.cache-gradle-profiler.outputs.cache-hit != 'true'
