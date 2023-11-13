@@ -169,7 +169,7 @@ jobs:
             --measure-config-time \
             --measure-gc \
             --iterations 1 \
-            --warmups 0 \
+            --warmups 1 \
             --measure-local-build-cache \
             testDebugUnitTest $GRADLE_FLAGS
 
