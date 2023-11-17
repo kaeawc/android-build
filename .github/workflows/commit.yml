@@ -2,14 +2,8 @@ name: "Commit"
 
 on:
   push:
-    paths:
-      - '.github/commit.yml'
-      - 'app/'
-      - 'build.gradle.kts'
-      - 'settings.gradle.kts'
-      - 'gradle/wrapper/'
-      - 'gradle/libs.versions.toml'
-      - 'gradle.properties'
+    branches:
+      - '*'
   pull_request:
     branches:
       - '*'
