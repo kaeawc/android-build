@@ -2,15 +2,17 @@ name: "Commit"
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
     paths:
-      - '.github/'
+      - '.github/commit.yml'
       - 'app/'
       - 'build.gradle.kts'
       - 'settings.gradle.kts'
       - 'gradle/wrapper/'
+      - 'gradle/libs.versions.toml'
       - 'gradle.properties'
+  pull_request:
+    branches:
+      - '*'
 
 permissions:
   checks: write
