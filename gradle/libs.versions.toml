@@ -14,7 +14,7 @@ build-compose-kotlinCompilerVersion = "1.5.4"
 
 androidx-core = "1.12.0"
 androidx-lifecycle-runtime = "2.6.2"
-androidx-activity-compose = "1.8.0"
+androidx-activity-compose = "1.8.1"
 androidx-compose-bom = "2023.10.01"
 
 test-junit = "4.13.2"
