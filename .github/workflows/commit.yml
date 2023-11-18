@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /tmp/libjemalloc.so.2
-          key: v2-${{ runner.os }}-jemalloc-test
+          key: v2-${{ runner.os }}-jemalloc-5.3.0
 
       - name: "Relocate jemalloc to expected directory"
         if: steps.cache-jemalloc.outputs.cache-hit == 'true'
@@ -69,7 +69,7 @@ jobs:
         if: steps.cache-jemalloc.outputs.cache-hit != 'true'
         with:
           path: /tmp/libjemalloc.so.2
-          key: v2-${{ runner.os }}-jemalloc-test
+          key: v2-${{ runner.os }}-jemalloc-5.3.0
 
       - name: "Print Java Flags & version"
         run: |
