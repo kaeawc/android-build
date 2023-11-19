@@ -19,6 +19,7 @@ runs:
   using: "composite"
   steps:
   - name: "Evaluate Gradle Flags"
+    shell: bash
     run: |
       
       # Note that we do not attempt to visually align JVM args - spaces included in kotlin.daemon.jvmargs causes the Kotlin compiler daemon to not run and fallback to Gradle in-process
@@ -91,6 +92,7 @@ runs:
         v2-${{ runner.os }}-gradle-build-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
   - name: "Run Unit Tests via Gradle"
+    shell: bash
     run: |
       ./gradlew testDebugUnitTest $GRADLE_FLAGS
 
@@ -127,9 +129,10 @@ runs:
 
   - name: "Prepare Gradle Project & Home Caches for Configuration Cache"
     if: steps.cache-gradle-home-project.outputs.cache-hit != 'true'
+    shell: bash
     run: |
       
-      # TODO: Once convention plugins are added we will need to preserve its build folder
+      # TODO: Auto-detect when convention plugins are added, then preserve their build folders
       echo "Preserve project Gradle cache"
       find .gradle -maxdepth 1 -type d \
         -regex ".gradle/.*" \
@@ -170,6 +173,7 @@ runs:
 
   - name: "Prepare Gradle Home Cache with only Dependency & Script Caches"
     if: steps.cache-gradle-home-project.outputs.cache-hit != 'true' && steps.cache-gradle-home.outputs.cache-hit != 'true'
+    shell: bash
     run: |
       
       echo " "
@@ -198,5 +202,6 @@ runs:
         v2-${{ runner.os }}-gradle-home-${{ vars.JOB_NAME }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}
 
   - name: "Write outputs"
+    shell: bash
     run: |
       echo "" >> $GITHUB_OUTPUTS
