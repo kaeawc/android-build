@@ -23,7 +23,7 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: .github/actions/gradle-task-run
+      - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "testDebugUnitTest"
           job-name: ${{ vars.JOB_NAME }}
@@ -35,7 +35,7 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: .github/actions/gradle-task-run
+      - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "spotlessCheck"
           job-name: ${{ vars.JOB_NAME }}
@@ -47,7 +47,7 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: .github/actions/gradle-task-run
+      - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "spotlessCheck"
           job-name: ${{ vars.JOB_NAME }}
@@ -59,7 +59,7 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: .github/actions/gradle-task-run
+      - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "lintRelease"
           job-name: ${{ vars.JOB_NAME }}
