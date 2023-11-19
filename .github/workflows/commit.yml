@@ -25,7 +25,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          tasks: "testDebugUnitTest"
+          gradle-tasks: "testDebugUnitTest"
 
   spotless:
     name: "Spotless Check"
@@ -36,5 +36,5 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          tasks: "spotlessCheck"
+          gradle-tasks: "spotlessCheck"
           job-name: ${{ vars.JOB_NAME }}
