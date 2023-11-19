@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Android"
+rootProject.name = "Android CI"
 include(":app")

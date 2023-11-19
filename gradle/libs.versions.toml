@@ -1,17 +1,23 @@
 [versions]
-build-android-buildToolsVersion = "34.0.0"
-build-android-compileSdkVersion = "34"
-build-android-minSdkVersion = "27"
-build-android-targetSdkVersion = "34"
-build-android-agpVersion = "8.3.0-alpha14"
-build-android-desugarVersion = "2.0.4"
-build-kotlin-stdlibVersion = "1.9.20"
-build-kotlin-languageVersion = "2.0"
-build-kotlin-kspVersion = "1.9.20-1.0.14"
-build-java-asmVersion = "9.6"
-build-java-targetVersion = "20"
-build-compose-kotlinCompilerVersion = "1.5.4"
-
+build-android-buildTools = "34.0.0"
+build-android-compileSdk = "34"
+build-android-minSdk = "27"
+build-android-targetSdk = "34"
+build-android-agp = "8.3.0-alpha14"
+build-android-desugar = "2.0.4"
+build-kotlin = "1.9.20"
+build-kotlin-language = "2.0"
+build-kotlin-ksp = "1.9.20-1.0.14"
+build-java-asm = "9.6"
+build-java-target = "20"
+build-compose-kotlinCompiler = "1.5.4"
+build-gradle-dependencyAnalysis = "1.22.0"
+build-gradle-graphAssertion = "2.5.0"
+build-gradle-doctor = "0.9.0"
+build-gradle-ktfmt = "0.46"
+build-gradle-sortDependencies = "0.4"
+build-gradle-spotless = "6.22.0"
+build-gradle-triplet-play = "3.8.4"
 androidx-core = "1.12.0"
 androidx-lifecycle-runtime = "2.6.2"
 androidx-activity-compose = "1.8.1"
@@ -21,12 +27,20 @@ test-junit = "4.13.2"
 test-androidx-junit = "1.1.5"
 test-androidx-espresso = "3.5.1"
 
-[libraries]
-kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "build-kotlin-stdlibVersion" }
-agp = { module = "com.android.tools.build:gradle", version.ref = "build-android-agpVersion" }
+[plugins]
+dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "build-gradle-dependencyAnalysis" }
+spotless = { id = "com.diffplug.spotless", version.ref = "build-gradle-spotless" }
+sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "build-gradle-sortDependencies" }
+doctor = { id = "com.osacky.doctor", version.ref = "build-gradle-doctor" }
+graphAssertion = { id = "com.jraska.module.graph.assertion", version.ref = "build-gradle-graphAssertion" }
+publish = { id = "com.github.triplet.play", version.ref = "build-gradle-triplet-play" }
 
-asm-bom = { module = "org.ow2.asm:asm-bom", version.ref = "build-java-asmVersion" }
-desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "build-android-desugarVersion" }
+[libraries]
+kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "build-kotlin" }
+agp = { module = "com.android.tools.build:gradle", version.ref = "build-android-agp" }
+
+asm-bom = { module = "org.ow2.asm:asm-bom", version.ref = "build-java-asm" }
+desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "build-android-desugar" }
 
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle-runtime" }
