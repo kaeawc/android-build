@@ -1,9 +1,6 @@
 #file: noinspection YAMLSchemaValidation
 name: "jemalloc-linux"
 description: ""
-outputs:
-  cache-hit:
-    value: ${{ steps.cache-jemalloc.outputs.cache-hit }}
 
 runs:
   using: "composite"

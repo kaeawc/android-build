@@ -225,8 +225,3 @@ runs:
         ~/.gradle/caches
       key:
         v2-${{ runner.os }}-gradle-home-${{ inputs.job-name }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}
-
-  - name: "Write outputs"
-    shell: bash
-    run: |
-      echo "" >> $GITHUB_OUTPUTS
