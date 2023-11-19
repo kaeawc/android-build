@@ -3,11 +3,13 @@ name: "gradle-task-run"
 description: ""
 inputs:
   gradle-flags:
-    description: "Set of options we will pass to ./gradlew", example: '["--continue", "--stacktrace"]'
+    description: "Set of options we will pass to ./gradlew"
+    example: '["--continue", "--stacktrace"]'
     required: "true"
     default: "[]"
   gradle-tasks:
-    description: "Set of tasks to be executed by ./gradlew", example: '["assembleDebug", "check"]'
+    description: "Set of tasks to be executed by ./gradlew"
+    example: '["assembleDebug", "check"]'
     required: "true"
 
 outputs:
