@@ -121,14 +121,29 @@ runs:
     run: |
       ./gradlew ${{ inputs.gradle-tasks }} $GRADLE_FLAGS
 
+  - name: Check if any JUnit tests reports were created
+    id: junit-reports-exist
+    if: success() || failure() # always run even if the previous step fails
+    uses: andstor/file-existence-action@v1
+    with:
+      files: "**/build/test-results/testDebugUnitTest/TEST-*.xml"
+
   - name: "Publish Test Report"
     uses: mikepenz/action-junit-report@v4
-    if: success() || failure() # always run even if the previous step fails
+    if: steps.junit-reports-exist.outputs.files_exists == 'true'
     with:
       report_paths: '**/build/test-results/testDebugUnitTest/TEST-*.xml'
 
+  - name: Check if any Configuration Cache report was created
+    id: configuration-cache-report-exists
+    if: success() || failure() # always run even if the previous step fails
+    uses: andstor/file-existence-action@v1
+    with:
+      files: "build/reports/configuration-cache/**/*.html"
+
   - name: "Store Configuration Cache Report"
     uses: actions/upload-artifact@v3
+    if: steps.configuration-cache-report-exists.outputs.files_exists == 'true'
     with:
       name: configuration-cache-report
       path: |
