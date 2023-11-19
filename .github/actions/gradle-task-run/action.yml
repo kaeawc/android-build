@@ -3,9 +3,13 @@ name: "gradle-task-run"
 description: ""
 inputs:
   gradle-flags:
-    description: "Set of options we will pass to ./gradlew <task>", example: '["--continue", "--stacktrace"]'
+    description: "Set of options we will pass to ./gradlew", example: '["--continue", "--stacktrace"]'
     required: "true"
     default: "[]"
+  gradle-tasks:
+    description: "Set of tasks to be executed by ./gradlew", example: '["assembleDebug", "check"]'
+    required: "true"
+    default: "tasks"
 
 outputs:
   gradle-home-project-cache-hit:
@@ -26,7 +30,7 @@ runs:
       export GRADLE_FLAGS="
         --continue
         --stacktrace
-        ${{ inputs.gradle-flags }}
+        $(echo "${{ inputs.gradle-flags }}" | jq ".[]" -M -r)
         -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
         "
       
@@ -94,7 +98,7 @@ runs:
   - name: "Run Unit Tests via Gradle"
     shell: bash
     run: |
-      ./gradlew testDebugUnitTest $GRADLE_FLAGS
+      ./gradlew ${{ inputs.gradle-tasks }} $GRADLE_FLAGS
 
   - name: "Publish Test Report"
     uses: mikepenz/action-junit-report@v4
