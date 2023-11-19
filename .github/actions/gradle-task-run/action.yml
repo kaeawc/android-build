@@ -9,7 +9,6 @@ inputs:
   gradle-tasks:
     description: "Set of tasks to be executed by ./gradlew", example: '["assembleDebug", "check"]'
     required: "true"
-    default: "tasks"
 
 outputs:
   gradle-home-project-cache-hit:
@@ -22,6 +21,11 @@ outputs:
 runs:
   using: "composite"
   steps:
+  - name: "Print Java Flags & version"
+    shell: bash
+    run: |
+      java -XX:+UseParallelGC -XX:+UnlockExperimentalVMOptions -XX:+PrintFlagsFinal -version
+
   - name: "Evaluate Gradle Flags"
     shell: bash
     run: |
