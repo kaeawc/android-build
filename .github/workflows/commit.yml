@@ -37,3 +37,4 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           tasks: "spotlessCheck"
+          job-name: ${{ vars.JOB_NAME }}
