@@ -50,15 +50,10 @@ runs:
     shell: bash
     run: |
       
-      echo "${{ inputs.allow-configuration-cache }}"
-      export CONFIG_CACHE=$(if [ "${{ inputs.allow-configuration-cache }}" == "true" ]; then echo ""; else echo "--no-configuration-cache"; fi;)
-      echo "$CONFIG_CACHE"
-      
       # Note that we do not attempt to visually align JVM args - spaces included in kotlin.daemon.jvmargs causes the Kotlin compiler daemon to not run and fallback to Gradle in-process
       export GRADLE_FLAGS="
         --continue
         --stacktrace
-        $CONFIG_CACHE
         $(echo "${{ inputs.gradle-flags }}" | jq ".[]" -M -r)
         -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
         "
@@ -69,14 +64,8 @@ runs:
       # Write temporary file for checksum
       echo "$GRADLE_FLAGS" > /tmp/gradle_flags.txt
       
-      # Also export it to system environment in case this gets used in other commands
-      echo 'export GRADLE_FLAGS=$(cat /tmp/gradle_flags.txt)' >> $GITHUB_ENV
-      
       echo "Printing evaluated Gradle flags"
       echo "GRADLE_FLAGS: $GRADLE_FLAGS"
-      
-      echo "Printing LD_PRELOAD"
-      echo "LD_PRELOAD: $LD_PRELOAD"
 
   - name: "Restore Gradle Wrapper"
     id: cache-gradle-wrapper
@@ -135,6 +124,7 @@ runs:
   - name: "Run Unit Tests via Gradle"
     shell: bash
     run: |
+      export GRADLE_FLAGS=$(cat /tmp/gradle_flags.txt)
       echo "about to use GRADLE_FLAGS: $GRADLE_FLAGS"
       ./gradlew ${{ inputs.gradle-tasks }} $GRADLE_FLAGS
 

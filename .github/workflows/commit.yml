@@ -35,7 +35,7 @@ jobs:
         with:
           gradle-tasks: "spotlessCheck"
           # Due to https://github.com/diffplug/spotless/issues/987
-          allow-configuration-cache: false
+          gradle-flags: '["--no-configuration-cache"]'
 
   module-graph:
     name: "Module Graph Check"
