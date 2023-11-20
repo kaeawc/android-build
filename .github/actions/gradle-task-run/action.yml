@@ -123,7 +123,7 @@ runs:
 
   - name: Check if any JUnit tests reports were created
     id: junit-reports-exist
-    if: success() || failure() # always run even if the previous step fails
+    if: always() # always run even if the previous step fails
     uses: andstor/file-existence-action@v1
     with:
       files: "**/build/test-results/testDebugUnitTest/TEST-*.xml"
