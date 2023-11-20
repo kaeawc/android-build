@@ -54,6 +54,7 @@ runs:
       export GRADLE_FLAGS="
         --continue
         --stacktrace
+        $(if [ "${{ inputs.allow-configuration-cache }}" == "true" ]; then echo ""; else echo "--no-configuration-cache"; fi;)
         $(echo "${{ inputs.gradle-flags }}" | jq ".[]" -M -r)
         -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
         "
