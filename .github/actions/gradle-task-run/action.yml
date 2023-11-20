@@ -50,11 +50,15 @@ runs:
     shell: bash
     run: |
       
+      echo "${{ inputs.allow-configuration-cache }}"
+      export CONFIG_CACHE=$(if [ "${{ inputs.allow-configuration-cache }}" == "true" ]; then echo ""; else echo "--no-configuration-cache"; fi;)
+      echo "$CONFIG_CACHE"
+      
       # Note that we do not attempt to visually align JVM args - spaces included in kotlin.daemon.jvmargs causes the Kotlin compiler daemon to not run and fallback to Gradle in-process
       export GRADLE_FLAGS="
         --continue
         --stacktrace
-        $(if [ "${{ inputs.allow-configuration-cache }}" == "true" ]; then echo ""; else echo "--no-configuration-cache"; fi;)
+        $CONFIG_CACHE
         $(echo "${{ inputs.gradle-flags }}" | jq ".[]" -M -r)
         -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
         "
