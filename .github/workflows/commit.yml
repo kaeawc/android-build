@@ -147,8 +147,8 @@ jobs:
         uses: emulator-wtf/run-tests@v0
         with:
           api-token: ${{ secrets.EW_API_TOKEN }}
-          app: app/build/outputs/apk/debug/app-debug.apk
-          test: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+          app: app-debug.apk
+          test: app-debug-androidTest.apk
           outputs-dir: build/test-results
 
       - name: "Publish Test Report"
