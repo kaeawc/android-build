@@ -14,6 +14,9 @@ inputs:
   job-name:
     description: "The name of the GitHub Action job being run"
     required: "true"
+  allow-configuration-cache:
+    description: "Whether to allow Configuration Cache reuse"
+    required: "true"
 
 outputs:
   gradle-home-project-cache-hit:
@@ -51,6 +54,7 @@ runs:
       export GRADLE_FLAGS="
         --continue
         --stacktrace
+        $(if [ "${{ inputs.allow-configuration-cache }}" == "true" ]; then echo ""; else echo "--no-configuration-cache"; fi;)
         $(echo "${{ inputs.gradle-flags }}" | jq ".[]" -M -r)
         -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
         "
@@ -86,6 +90,7 @@ runs:
       method: MD5
 
   - name: "Restore Gradle Home & Project Caches"
+    if: ${{ inputs.allow-configuration-cache }} == 'true'
     id: cache-gradle-home-project
     uses: actions/cache/restore@v3
     with:
@@ -175,7 +180,7 @@ runs:
         v2-${{ runner.os }}-gradle-build-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('gradle/libs.versions.toml') }}-${{ hashFiles('gradle.properties') }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/*.kt') }}
 
   - name: "Prepare Gradle Project & Home Caches for Configuration Cache"
-    if: steps.cache-gradle-home-project.outputs.cache-hit != 'true'
+    if: ${{ inputs.allow-configuration-cache }} == 'true' && steps.cache-gradle-home-project.outputs.cache-hit != 'true'
     shell: bash
     run: |
       
@@ -210,7 +215,7 @@ runs:
 
   - name: "Save Gradle Home & Project cache"
     uses: actions/cache/save@v3
-    if: steps.cache-gradle-home-project.outputs.cache-hit != 'true'
+    if: ${{ inputs.allow-configuration-cache }} == 'true' && steps.cache-gradle-home-project.outputs.cache-hit != 'true'
     with:
       path: |
         ~/.gradle/caches

@@ -22,6 +22,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "testDebugUnitTest"
+          allow-configuration-cache: true
 
   spotless:
     name: "Spotless Check"
@@ -33,6 +34,8 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "spotlessCheck"
+          # Due to https://github.com/diffplug/spotless/issues/987
+          allow-configuration-cache: false
 
   module-graph:
     name: "Module Graph Check"
@@ -43,7 +46,8 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: "spotlessCheck"
+          gradle-tasks: "assertModuleGraph"
+          allow-configuration-cache: true
 
   android-lint:
     name: "Android Lint"
@@ -55,6 +59,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "lintRelease"
+          allow-configuration-cache: true
 
       - name: "Store Android Lint Report"
         uses: actions/upload-artifact@v3
@@ -74,6 +79,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "assembleDebug"
+          allow-configuration-cache: true
 
       - name: "Check if APK was created"
         id: apk-output
@@ -100,6 +106,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "assembleAndroidTest"
+          allow-configuration-cache: true
 
       - name: "Check if Test APK was created"
         id: apk-output
