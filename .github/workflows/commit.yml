@@ -72,8 +72,8 @@ jobs:
           path: |
             app/build/reports/lint-results-release.html
 
-  ui-tests:
-    name: "Android UI Tests"
+  build-apk:
+    name: "Build APK"
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
@@ -81,8 +81,67 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: "assembleDebug assembleAndroidTest"
+          gradle-tasks: "assembleDebug"
           job-name: ${{ vars.JOB_NAME }}
+
+      - name: "Check if APK was created"
+        id: apk-output
+        if: always() # always run even if the previous step fails
+        uses: andstor/file-existence-action@v2
+        with:
+          files: "app/build/outputs/apk/debug/app-debug.apk"
+
+      - name: "Store APK"
+        uses: actions/upload-artifact@v3
+        if: steps.apk-output.outputs.files_exists == 'true'
+        with:
+          name: apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+
+  build-test-apk:
+    name: "Build Test APK"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "assembleAndroidTest"
+          job-name: ${{ vars.JOB_NAME }}
+
+      - name: "Check if Test APK was created"
+        id: apk-output
+        if: always() # always run even if the previous step fails
+        uses: andstor/file-existence-action@v2
+        with:
+          files: "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
+
+      - name: "Store Test APK"
+        uses: actions/upload-artifact@v3
+        if: steps.apk-output.outputs.files_exists == 'true'
+        with:
+          name: test-apk
+          path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+  ui-tests:
+    name: "Android UI Tests"
+    runs-on: ubuntu-latest
+    needs:
+      - build-apk
+      - build-test-apk
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: apk
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: test-apk
 
       - name: "Run tests on emulator.wtf"
         uses: emulator-wtf/run-tests@v0
