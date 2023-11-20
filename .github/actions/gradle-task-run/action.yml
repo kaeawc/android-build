@@ -135,6 +135,7 @@ runs:
   - name: "Run Unit Tests via Gradle"
     shell: bash
     run: |
+      echo "about to use GRADLE_FLAGS: $GRADLE_FLAGS"
       ./gradlew ${{ inputs.gradle-tasks }} $GRADLE_FLAGS
 
   - name: Check if any JUnit tests reports were created
