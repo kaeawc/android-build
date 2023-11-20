@@ -26,7 +26,6 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "testDebugUnitTest"
-          job-name: ${{ vars.JOB_NAME }}
 
   spotless:
     name: "Spotless Check"
@@ -38,7 +37,6 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "spotlessCheck"
-          job-name: ${{ vars.JOB_NAME }}
 
   module-graph:
     name: "Module Graph Check"
@@ -50,7 +48,6 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "spotlessCheck"
-          job-name: ${{ vars.JOB_NAME }}
 
   android-lint:
     name: "Android Lint"
@@ -62,7 +59,6 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "lintRelease"
-          job-name: ${{ vars.JOB_NAME }}
 
       - name: "Store Android Lint Report"
         uses: actions/upload-artifact@v3
@@ -82,7 +78,6 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "assembleDebug"
-          job-name: ${{ vars.JOB_NAME }}
 
       - name: "Check if APK was created"
         id: apk-output
@@ -109,7 +104,6 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "assembleAndroidTest"
-          job-name: ${{ vars.JOB_NAME }}
 
       - name: "Check if Test APK was created"
         id: apk-output
