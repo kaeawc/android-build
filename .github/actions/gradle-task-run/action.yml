@@ -126,7 +126,6 @@ runs:
     shell: bash
     run: |
       export GRADLE_FLAGS=$(cat /tmp/gradle_flags.txt)
-      echo "about to use GRADLE_FLAGS: $GRADLE_FLAGS"
       ./gradlew ${{ inputs.gradle-tasks }} $GRADLE_FLAGS
 
   - name: Check if any JUnit tests reports were created
