@@ -125,6 +125,7 @@ jobs:
   ui-tests:
     name: "Android UI Tests"
     runs-on: ubuntu-latest
+    if: github.secret_source == 'Actions'
     needs:
       - build-apk
       - build-test-apk
