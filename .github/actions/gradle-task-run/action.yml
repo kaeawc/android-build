@@ -76,7 +76,7 @@ runs:
         ~/.gradle/wrapper
       key: v2-${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
-  - name: Hash Gradle Tasks
+  - name: "Hash Gradle Tasks"
     uses: pplanel/hash-calculator-action@v1.3.1
     id: gradle-task-hash
     with:
@@ -128,7 +128,7 @@ runs:
       export GRADLE_FLAGS=$(cat /tmp/gradle_flags.txt)
       ./gradlew ${{ inputs.gradle-tasks }} $GRADLE_FLAGS
 
-  - name: Check if any JUnit tests reports were created
+  - name: "Check if any JUnit tests reports were created"
     id: junit-reports-exist
     if: always() # always run even if the previous step fails
     uses: andstor/file-existence-action@v2
@@ -141,7 +141,7 @@ runs:
     with:
       report_paths: '**/build/test-results/testDebugUnitTest/TEST-*.xml'
 
-  - name: Check if any Configuration Cache report was created
+  - name: "Check if any Configuration Cache report was created"
     id: configuration-cache-report-exists
     if: success() || failure() # always run even if the previous step fails
     uses: andstor/file-existence-action@v2
