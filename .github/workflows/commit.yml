@@ -67,7 +67,7 @@ jobs:
         with:
           name: android-lint-report
           path: |
-            app/build/reports/lint-results-release.html
+            app/build/reports/lint-results-*.html
 
   build-apk:
     name: "Build APK"
