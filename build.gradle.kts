@@ -66,9 +66,9 @@ doctor {
      */
     negativeAvoidanceThreshold.set(500)
     /**
-     * Warn when not using parallel GC. Parallel GC is faster for build type tasks and is no longer the default in Java 9+.
+     * Do not warn when not using ParallelGC, currently evaluating G1Gc on JDK 21.
      */
-    warnWhenNotUsingParallelGC.set(true)
+    warnWhenNotUsingParallelGC.set(false)
     /**
      * Throws an error when the `Delete` or `clean` task has dependencies.
      * If a clean task depends on other tasks, clean can be reordered and made to run after the tasks that would produce
