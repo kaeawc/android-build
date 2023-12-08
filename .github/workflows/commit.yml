@@ -19,10 +19,16 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/gradle-task-run
+      - name: "Install JDK"
+        uses: actions/setup-java@v3
         with:
-          gradle-tasks: "testDebugUnitTest"
-          allow-configuration-cache: true
+          distribution: 'zulu'
+          java-version: '21'
+
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: "testDebugUnitTest"
+          # allow-configuration-cache: true
 
   spotless:
     name: "Spotless Check"
@@ -31,10 +37,16 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/gradle-task-run
+      - name: "Install JDK"
+        uses: actions/setup-java@v3
         with:
-          gradle-tasks: "spotlessCheck"
-          # Due to https://github.com/diffplug/spotless/issues/987
+          distribution: 'zulu'
+          java-version: '21'
+
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: "spotlessCheck"
+          # # Due to https://github.com/diffplug/spotless/issues/987
           allow-configuration-cache: false
 
   module-graph:
@@ -44,10 +56,16 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/gradle-task-run
+      - name: "Install JDK"
+        uses: actions/setup-java@v3
         with:
-          gradle-tasks: "assertModuleGraph"
-          allow-configuration-cache: true
+          distribution: 'zulu'
+          java-version: '21'
+
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: "assertModuleGraph"
+          # allow-configuration-cache: true
 
   android-lint:
     name: "Android Lint"
@@ -56,10 +74,16 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/gradle-task-run
+      - name: "Install JDK"
+        uses: actions/setup-java@v3
         with:
-          gradle-tasks: "lintRelease"
-          allow-configuration-cache: true
+          distribution: 'zulu'
+          java-version: '21'
+
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: "lintRelease"
+          # allow-configuration-cache: true
 
       - name: "Store Android Lint Report"
         uses: actions/upload-artifact@v3
@@ -76,10 +100,16 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/gradle-task-run
+      - name: "Install JDK"
+        uses: actions/setup-java@v3
         with:
-          gradle-tasks: "assembleDebug"
-          allow-configuration-cache: true
+          distribution: 'zulu'
+          java-version: '21'
+
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: "assembleDebug"
+          # allow-configuration-cache: true
 
       - name: "Check if APK was created"
         id: apk-output
@@ -103,10 +133,16 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/gradle-task-run
+      - name: "Install JDK"
+        uses: actions/setup-java@v3
         with:
-          gradle-tasks: "assembleAndroidTest"
-          allow-configuration-cache: true
+          distribution: 'zulu'
+          java-version: '21'
+
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: "assembleAndroidTest"
+          # allow-configuration-cache: true
 
       - name: "Check if Test APK was created"
         id: apk-output
