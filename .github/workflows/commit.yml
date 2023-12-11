@@ -1,6 +1,5 @@
 name: "Commit"
 
-
 on:
   push:
     branches:
@@ -13,8 +12,8 @@ permissions:
   checks: write
 
 jobs:
-  build-and-test:
-    name: "Build & Unit Test"
+  unit-tests:
+    name: "Unit Tests"
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
@@ -22,7 +21,44 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: "testDebugUnitTest assertModuleGraph lintRelease assembleDebug assembleAndroidTest"
+          gradle-tasks: "testDebugUnitTest"
+          reuse-configuration-cache: true
+
+  spotless:
+    name: "Spotless Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "spotlessCheck"
+          # Due to https://github.com/diffplug/spotless/issues/987
+          reuse-configuration-cache: false
+
+  module-graph:
+    name: "Module Graph Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "assertModuleGraph"
+          reuse-configuration-cache: true
+
+  android-lint:
+    name: "Android Lint"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "lintRelease"
           reuse-configuration-cache: true
 
       - name: "Store Android Lint Report"
@@ -33,38 +69,49 @@ jobs:
           path: |
             app/build/reports/lint-results-*.html
 
+  build-apk:
+    name: "Build APK"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "assembleDebug"
+          reuse-configuration-cache: true
+
       - name: "Store APK"
         uses: actions/upload-artifact@v3
         with:
           name: apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
+  build-test-apk:
+    name: "Build Test APK"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "assembleAndroidTest"
+          reuse-configuration-cache: true
+
       - name: "Store Test APK"
         uses: actions/upload-artifact@v3
         with:
           name: test-apk
           path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-#
-#
-#  spotless:
-#    name: "Spotless Check"
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: "Git Checkout"
-#        uses: actions/checkout@v4
-#
-#      - uses: ./.github/actions/gradle-task-run
-#        with:
-#          gradle-tasks: "spotlessCheck"
-#          # Due to https://github.com/diffplug/spotless/issues/987
-#          reuse-configuration-cache: false
 
   ui-tests:
     name: "Android UI Tests"
     runs-on: ubuntu-latest
     if: github.secret_source == 'Actions'
     needs:
-      - build-and-test
+      - build-apk
+      - build-test-apk
     steps:
       - name: "Git Checkout"
         uses: actions/checkout@v4
