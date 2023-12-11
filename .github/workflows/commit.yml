@@ -22,7 +22,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          arguments: "testDebugUnitTest"
+          gradle-tasks: "testDebugUnitTest"
           allow-configuration-cache: true
 
   spotless:
@@ -34,7 +34,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          arguments: "spotlessCheck"
+          gradle-tasks: "spotlessCheck"
           # Due to https://github.com/diffplug/spotless/issues/987
           allow-configuration-cache: false
 
@@ -47,7 +47,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          arguments: "assertModuleGraph"
+          gradle-tasks: "assertModuleGraph"
           allow-configuration-cache: true
 
   android-lint:
@@ -59,7 +59,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          arguments: "lintRelease"
+          gradle-tasks: "lintRelease"
           allow-configuration-cache: true
 
       - name: "Store Android Lint Report"
@@ -79,7 +79,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          arguments: "assembleDebug"
+          gradle-tasks: "assembleDebug"
           allow-configuration-cache: true
 
       - name: "Store APK"
@@ -98,7 +98,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          arguments: "assembleAndroidTest"
+          gradle-tasks: "assembleAndroidTest"
           allow-configuration-cache: true
 
       - name: "Store Test APK"
