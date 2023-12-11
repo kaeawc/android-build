@@ -104,6 +104,10 @@ runs:
       input: ${{ inputs.gradle-tasks }}
       method: MD5
 
+  - name: "Output Task Hash"
+    shell: ${{ inputs.shell }}
+    run: echo "Task hash is ${{ steps.gradle-task-hash.outputs.digest }}"
+
   - name: "Restore Gradle Home & Project Caches"
     if: ${{ inputs.allow-configuration-cache }} == 'true'
     id: cache-gradle-home-project
