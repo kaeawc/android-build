@@ -276,4 +276,4 @@ runs:
       path: |
         ${{ inputs.gradle-home-directory }}/caches
       key:
-        v3-${{ runner.os }}-gradle-home-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles('format('{0}'/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('format('{0}'/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}'/gradle.properties', inputs.gradle-project-directory)) }}
+        v3-${{ runner.os }}-gradle-home-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}
