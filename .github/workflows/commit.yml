@@ -12,7 +12,7 @@ permissions:
   checks: write
 
 jobs:
-  unit_tests:
+  build-and-test:
     name: "Build & Unit Test"
     runs-on: ubuntu-latest
     steps:
