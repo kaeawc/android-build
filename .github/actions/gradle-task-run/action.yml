@@ -246,7 +246,7 @@ runs:
         ${{ inputs.gradle-home-directory }}/caches
         ${{ inputs.gradle-project-directory }}/.gradle
       key:
-        v3-${{ runner.os }}-gradle-home-project-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles('{0}/gradle.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles(format('{0}/**/*.gradle.kts', inputs.gradle-project-directory)) }}
+        v3-${{ runner.os }}-gradle-home-project-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles(format('{0}/**/*.gradle.kts', inputs.gradle-project-directory)) }}
 
   - name: "Prepare Gradle Home Cache with only Dependency & Script Caches"
     if: steps.cache-gradle-home-project.outputs.cache-hit != 'true' && steps.cache-gradle-home.outputs.cache-hit != 'true'
