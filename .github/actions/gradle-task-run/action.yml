@@ -205,7 +205,7 @@ runs:
       key:
         v3-${{ runner.os }}-gradle-build-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles(format('{0}/**/*.gradle.kts', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/**/*.kt', inputs.gradle-project-directory)) }}
 
-  - name: , inputs.gradle-project-directory"Prepare Gradle Project & Home Caches for Configuration Cache"
+  - name: "Prepare Gradle Project & Home Caches for Configuration Cache"
     if: ${{ inputs.reuse-configuration-cache }} == 'true' && steps.cache-gradle-home-project.outputs.cache-hit != 'true'
     shell: ${{ inputs.shell }}
     run: |
