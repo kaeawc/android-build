@@ -82,16 +82,8 @@ jobs:
           arguments: "assembleDebug"
           allow-configuration-cache: true
 
-      - name: "Check if APK was created"
-        id: apk-output
-        if: always() # always run even if the previous step fails
-        uses: andstor/file-existence-action@v2
-        with:
-          files: "app/build/outputs/apk/debug/app-debug.apk"
-
       - name: "Store APK"
         uses: actions/upload-artifact@v3
-        if: steps.apk-output.outputs.files_exists == 'true'
         with:
           name: apk
           path: app/build/outputs/apk/debug/app-debug.apk
@@ -109,16 +101,8 @@ jobs:
           arguments: "assembleAndroidTest"
           allow-configuration-cache: true
 
-      - name: "Check if Test APK was created"
-        id: apk-output
-        if: always() # always run even if the previous step fails
-        uses: andstor/file-existence-action@v2
-        with:
-          files: "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
-
       - name: "Store Test APK"
         uses: actions/upload-artifact@v3
-        if: steps.apk-output.outputs.files_exists == 'true'
         with:
           name: test-apk
           path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
