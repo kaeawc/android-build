@@ -121,7 +121,7 @@ runs:
     with:
       path: |
         ${{ inputs.gradle-home-directory }}/caches
-        .gradle
+        ${{ inputs.gradle-project-directory }}/.gradle
       key:
         v3-${{ runner.os }}-gradle-home-project-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles(format('{0}/**/*.gradle.kts', inputs.gradle-project-directory)) }}
 
