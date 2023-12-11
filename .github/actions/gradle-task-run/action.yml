@@ -104,9 +104,19 @@ runs:
       input: ${{ inputs.gradle-tasks }}
       method: MD5
 
-  - name: "Output Task Hash"
+  - name: "Debug cache key inputs"
     shell: ${{ inputs.shell }}
-    run: echo "Task hash is ${{ steps.gradle-task-hash.outputs.digest }}"
+    run: |
+      echo "Task hash is ${{ steps.gradle-task-hash.outputs.digest }}"
+      echo "gradle-flags: ${{ inputs.gradle-flags }}"
+      echo "gradle-tasks: ${{ inputs.gradle-tasks }}"
+      echo "job-name: ${{ inputs.job-name }}"
+      echo "gradle-version: ${{ inputs.gradle-version }}"
+      echo "gradle-home-directory: ${{ inputs.gradle-home-directory }}"
+      echo "gradle-project-directory: ${{ inputs.gradle-project-directory }}"
+      echo "reuse-configuration-cache: ${{ inputs.reuse-configuration-cache }}"
+      echo "debug: ${{ inputs.debug }}"
+      echo "shell: ${{ inputs.shell }}"
 
   - name: "Restore Gradle Home & Project Caches"
     if: ${{ inputs.allow-configuration-cache }} == 'true'
