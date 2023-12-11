@@ -60,7 +60,7 @@ runs:
 
   - name: "Print Java Flags & version"
     if: ${{ inputs.debug == 'true' }}
-    shell: ${{  1 file changed, 12 insertions(+), 2 deletions(-)inputs.shell }}
+    shell: ${{ inputs.shell }}
     run: |
       java -XX:+UseParallelGC -XX:+UnlockExperimentalVMOptions -XX:+PrintFlagsFinal -version
 
