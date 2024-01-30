@@ -81,6 +81,7 @@ jobs:
         with:
           gradle-tasks: "assembleDebug"
           reuse-configuration-cache: true
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: "Store APK"
         uses: actions/upload-artifact@v3
