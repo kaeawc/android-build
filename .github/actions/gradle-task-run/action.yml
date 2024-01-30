@@ -86,14 +86,6 @@ runs:
       echo "Printing evaluated Gradle flags"
       echo "GRADLE_FLAGS: $GRADLE_FLAGS"
 
-  - name: "Restore Gradle Wrapper"
-    id: cache-gradle-wrapper
-    uses: actions/cache/restore@v3
-    with:
-      path: |
-        ${{ inputs.gradle-home-directory }}/wrapper
-      key: v3-${{ runner.os }}-gradle-wrapper-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}
-
   - name: "Hash Gradle Tasks"
     uses: pplanel/hash-calculator-action@v1.3.1
     id: gradle-task-hash
@@ -114,44 +106,11 @@ runs:
       echo "debug: ${{ inputs.debug }}"
       echo "shell: ${{ inputs.shell }}"
 
-  - name: "Restore Gradle Home & Project Caches"
-    if: ${{ inputs.reuse-configuration-cache }} == 'true'
-    id: cache-gradle-home-project
-    uses: actions/cache/restore@v3
+  - name: "Build with Gradle"
+    uses: gradle/gradle-build-action@v3
     with:
-      path: |
-        ${{ inputs.gradle-home-directory }}/caches
-        ${{ inputs.gradle-project-directory }}/.gradle
-      key:
-        v3-${{ runner.os }}-gradle-home-project-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles(format('{0}/**/*.gradle.kts', inputs.gradle-project-directory)) }}
-
-  - name: "Restore Gradle Home Cache"
-    if: steps.cache-gradle-home-project.outputs.cache-hit != 'true'
-    id: cache-gradle-home
-    uses: actions/cache/restore@v3
-    with:
-      path: |
-        ${{ inputs.gradle-home-directory }}/caches
-      key:
-        v3-${{ runner.os }}-gradle-home-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}
-      restore-keys: |
-        v3-${{ runner.os }}-gradle-home-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}
-        v3-${{ runner.os }}-gradle-home-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}
-        v3-${{ runner.os }}-gradle-home-${{ steps.gradle-task-hash.outputs.digest }}
-
-  - name: "Restore Gradle Build Cache"
-    id: cache-gradle-build
-    uses: actions/cache/restore@v3
-    with:
-      path: |
-        ${{ inputs.gradle-home-directory }}/caches/build-cache-*
-      key:
-        v3-${{ runner.os }}-gradle-build-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles(format('{0}/**/*.gradle.kts', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/**/*.kt', inputs.gradle-project-directory)) }}
-      restore-keys: |
-        v3-${{ runner.os }}-gradle-build-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles(format('{0}/**/*.gradle.kts', inputs.gradle-project-directory)) }}
-        v3-${{ runner.os }}-gradle-build-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('/tmp/gradle_flags.txt') }}
-        v3-${{ runner.os }}-gradle-build-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}
-        v3-${{ runner.os }}-gradle-build-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}
+      gradle-version: ${{ inputs.gradle-version }}
+      cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
 
   - name: "Run Unit Tests via Gradle"
     shell: ${{ inputs.shell }}
@@ -186,94 +145,3 @@ runs:
       name: configuration-cache-report
       path: |
         ${{ inputs.gradle-project-directory }}/build/reports/configuration-cache/**/*.html
-
-  - name: "Save Gradle Wrapper"
-    uses: actions/cache/save@v3
-    if: steps.cache-gradle-wrapper.outputs.cache-hit != 'true'
-    with:
-      path: |
-        ${{ inputs.gradle-home-directory }}/wrapper
-      key:
-        v3-${{ runner.os }}-gradle-wrapper-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}
-
-  - name: "Save Gradle Build Cache"
-    uses: actions/cache/save@v3
-    if: steps.cache-gradle-build.outputs.cache-hit != 'true'
-    with:
-      path: |
-        ${{ inputs.gradle-home-directory }}/caches/build-cache-*
-      key:
-        v3-${{ runner.os }}-gradle-build-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles(format('{0}/**/*.gradle.kts', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/**/*.kt', inputs.gradle-project-directory)) }}
-
-  - name: "Prepare Gradle Project & Home Caches for Configuration Cache"
-    if: ${{ inputs.reuse-configuration-cache }} == 'true' && steps.cache-gradle-home-project.outputs.cache-hit != 'true'
-    shell: ${{ inputs.shell }}
-    run: |
-      
-      # TODO: Auto-detect when convention plugins are added, then preserve their build folders
-      echo "Preserve project Gradle cache"
-      find .gradle -maxdepth 1 -type d \
-        -regex "${{ inputs.gradle-project-directory }}/.gradle/.*" \
-        -not -regex ".*/${{ inputs.gradle-version }}" \
-        -not -regex ".*/configuration-cache" | \
-        xargs rm -rf
-      
-      echo " "
-      echo "Preserve Gradle home cache"
-      find ${{ inputs.gradle-home-directory }}/caches -maxdepth 1 -type d \
-        -regex ".*/caches/.*" \
-        -not -regex ".*/${{ inputs.gradle-version }}" \
-        -not -regex ".*/modules-2" \
-        -not -regex ".*/jars-9" \
-        -not -regex ".*/transforms-*" | \
-        xargs rm -rf
-      
-      echo " "
-      echo "Preserve Gradle script cache"
-      find ${{ inputs.gradle-home-directory }}/caches/${{ inputs.gradle-version }} -maxdepth 1 -type d \
-        -regex ".*/caches/${{ inputs.gradle-version }}/.*" \
-        -not -regex ".*/kotlin-dsl" \
-        -not -regex ".*/generated-gradle-jars" | \
-        xargs rm -rf
-      
-      # Remove Kotlin build results from any convention plugin build folder
-
-  - name: "Save Gradle Home & Project cache"
-    uses: actions/cache/save@v3
-    if: ${{ inputs.reuse-configuration-cache }} == 'true' && steps.cache-gradle-home-project.outputs.cache-hit != 'true'
-    with:
-      path: |
-        ${{ inputs.gradle-home-directory }}/caches
-        ${{ inputs.gradle-project-directory }}/.gradle
-      key:
-        v3-${{ runner.os }}-gradle-home-project-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}-${{ hashFiles('/tmp/gradle_flags.txt') }}-${{ hashFiles(format('{0}/**/*.gradle.kts', inputs.gradle-project-directory)) }}
-
-  - name: "Prepare Gradle Home Cache with only Dependency & Script Caches"
-    if: steps.cache-gradle-home-project.outputs.cache-hit != 'true' && steps.cache-gradle-home.outputs.cache-hit != 'true'
-    shell: ${{ inputs.shell }}
-    run: |
-      
-      echo " "
-      echo "Preserve Gradle home cache"
-      find ${{ inputs.gradle-home-directory }}/caches -maxdepth 1 -type d \
-        -regex ".*/caches/.*" \
-        -not -regex ".*/${{ inputs.gradle-version }}" \
-        -not -regex ".*/modules-2" | \
-        xargs rm -rf
-      
-      echo " "
-      echo "Preserve Gradle home script cache"
-      find ${{ inputs.gradle-home-directory }}/caches/${{ inputs.gradle-version }} -maxdepth 1 -type d \
-        -regex ".*/caches/${{ inputs.gradle-version }}/.*" \
-        -not -regex ".*/kotlin-dsl" \
-        -not -regex ".*/generated-gradle-jars" | \
-        xargs rm -rf
-
-  - name: "Save Gradle Home cache"
-    uses: actions/cache/save@v3
-    if: steps.cache-gradle-home-project.outputs.cache-hit != 'true' && steps.cache-gradle-home.outputs.cache-hit != 'true'
-    with:
-      path: |
-        ${{ inputs.gradle-home-directory }}/caches
-      key:
-        v3-${{ runner.os }}-gradle-home-${{ steps.gradle-task-hash.outputs.digest }}-${{ hashFiles(format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle/libs.versions.toml', inputs.gradle-project-directory)) }}-${{ hashFiles(format('{0}/gradle.properties', inputs.gradle-project-directory)) }}

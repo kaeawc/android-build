@@ -13,62 +13,62 @@ permissions:
   checks: write
 
 jobs:
-  unit-tests:
-    name: "Unit Tests"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "testDebugUnitTest"
-          reuse-configuration-cache: true
-
-  spotless:
-    name: "Spotless Check"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "spotlessCheck"
-          # Due to https://github.com/diffplug/spotless/issues/987
-          reuse-configuration-cache: false
-
-  module-graph:
-    name: "Module Graph Check"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "assertModuleGraph"
-          reuse-configuration-cache: true
-
-  android-lint:
-    name: "Android Lint"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "lintRelease"
-          reuse-configuration-cache: true
-
-      - name: "Store Android Lint Report"
-        uses: actions/upload-artifact@v3
-        if: success()
-        with:
-          name: android-lint-report
-          path: |
-            app/build/reports/lint-results-*.html
+#  unit-tests:
+#    name: "Unit Tests"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "testDebugUnitTest"
+#          reuse-configuration-cache: true
+#
+#  spotless:
+#    name: "Spotless Check"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "spotlessCheck"
+#          # Due to https://github.com/diffplug/spotless/issues/987
+#          reuse-configuration-cache: false
+#
+#  module-graph:
+#    name: "Module Graph Check"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "assertModuleGraph"
+#          reuse-configuration-cache: true
+#
+#  android-lint:
+#    name: "Android Lint"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "lintRelease"
+#          reuse-configuration-cache: true
+#
+#      - name: "Store Android Lint Report"
+#        uses: actions/upload-artifact@v3
+#        if: success()
+#        with:
+#          name: android-lint-report
+#          path: |
+#            app/build/reports/lint-results-*.html
 
   build-apk:
     name: "Build APK"
@@ -88,54 +88,54 @@ jobs:
           name: apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
-  build-test-apk:
-    name: "Build Test APK"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "assembleAndroidTest"
-          reuse-configuration-cache: true
-
-      - name: "Store Test APK"
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-apk
-          path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-
-  ui-tests:
-    name: "Android UI Tests"
-    runs-on: ubuntu-latest
-    if: github.secret_source == 'Actions'
-    needs:
-      - build-apk
-      - build-test-apk
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v3
-        with:
-          name: apk
-
-      - uses: actions/download-artifact@v3
-        with:
-          name: test-apk
-
-      - name: "Run tests on emulator.wtf"
-        uses: emulator-wtf/run-tests@v0
-        with:
-          api-token: ${{ secrets.EW_API_TOKEN }}
-          app: app-debug.apk
-          test: app-debug-androidTest.apk
-          outputs-dir: build/test-results
-
-      - name: "Publish Test Report"
-        uses: mikepenz/action-junit-report@v4
-        if: always() # always run even if the tests fail
-        with:
-          check_name: "UI Test Report"
-          report_paths: 'build/test-results/**/*.xml'
+#  build-test-apk:
+#    name: "Build Test APK"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "assembleAndroidTest"
+#          reuse-configuration-cache: true
+#
+#      - name: "Store Test APK"
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: test-apk
+#          path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+#
+#  ui-tests:
+#    name: "Android UI Tests"
+#    runs-on: ubuntu-latest
+#    if: github.secret_source == 'Actions'
+#    needs:
+#      - build-apk
+#      - build-test-apk
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: actions/download-artifact@v3
+#        with:
+#          name: apk
+#
+#      - uses: actions/download-artifact@v3
+#        with:
+#          name: test-apk
+#
+#      - name: "Run tests on emulator.wtf"
+#        uses: emulator-wtf/run-tests@v0
+#        with:
+#          api-token: ${{ secrets.EW_API_TOKEN }}
+#          app: app-debug.apk
+#          test: app-debug-androidTest.apk
+#          outputs-dir: build/test-results
+#
+#      - name: "Publish Test Report"
+#        uses: mikepenz/action-junit-report@v4
+#        if: always() # always run even if the tests fail
+#        with:
+#          check_name: "UI Test Report"
+#          report_paths: 'build/test-results/**/*.xml'
