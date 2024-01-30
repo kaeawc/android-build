@@ -1,6 +1,5 @@
 name: "Commit"
 
-
 on:
   push:
     branches:
