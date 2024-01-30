@@ -14,7 +14,7 @@ inputs:
   gradle-version:
     description: "Version of Gradle to run build and cache results with"
     required: "true"
-    default: "8.6-milestone-1"
+    default: "8.6-rc-3"
   gradle-home-directory:
     description: "The directory to use for Gradle User Home"
     required: "true"
