@@ -108,6 +108,7 @@ runs:
       echo "reuse-configuration-cache: ${{ inputs.reuse-configuration-cache }}"
       echo "debug: ${{ inputs.debug }}"
       echo "shell: ${{ inputs.shell }}"
+      echo ".installData: $(cat "$ANDROID_HOME/platform-tools/.installer/.installData")"
 
   - name: "Build with Gradle"
     uses: gradle/gradle-build-action@v3
@@ -115,11 +116,21 @@ runs:
       gradle-version: ${{ inputs.gradle-version }}
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
 
+  - name: "Check installData after Gradle build action init"
+    shell: ${{ inputs.shell }}
+    run: |
+      echo ".installData: $(cat "$ANDROID_HOME/platform-tools/.installer/.installData")"
+
   - name: "Run Unit Tests via Gradle"
     shell: ${{ inputs.shell }}
     run: |
       export GRADLE_FLAGS=$(cat /tmp/gradle_flags.txt)
       ./gradlew ${{ inputs.gradle-tasks }} $GRADLE_FLAGS
+
+  - name: "Check installData after Gradle build finishes"
+    shell: ${{ inputs.shell }}
+    run: |
+      echo ".installData: $(cat "$ANDROID_HOME/platform-tools/.installer/.installData")"
 
   - name: "Check if any JUnit tests reports were created"
     id: junit-reports-exist
