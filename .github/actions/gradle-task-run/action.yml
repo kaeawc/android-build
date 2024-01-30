@@ -14,7 +14,7 @@ inputs:
   gradle-version:
     description: "Version of Gradle to run build and cache results with"
     required: "true"
-    default: "8.6-rc-3"
+    default: "8.6-rc-1"
   gradle-encryption-key:
     description: "Encryption key used for this project"
     required: "true"
