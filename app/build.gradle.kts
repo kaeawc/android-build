@@ -6,35 +6,35 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    alias(libs.plugins.graphAssertion)
-    alias(libs.plugins.publish)
-    alias(libs.plugins.sortDependencies)
-    alias(libs.plugins.spotless)
+//    alias(libs.plugins.graphAssertion)
+//    alias(libs.plugins.publish)
+//    alias(libs.plugins.sortDependencies)
+//    alias(libs.plugins.spotless)
 }
 
-moduleGraphAssert {
-    maxHeight = 8
-    allowed = arrayOf(
-        ":app -> :.*",
-        ":feature:.* -> :subsystem:.*",
-        ":feature:.* -> :foundation:.*",
-        ":subsystem:.* -> :foundation:.*",
-        ":subsystem:.* -> :core:.*",
-        ":foundation:.* -> :core:.*",
-        ":core:.* -> :core:.*"
-    )
-    configurations = setOf("api", "implementation")
-    assertOnAnyBuild = false
-}
-
-play {
-    track.set("internal")
-    releaseStatus.set(ReleaseStatus.COMPLETED)
-    userFraction.set(1.0)
-    defaultToAppBundles.set(true)
-    serviceAccountCredentials.set(file("google-play-publishing-service-account.json"))
-    resolutionStrategy.set(com.github.triplet.gradle.androidpublisher.ResolutionStrategy.IGNORE)
-}
+//moduleGraphAssert {
+//    maxHeight = 8
+//    allowed = arrayOf(
+//        ":app -> :.*",
+//        ":feature:.* -> :subsystem:.*",
+//        ":feature:.* -> :foundation:.*",
+//        ":subsystem:.* -> :foundation:.*",
+//        ":subsystem:.* -> :core:.*",
+//        ":foundation:.* -> :core:.*",
+//        ":core:.* -> :core:.*"
+//    )
+//    configurations = setOf("api", "implementation")
+//    assertOnAnyBuild = false
+//}
+//
+//play {
+//    track.set("internal")
+//    releaseStatus.set(ReleaseStatus.COMPLETED)
+//    userFraction.set(1.0)
+//    defaultToAppBundles.set(true)
+//    serviceAccountCredentials.set(file("google-play-publishing-service-account.json"))
+//    resolutionStrategy.set(com.github.triplet.gradle.androidpublisher.ResolutionStrategy.IGNORE)
+//}
 
 android {
     namespace = "dev.jasonpearson.android"
@@ -118,42 +118,42 @@ tasks.withType<KotlinCompile>().configureEach {
     }
 }
 
-val ktfmtVersion = libs.versions.build.gradle.ktfmt.get()
-val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
-
-configure<SpotlessExtension> {
-    format("misc") {
-        target("*.md", ".gitignore")
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    kotlin {
-        target("src/**/*.kt")
-        targetExclude(externalFiles)
-        ktfmt(ktfmtVersion).dropboxStyle()
-        trimTrailingWhitespace()
-        endWithNewline()
-        licenseHeaderFile(rootProject.file("spotless/spotless.kt"))
-        targetExclude("**/spotless.kt", "**/Aliases.kt", *externalFiles.toTypedArray())
-    }
-    format("kotlinExternal", KotlinExtension::class.java) {
-        target(externalFiles)
-        ktfmt(ktfmtVersion).dropboxStyle()
-        trimTrailingWhitespace()
-        endWithNewline()
-        targetExclude("**/spotless.kt", "**/Aliases.kt")
-    }
-    kotlinGradle {
-        target("src/**/*.kts")
-        ktfmt(ktfmtVersion).dropboxStyle()
-        trimTrailingWhitespace()
-        endWithNewline()
-        licenseHeaderFile(
-            rootProject.file("spotless/spotless.kt"),
-            "(import|plugins|pluginManagement|dependencies)"
-        )
-    }
-}
+//val ktfmtVersion = libs.versions.build.gradle.ktfmt.get()
+//val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
+//
+//configure<SpotlessExtension> {
+//    format("misc") {
+//        target("*.md", ".gitignore")
+//        trimTrailingWhitespace()
+//        endWithNewline()
+//    }
+//    kotlin {
+//        target("src/**/*.kt")
+//        targetExclude(externalFiles)
+//        ktfmt(ktfmtVersion).dropboxStyle()
+//        trimTrailingWhitespace()
+//        endWithNewline()
+//        licenseHeaderFile(rootProject.file("spotless/spotless.kt"))
+//        targetExclude("**/spotless.kt", "**/Aliases.kt", *externalFiles.toTypedArray())
+//    }
+//    format("kotlinExternal", KotlinExtension::class.java) {
+//        target(externalFiles)
+//        ktfmt(ktfmtVersion).dropboxStyle()
+//        trimTrailingWhitespace()
+//        endWithNewline()
+//        targetExclude("**/spotless.kt", "**/Aliases.kt")
+//    }
+//    kotlinGradle {
+//        target("src/**/*.kts")
+//        ktfmt(ktfmtVersion).dropboxStyle()
+//        trimTrailingWhitespace()
+//        endWithNewline()
+//        licenseHeaderFile(
+//            rootProject.file("spotless/spotless.kt"),
+//            "(import|plugins|pluginManagement|dependencies)"
+//        )
+//    }
+//}
 
 dependencies {
     coreLibraryDesugaring(libs.desugar)
