@@ -121,14 +121,21 @@ runs:
       gradle-version: ${{ inputs.gradle-version }}
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
 
-  - name: "Check installData after Gradle build action init"
+  - name: Setup Android SDK
+    uses: android-actions/setup-android@v3
+
+  - name: "Check platform tools exists so it does not need to be installed during build"
     shell: ${{ inputs.shell }}
     run: |
       
       echo ""
       echo "Listing files in /usr/local/lib/android/sdk"
       ls -la /usr/local/lib/android/sdk
-      
+
+      echo ""
+      echo "Listing files in /usr/local/lib/android/sdk/platform-tools"
+      ls -la /usr/local/lib/android/sdk/platform-tools
+
   - name: "Run Unit Tests via Gradle"
     shell: ${{ inputs.shell }}
     run: |
@@ -146,14 +153,6 @@ runs:
       echo ""
       echo "Listing files in /usr/local/lib/android/sdk/platform-tools"
       ls -la /usr/local/lib/android/sdk/platform-tools
-      
-      echo ""
-      echo "Listing files in /usr/local/lib/android/sdk/platform-tools/.installer"
-      ls -la /usr/local/lib/android/sdk/platform-tools/.installer
-      
-      echo ""
-      echo "Checking what is in .installData"
-      cat /usr/local/lib/android/sdk/platform-tools/.installer/.installData
 
   - name: "Check if any JUnit tests reports were created"
     id: junit-reports-exist
