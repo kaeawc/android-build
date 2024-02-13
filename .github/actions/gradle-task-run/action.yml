@@ -120,7 +120,9 @@ runs:
     id: cache-android-platform-tools
     uses: actions/cache/restore@v3
     with:
-      path: /usr/local/lib/android/sdk/platform-tools
+      path: |
+        /usr/local/lib/android/sdk/platform-tools
+        /home/runner/.android/cache
       key: v2-${{ runner.os }}-android-platform-tools
 
   - name: Setup Android SDK
@@ -131,7 +133,9 @@ runs:
     uses: actions/cache/save@v3
     if: steps.cache-android-platform-tools.outputs.cache-hit != 'true'
     with:
-      path: /usr/local/lib/android/sdk/platform-tools
+      path: |
+        /usr/local/lib/android/sdk/platform-tools
+        /home/runner/.android/cache
       key: v2-${{ runner.os }}-android-platform-tools
 
   - name: "Run Unit Tests via Gradle"
