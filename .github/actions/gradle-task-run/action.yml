@@ -114,14 +114,6 @@ runs:
       echo "Listing files in /usr/local/lib/android/sdk"
       ls -la /usr/local/lib/android/sdk
       
-      echo ""
-      echo "Listing files in /usr/local/lib/android/sdk/platform-tools"
-      ls -la /usr/local/lib/android/sdk/platform-tools
-      
-      echo ""
-      echo "Listing files in /usr/local/lib/android/sdk/platform-tools/.installer"
-      ls -la /usr/local/lib/android/sdk/platform-tools/.installer
-      echo ".installData: $(cat "/usr/local/lib/android/sdk/platform-tools/.installer/.installData")"
 
   - name: "Build with Gradle"
     uses: gradle/gradle-build-action@v3
