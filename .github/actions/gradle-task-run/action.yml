@@ -108,7 +108,20 @@ runs:
       echo "reuse-configuration-cache: ${{ inputs.reuse-configuration-cache }}"
       echo "debug: ${{ inputs.debug }}"
       echo "shell: ${{ inputs.shell }}"
-      echo ".installData: $(cat "../../../../../usr/local/lib/android/sdk/platform-tools/.installer/.installData")"
+      echo "ANDROID_HOME: $ANDROID_HOME"
+      
+      echo ""
+      echo "Listing files in /usr/local/lib/android/sdk"
+      ls -la /usr/local/lib/android/sdk
+      
+      echo ""
+      echo "Listing files in /usr/local/lib/android/sdk/platform-tools"
+      ls -la /usr/local/lib/android/sdk/platform-tools
+      
+      echo ""
+      echo "Listing files in /usr/local/lib/android/sdk/platform-tools/.installer"
+      ls -la /usr/local/lib/android/sdk/platform-tools/.installer
+      echo ".installData: $(cat "/usr/local/lib/android/sdk/platform-tools/.installer/.installData")"
 
   - name: "Build with Gradle"
     uses: gradle/gradle-build-action@v3
@@ -119,7 +132,22 @@ runs:
   - name: "Check installData after Gradle build action init"
     shell: ${{ inputs.shell }}
     run: |
-      echo ".installData: $(cat "../../../../../usr/local/lib/android/sdk/platform-tools/.installer/.installData")"
+      
+      echo ""
+      echo "Listing files in /usr/local/lib/android/sdk"
+      ls -la /usr/local/lib/android/sdk
+      
+      echo ""
+      echo "Listing files in /usr/local/lib/android/sdk/platform-tools"
+      ls -la /usr/local/lib/android/sdk/platform-tools
+      
+      echo ""
+      echo "Listing files in /usr/local/lib/android/sdk/platform-tools/.installer"
+      ls -la /usr/local/lib/android/sdk/platform-tools/.installer
+      
+      echo ""
+      echo "Checking what is in .installData"
+      cat /usr/local/lib/android/sdk/platform-tools/.installer/.installData
 
   - name: "Run Unit Tests via Gradle"
     shell: ${{ inputs.shell }}
@@ -130,7 +158,7 @@ runs:
   - name: "Check installData after Gradle build finishes"
     shell: ${{ inputs.shell }}
     run: |
-      echo ".installData: $(cat "../../../../../usr/local/lib/android/sdk/platform-tools/.installer/.installData")"
+      echo ".installData: $(cat "/usr/local/lib/android/sdk/platform-tools/.installer/.installData")"
 
   - name: "Check if any JUnit tests reports were created"
     id: junit-reports-exist
