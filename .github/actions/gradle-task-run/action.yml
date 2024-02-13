@@ -109,11 +109,6 @@ runs:
       echo "debug: ${{ inputs.debug }}"
       echo "shell: ${{ inputs.shell }}"
       echo "ANDROID_HOME: $ANDROID_HOME"
-      
-      echo ""
-      echo "Listing files in /usr/local/lib/android/sdk"
-      ls -la /usr/local/lib/android/sdk
-      
 
   - name: "Build with Gradle"
     uses: gradle/gradle-build-action@v3
@@ -121,38 +116,29 @@ runs:
       gradle-version: ${{ inputs.gradle-version }}
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
 
+  - name: "Restore Android SDK Platform Tools"
+    id: cache-android-platform-tools
+    uses: actions/cache/restore@v3
+    with:
+      path: /usr/local/lib/android/sdk/platform-tools
+      key: v2-${{ runner.os }}-android-platform-tools
+
   - name: Setup Android SDK
+    if: steps.cache-android-platform-tools.outputs.cache-hit != 'true'
     uses: android-actions/setup-android@v3
 
-  - name: "Check platform tools exists so it does not need to be installed during build"
-    shell: ${{ inputs.shell }}
-    run: |
-      
-      echo ""
-      echo "Listing files in /usr/local/lib/android/sdk"
-      ls -la /usr/local/lib/android/sdk
-
-      echo ""
-      echo "Listing files in /usr/local/lib/android/sdk/platform-tools"
-      ls -la /usr/local/lib/android/sdk/platform-tools
+  - name: "Save Android SDK Platform Tools"
+    uses: actions/cache/save@v3
+    if: steps.cache-android-platform-tools.outputs.cache-hit != 'true'
+    with:
+      path: /usr/local/lib/android/sdk/platform-tools
+      key: v2-${{ runner.os }}-android-platform-tools
 
   - name: "Run Unit Tests via Gradle"
     shell: ${{ inputs.shell }}
     run: |
       export GRADLE_FLAGS=$(cat /tmp/gradle_flags.txt)
       ./gradlew ${{ inputs.gradle-tasks }} $GRADLE_FLAGS
-
-  - name: "Check installData after Gradle build finishes"
-    shell: ${{ inputs.shell }}
-    run: |
-      
-      echo ""
-      echo "Listing files in /usr/local/lib/android/sdk"
-      ls -la /usr/local/lib/android/sdk
-      
-      echo ""
-      echo "Listing files in /usr/local/lib/android/sdk/platform-tools"
-      ls -la /usr/local/lib/android/sdk/platform-tools
 
   - name: "Check if any JUnit tests reports were created"
     id: junit-reports-exist
