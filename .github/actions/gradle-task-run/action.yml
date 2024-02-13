@@ -138,7 +138,22 @@ runs:
   - name: "Check installData after Gradle build finishes"
     shell: ${{ inputs.shell }}
     run: |
-      echo ".installData: $(cat "/usr/local/lib/android/sdk/platform-tools/.installer/.installData")"
+      
+      echo ""
+      echo "Listing files in /usr/local/lib/android/sdk"
+      ls -la /usr/local/lib/android/sdk
+      
+      echo ""
+      echo "Listing files in /usr/local/lib/android/sdk/platform-tools"
+      ls -la /usr/local/lib/android/sdk/platform-tools
+      
+      echo ""
+      echo "Listing files in /usr/local/lib/android/sdk/platform-tools/.installer"
+      ls -la /usr/local/lib/android/sdk/platform-tools/.installer
+      
+      echo ""
+      echo "Checking what is in .installData"
+      cat /usr/local/lib/android/sdk/platform-tools/.installer/.installData
 
   - name: "Check if any JUnit tests reports were created"
     id: junit-reports-exist
