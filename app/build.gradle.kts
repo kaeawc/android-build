@@ -39,7 +39,7 @@ plugins {
 android {
     namespace = "dev.jasonpearson.android"
     compileSdk = libs.versions.build.android.compileSdk.get().toInt()
-    buildToolsVersion = libs.versions.build.android.buildTools.get()
+    // buildToolsVersion = libs.versions.build.android.buildTools.get()
 
     defaultConfig {
         applicationId = "dev.jasonpearson.android"
