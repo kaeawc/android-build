@@ -1,32 +1,52 @@
-import com.diffplug.gradle.spotless.KotlinExtension
-import com.diffplug.gradle.spotless.SpotlessExtension
+/*
+ * MIT License
+ *
+ * Copyright (c) 2024 Jason Pearson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.graphAssertion)
     alias(libs.plugins.publish)
     alias(libs.plugins.sortDependencies)
-    alias(libs.plugins.spotless)
     alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.compose.compiler)
 }
 
 moduleGraphAssert {
     maxHeight = 8
-    allowed = arrayOf(
-        ":app -> :.*",
-        ":feature:.* -> :subsystem:.*",
-        ":feature:.* -> :foundation:.*",
-        ":subsystem:.* -> :foundation:.*",
-        ":subsystem:.* -> :core:.*",
-        ":foundation:.* -> :core:.*",
-        ":core:.* -> :core:.*"
-    )
+    allowed =
+        arrayOf(
+            ":app -> :.*",
+            ":feature:.* -> :subsystem:.*",
+            ":feature:.* -> :foundation:.*",
+            ":subsystem:.* -> :foundation:.*",
+            ":subsystem:.* -> :core:.*",
+            ":foundation:.* -> :core:.*",
+            ":core:.* -> :core:.*")
     configurations = setOf("api", "implementation")
     assertOnAnyBuild = false
 }
@@ -53,9 +73,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        vectorDrawables { useSupportLibrary = true }
     }
 
     signingConfigs {
@@ -80,29 +98,23 @@ android {
         isCoreLibraryDesugaringEnabled = true
 
         /**
-         * Normally we would only want to target Java 8 or 11, but since minSdk for this project
-         * is as high as I want it to be I can target more recent JDK versions and use
-         * desugaring + ASM to ensure older Android devices can run this just fine.
+         * Normally we would only want to target Java 8 or 11, but since minSdk for this project is
+         * as high as I want it to be I can target more recent JDK versions and use desugaring + ASM
+         * to ensure older Android devices can run this just fine.
          */
         sourceCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
         targetCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
     }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        useLiveLiterals = false
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
+    buildFeatures { compose = true }
+    composeOptions { useLiveLiterals = false }
+    packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
-        languageVersion.set(KotlinVersion.valueOf("KOTLIN_${libs.versions.build.kotlin.language.get().replace(".", "_")}"))
+        languageVersion.set(
+            KotlinVersion.valueOf(
+                "KOTLIN_${libs.versions.build.kotlin.language.get().replace(".", "_")}"))
         jvmTarget.set(JvmTarget.valueOf("JVM_${libs.versions.build.java.target.get()}"))
         freeCompilerArgs.addAll(
             listOf(
@@ -113,45 +125,7 @@ tasks.withType<KotlinCompile>().configureEach {
                 "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
                 "-opt-in=kotlinx.coroutines.FlowPreview",
                 "-Xcontext-receivers",
-            )
-        )
-    }
-}
-
-val ktfmtVersion = libs.versions.build.gradle.ktfmt.get()
-val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
-
-configure<SpotlessExtension> {
-    format("misc") {
-        target("*.md", ".gitignore")
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    kotlin {
-        target("src/**/*.kt")
-        targetExclude(externalFiles)
-        ktfmt(ktfmtVersion).dropboxStyle()
-        trimTrailingWhitespace()
-        endWithNewline()
-        licenseHeaderFile(rootProject.file("spotless/spotless.kt"))
-        targetExclude("**/spotless.kt", "**/Aliases.kt", *externalFiles.toTypedArray())
-    }
-    format("kotlinExternal", KotlinExtension::class.java) {
-        target(externalFiles)
-        ktfmt(ktfmtVersion).dropboxStyle()
-        trimTrailingWhitespace()
-        endWithNewline()
-        targetExclude("**/spotless.kt", "**/Aliases.kt")
-    }
-    kotlinGradle {
-        target("src/**/*.kts")
-        ktfmt(ktfmtVersion).dropboxStyle()
-        trimTrailingWhitespace()
-        endWithNewline()
-        licenseHeaderFile(
-            rootProject.file("spotless/spotless.kt"),
-            "(import|plugins|pluginManagement|dependencies)"
-        )
+            ))
     }
 }
 
