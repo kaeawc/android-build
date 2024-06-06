@@ -1,8 +1,62 @@
+import com.diffplug.gradle.spotless.KotlinExtension
+import com.diffplug.gradle.spotless.SpotlessExtension
+import com.diffplug.gradle.spotless.SpotlessExtensionPredeclare
+import com.diffplug.spotless.LineEnding
+
 plugins {
     `version-catalog`
+    alias(libs.plugins.spotless)
 //    alias(libs.plugins.doctor)
-//    alias(libs.plugins.dependencyAnalysis)
+    alias(libs.plugins.dependencyAnalysis)
 }
+
+//allprojects {
+//    apply(plugin = "com.diffplug.spotless")
+//    val spotlessFormatters: SpotlessExtension.() -> Unit = {
+//        lineEndings = LineEnding.PLATFORM_NATIVE
+//
+//        format("misc") {
+//            target("*.md", ".gitignore")
+//            trimTrailingWhitespace()
+//            endWithNewline()
+//        }
+//        kotlin {
+//            target("src/**/*.kt")
+//            targetExclude(externalFiles)
+//            ktfmt(ktfmtVersion).dropboxStyle()
+//            trimTrailingWhitespace()
+//            endWithNewline()
+//            licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
+//            targetExclude("**/copyright.kt", *externalFiles.toTypedArray())
+//        }
+//        format("kotlinExternal", KotlinExtension::class.java) {
+//            target(externalFiles)
+//            ktfmt(ktfmtVersion).dropboxStyle()
+//            trimTrailingWhitespace()
+//            endWithNewline()
+//            targetExclude("**/copyright.kt")
+//        }
+//        kotlinGradle {
+//            target("*.kts")
+//            ktfmt(ktfmtVersion).dropboxStyle()
+//            trimTrailingWhitespace()
+//            endWithNewline()
+//            licenseHeaderFile(
+//                rootProject.file("spotless/copyright.kt"),
+//                "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
+//            )
+//        }
+//    }
+//    configure<SpotlessExtension> {
+//        spotlessFormatters()
+//        if (project.rootProject == project) {
+//            predeclareDeps()
+//        }
+//    }
+//    if (project.rootProject == project) {
+//        configure<SpotlessExtensionPredeclare> { spotlessFormatters() }
+//    }
+//}
 
 buildscript {
     repositories {

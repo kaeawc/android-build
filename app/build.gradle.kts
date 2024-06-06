@@ -1,6 +1,8 @@
 import com.diffplug.gradle.spotless.KotlinExtension
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -10,6 +12,8 @@ plugins {
     alias(libs.plugins.publish)
     alias(libs.plugins.sortDependencies)
     alias(libs.plugins.spotless)
+    alias(libs.plugins.jetbrains.compose)
+    alias(libs.plugins.compose.compiler)
 }
 
 moduleGraphAssert {
@@ -87,7 +91,6 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.build.compose.kotlinCompiler.get()
         useLiveLiterals = false
     }
     packaging {
@@ -97,24 +100,21 @@ android {
     }
 }
 
-kotlin {
-    jvmToolchain {
-        vendor.set(JvmVendorSpec.AZUL)
-        languageVersion.set(JavaLanguageVersion.of(libs.versions.build.java.target.get().toInt()))
-    }
-}
-
 tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions {
-        languageVersion = libs.versions.build.kotlin.language.get()
-        jvmTarget = libs.versions.build.java.target.get()
-        freeCompilerArgs +=
+    compilerOptions {
+        languageVersion.set(KotlinVersion.valueOf("KOTLIN_${libs.versions.build.kotlin.language.get().replace(".", "_")}"))
+        jvmTarget.set(JvmTarget.valueOf("JVM_${libs.versions.build.java.target.get()}"))
+        freeCompilerArgs.addAll(
             listOf(
                 "-opt-in=kotlin.time.ExperimentalTime,kotlin.RequiresOptIn",
+                "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                "-opt-in=kotlin.ExperimentalUnsignedTypes",
+                "-opt-in=kotlin.time.ExperimentalTime",
                 "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
                 "-opt-in=kotlinx.coroutines.FlowPreview",
                 "-Xcontext-receivers",
             )
+        )
     }
 }
 
