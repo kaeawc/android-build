@@ -25,6 +25,9 @@ import com.diffplug.gradle.spotless.KotlinExtension
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.diffplug.gradle.spotless.SpotlessExtensionPredeclare
 import com.diffplug.spotless.LineEnding
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `version-catalog`
@@ -84,6 +87,26 @@ allprojects {
     }
     if (project.rootProject == project) {
         configure<SpotlessExtensionPredeclare> { spotlessFormatters() }
+    }
+
+
+    tasks.withType<KotlinCompile>().configureEach {
+        compilerOptions {
+            languageVersion.set(
+                KotlinVersion.valueOf(
+                    "KOTLIN_${libs.versions.build.kotlin.language.get().replace(".", "_")}"))
+            jvmTarget.set(JvmTarget.valueOf("JVM_${libs.versions.build.java.target.get()}"))
+            freeCompilerArgs.addAll(
+                listOf(
+                    "-opt-in=kotlin.time.ExperimentalTime,kotlin.RequiresOptIn",
+                    "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                    "-opt-in=kotlin.ExperimentalUnsignedTypes",
+                    "-opt-in=kotlin.time.ExperimentalTime",
+                    "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                    "-opt-in=kotlinx.coroutines.FlowPreview",
+                    "-Xcontext-receivers",
+                ))
+        }
     }
 }
 
