@@ -76,7 +76,7 @@ runs:
         echo "$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-(all|bin).zip/\1/')"
         export GRADLE_VERSION="$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-(all|bin).zip/\1/')"
         echo $GRADLE_VERSION
-        echo 'export GRADLE_VERSION="$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-(all|bin).zip/\1/')"' >> $GITHUB_ENV
+        echo 'export GRADLE_VERSION="$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-\([0-9.]+\)-\(all|bin\).zip/\1/')"' >> $GITHUB_ENV
       else
         echo "Reading custom Gradle version provided to action."
         echo 'export GRADLE_VERSION="${{ inputs.gradle-version }}"' >> $GITHUB_ENV
