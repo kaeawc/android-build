@@ -70,8 +70,12 @@ runs:
   - name: "Evaluate Gradle Flags"
     shell: ${{ inputs.shell }}
     run: |
-      export GRADLE_EVAL_VERSION="$(if [ "${{ inputs.gradle-version }}" == "" ]; then echo "$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-(all|bin).zip/\1/')"; else echo "${{ inputs.gradle-version }}"; fi;)"
+      export GRADLE_WRAPPER_PROPERTIES_VERSION="$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-(all|bin).zip/\1/')"
+      echo "GRADLE_WRAPPER_PROPERTIES_VERSION: $GRADLE_WRAPPER_PROPERTIES_VERSION"
+      export GRADLE_EVAL_VERSION="$(if [ "${{ inputs.gradle-version }}" == "" ]; then echo "$GRADLE_WRAPPER_PROPERTIES_VERSION"; else echo "${{ inputs.gradle-version }}"; fi;)"
+      echo "GRADLE_EVAL_VERSION: $GRADLE_EVAL_VERSION"
       echo 'export GRADLE_VERSION="echo $GRADLE_EVAL_VERSION"' >> $GITHUB_ENV
+      echo "GRADLE_VERSION: $GRADLE_VERSION"
       
       # Note that we do not attempt to visually align JVM args - spaces included in kotlin.daemon.jvmargs causes the Kotlin compiler daemon to not run and fallback to Gradle in-process
       export GRADLE_FLAGS="
