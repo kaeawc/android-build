@@ -14,7 +14,7 @@ inputs:
   gradle-version:
     description: "Version of Gradle to run build and cache results with"
     required: "true"
-    default: "8.8"
+    default: ""
   gradle-encryption-key:
     description: "Encryption key used for this project"
     required: "true"
@@ -103,6 +103,11 @@ runs:
       echo "gradle-flags: ${{ inputs.gradle-flags }}"
       echo "gradle-tasks: ${{ inputs.gradle-tasks }}"
       echo "gradle-version: ${{ inputs.gradle-version }}"
+      if [[ "${{ inputs.gradle-version }}" == "" ]]; then
+        echo 'export GRADLE_VERSION="$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-(all|bin).zip/\1/')"' >> $GITHUB_ENV
+      else
+        echo 'export GRADLE_VERSION="${{ inputs.gradle-version }}"' >> $GITHUB_ENV
+      fi
       echo "gradle-home-directory: ${{ inputs.gradle-home-directory }}"
       echo "gradle-project-directory: ${{ inputs.gradle-project-directory }}"
       echo "reuse-configuration-cache: ${{ inputs.reuse-configuration-cache }}"
@@ -113,7 +118,7 @@ runs:
   - name: "Build with Gradle"
     uses: gradle/gradle-build-action@v3
     with:
-      gradle-version: ${{ inputs.gradle-version }}
+      gradle-version: $GRADLE_VERSION
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
 
   - name: "Restore Android SDK Platform Tools"
