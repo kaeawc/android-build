@@ -73,6 +73,7 @@ runs:
       if [ "${{ inputs.gradle-version }}" == "" ]; then
         echo "Reading Gradle version from Gradle wrapper properties file."
         grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-(all|bin).zip/\1/' > /tmp/gradle_version.txt
+        cat /tmp/gradle_version.txt
         echo 'export GRADLE_VERSION="$(cat /tmp/gradle_version.txt)' >> $GITHUB_ENV
       else
         echo "Reading custom Gradle version provided to action."
@@ -113,6 +114,7 @@ runs:
       echo "Task hash is ${{ steps.gradle-task-hash.outputs.digest }}"
       echo "gradle-flags: ${{ inputs.gradle-flags }}"
       echo "gradle-tasks: ${{ inputs.gradle-tasks }}"
+      cat /tmp/gradle_version.txt
       echo "gradle-version: $GRADLE_VERSION"
       echo "gradle-home-directory: ${{ inputs.gradle-home-directory }}"
       echo "gradle-project-directory: ${{ inputs.gradle-project-directory }}"
