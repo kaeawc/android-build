@@ -89,7 +89,6 @@ allprojects {
         configure<SpotlessExtensionPredeclare> { spotlessFormatters() }
     }
 
-
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             languageVersion.set(
