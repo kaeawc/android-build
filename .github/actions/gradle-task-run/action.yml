@@ -111,8 +111,7 @@ runs:
       echo "Task hash is ${{ steps.gradle-task-hash.outputs.digest }}"
       echo "gradle-flags: ${{ inputs.gradle-flags }}"
       echo "gradle-tasks: ${{ inputs.gradle-tasks }}"
-      cat /tmp/gradle_version.txt
-      echo "gradle-version: $GRADLE_VERSION"
+      echo "gradle-version: ${{ steps.eval_gradle.outputs.version }}
       echo "gradle-home-directory: ${{ inputs.gradle-home-directory }}"
       echo "gradle-project-directory: ${{ inputs.gradle-project-directory }}"
       echo "reuse-configuration-cache: ${{ inputs.reuse-configuration-cache }}"
