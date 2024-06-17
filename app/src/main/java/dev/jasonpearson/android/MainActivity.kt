@@ -37,8 +37,6 @@ import dev.jasonpearson.android.ui.theme.AndroidTheme
 
 class MainActivity : ComponentActivity() {
 
-    //    asdfasdf
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
