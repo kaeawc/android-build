@@ -14,7 +14,7 @@ inputs:
   gradle-version:
     description: "Version of Gradle to run build and cache results with"
     required: "true"
-    default: "8.6"
+    default: "8.8"
   gradle-encryption-key:
     description: "Encryption key used for this project"
     required: "true"
@@ -122,7 +122,7 @@ runs:
     with:
       path: |
         /usr/local/lib/android/sdk/platform-tools
-        ../../../.config/.android/cache
+        /home/runner/.config/.android/cache
       key: v2-${{ runner.os }}-android-platform-tools
 
   - name: Setup Android SDK
@@ -135,7 +135,7 @@ runs:
     with:
       path: |
         /usr/local/lib/android/sdk/platform-tools
-        ../../../.config/.android/cache
+        /home/runner/.config/.android/cache
       key: v2-${{ runner.os }}-android-platform-tools
 
   - name: "Run Unit Tests via Gradle"
