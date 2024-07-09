@@ -29,6 +29,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+buildscript {
+    dependencies {
+        classpath(libs.r8)
+        classpath(libs.agp)
+        classpath(libs.kgp)
+    }
+}
+
 plugins {
     `version-catalog`
     alias(libs.plugins.spotless)
@@ -106,18 +114,6 @@ allprojects {
                     "-Xcontext-receivers",
                 ))
         }
-    }
-}
-
-buildscript {
-    repositories {
-        google()
-        gradlePluginPortal()
-    }
-
-    dependencies {
-        classpath(libs.agp)
-        classpath(libs.kgp)
     }
 }
 
