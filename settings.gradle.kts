@@ -25,14 +25,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-
-        // R8 repo for R8/D8 releases
-        exclusiveContent {
-            forRepository {
-                maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
-            }
-            filter { includeModule("com.android.tools", "r8") }
-        }
     }
 }
 
