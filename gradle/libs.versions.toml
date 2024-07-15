@@ -3,7 +3,7 @@ build-android-buildTools = "35.0.0-rc4"
 build-android-compileSdk = "34"
 build-android-minSdk = "27"
 build-android-targetSdk = "34"
-build-android-agp = "8.6.0-alpha08"
+build-android-agp = "8.6.0-beta01"
 build-android-desugar = "2.0.4"
 build-android-r8 = "8.6.12-dev"
 # Check if the invocation of R8 lib can be removed from project build script once AGP
