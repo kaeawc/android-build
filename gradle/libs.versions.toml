@@ -24,7 +24,7 @@ build-gradle-spotless = "6.25.0"
 build-gradle-triplet-play = "3.10.1"
 build-cargo = "0.1.0"
 androidx-core = "1.13.1"
-androidx-activity-compose = "1.9.0"
+androidx-activity-compose = "1.9.1"
 androidx-compose-bom = "2024.06.00"
 androidx-lifecycle = "2.8.4" # Do not upgrade tp 2.8.x until b/346808608 is resolved. 2.8.2 still has the crash
 
