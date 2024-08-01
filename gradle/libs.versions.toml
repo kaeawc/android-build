@@ -5,9 +5,9 @@ build-android-minSdk = "27"
 build-android-targetSdk = "34"
 build-android-agp = "8.7.0-alpha03"
 build-android-desugar = "2.0.4"
-build-android-r8 = "8.6.12-dev"
-# Check if the invocation of R8 lib can be removed from project build script once AGP
-# 8.6.0-alpha09+ ships. This is necessary because of https://issuetracker.google.com/issues/347739663
+# Only necessary to override R8 version.
+# 8.6.11-dev had a bug that would fail R8 tasks. https://issuetracker.google.com/issues/347739663
+# AGP 8.7.1-dev fixed this so override is no longer necessary.
 build-kotlin = "2.0.0"
 build-kotlin-language = "2.0"
 build-kotlin-ksp = "2.0.0-1.0.22"
@@ -48,7 +48,8 @@ android-application = { id = "com.android.application", version.ref = "build-and
 [libraries]
 kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "build-kotlin" }
 agp = { module = "com.android.tools.build:gradle", version.ref = "build-android-agp" }
-r8 = { module = "com.android.tools:r8", version.ref = "build-android-r8" }
+# Only necessary to override R8 version
+# r8 = { module = "com.android.tools:r8", version.ref = "build-android-r8" }
 
 asm-bom = { module = "org.ow2.asm:asm-bom", version.ref = "build-java-asm" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "build-android-desugar" }

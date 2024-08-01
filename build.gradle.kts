@@ -31,7 +31,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
     dependencies {
-        classpath(libs.r8)
+        // Necessary if we are to override R8
+        // classpath(libs.r8)
         classpath(libs.agp)
         classpath(libs.kgp)
     }
