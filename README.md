@@ -12,7 +12,6 @@ workflow and performance.
 
 Every project's performance on G1GC vs ParallelGC seems to have slightly or significant characteristics. It is impossible to reliably test these algorithms with caching enabled due to the variances in network and IO bottlenecks, so I test these algorithms on clean builds with no caching. As of JDK 20 I started to see G1GC generally perform better than Parallel on significantly large Android projects, and every JDK version since has included significant achievements for G1GC. I still recommend testing GC algorithms on a per-project basis for fine tuning, but if you're hitting memory limits on your hardware this is the better option.
 
-
 ### -Xmx3g and -Xms3g
 
 Since we're on the GitHub actions free tier we have roughly 6GB of memory available in the worker. We therefore can allocate approximately 3GB to the Gradle nad Kotlin daemons each, which is more than plenty for this size project.
@@ -23,7 +22,7 @@ This property defines how fast soft references can be evicted by the JVM. As the
 
 ### -XX:MetaspaceSize=1g
 
-A common misconception is that because Gradle has MaxMetaspaceSize set, all Android projects should too.
+The reason for this setting and not MaxMetaspaceSize needed its own blog post.
 
 ### -XX:ReservedCodeCacheSize=128m -XX:CodeCacheExpansionSize=1m -XX:InitialCodeCacheSize=64m
 
