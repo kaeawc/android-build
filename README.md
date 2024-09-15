@@ -57,5 +57,3 @@ Spotless: Performs all configured Spotless plugin checks with ktfmt and spotless
 Module Graph: Validates the module graph, checks that it adheres to the existing rules and limits the depth of the graph.
 
 Android Lint: Runs an Android Lint check on the Release variant.
-
-
