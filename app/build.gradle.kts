@@ -106,7 +106,6 @@ android {
         targetCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
     }
     buildFeatures { compose = true }
-    composeOptions { useLiveLiterals = false }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
 
