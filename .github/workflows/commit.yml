@@ -63,7 +63,7 @@ jobs:
           reuse-configuration-cache: true
 
       - name: "Store Android Lint Report"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.4.0
         if: success()
         with:
           name: android-lint-report
@@ -84,7 +84,7 @@ jobs:
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: "Store APK"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: apk
           path: app/build/outputs/apk/debug/app-debug.apk
@@ -102,7 +102,7 @@ jobs:
           reuse-configuration-cache: true
 
       - name: "Store Test APK"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: test-apk
           path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
@@ -118,11 +118,11 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v4.1.7
+      - uses: actions/download-artifact@v4.4.0
         with:
           name: apk
 
-      - uses: actions/download-artifact@v4.1.7
+      - uses: actions/download-artifact@v4.4.0
         with:
           name: test-apk
 
