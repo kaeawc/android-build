@@ -20,9 +20,9 @@ Since we're on the GitHub actions free tier we have roughly 6GB of memory availa
 
 This property defines how fast soft references can be evicted by the JVM. As they are soft references, if they are evicted the program that depends on them will just have to spend time and resources recreating them. Gradle and Kotlin daemons create a ton of these and the default `1000` means that with a typical Android memory heap of 2GB-8GB soft references don't get released until 33-133 minutes. Using a value of `1` changes this to 2-8 seconds for the same memory heap. If your CI run is that long you've got other problems, but allowing memory to get freed up is a significant resource clawback. I've observed a 10-30% peak memory reduction on large projects without any issues across Kotlin, Dagger, KSP, Compose, Room, etc.
 
-### -XX:MetaspaceSize=256m
+### -XX:MetaspaceSize=1g
 
-A common misconception is that because Gradle has MaxMetaspaceSize set, all Android projects should too.
+Read my article about [Metaspace in JVM Builds](https://www.jasonpearson.dev/metaspace-in-jvm-builds/) for my reasoning and approach to sizing metaspace.
 
 ### -XX:ReservedCodeCacheSize=256m -XX:CodeCacheExpansionSize=1m -XX:InitialCodeCacheSize=64m
 
@@ -31,10 +31,6 @@ CodeCache is where compiled native method and non-method code is cached in memor
 ### -XX:+HeapDumpOnOutOfMemoryError
 
 If your build does have an OOM and you want to analyze why it happened you're going to want the heap dump file. Of course you'd have to setup saving this file as a job artifact to make it accessible.
-
-### -XX:+UnlockExperimentalVMOptions
-
-Keeping this on allows you to observe and use the latest experimental options in the JVM. I haven't found a practical use here yet, so unless you're looking to learn about this space you can probably leave this off.
 
 ## Gradle Properties
 
