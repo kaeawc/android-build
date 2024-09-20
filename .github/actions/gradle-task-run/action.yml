@@ -120,10 +120,14 @@ runs:
       echo "ANDROID_HOME: $ANDROID_HOME"
 
   - name: "Build with Gradle"
-    uses: gradle/gradle-build-action@v3
+    uses: gradle/actions/setup-gradle@v4
     with:
       gradle-version: ${{ steps.eval_gradle.outputs.version }}
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
+      cache-cleanup: true
+      build-scan-publish: true
+      build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
+      build-scan-terms-of-use-agree: true
 
   - name: "Restore Android SDK Platform Tools"
     id: cache-android-platform-tools
@@ -136,7 +140,7 @@ runs:
 
   - name: Setup Android SDK
     if: steps.cache-android-platform-tools.outputs.cache-hit != 'true'
-    uses: android-actions/setup-android@v3
+    uses: android-actions/setup-android@v3.2.1
 
   - name: "Save Android SDK Platform Tools"
     uses: actions/cache/save@v3
