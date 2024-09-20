@@ -60,7 +60,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "lintRelease"
-          reuse-configuration-cache: true
+          reuse-configuration-cache: false
 
       - name: "Store Android Lint Report"
         uses: actions/upload-artifact@v4.4.0
@@ -80,7 +80,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "assembleDebug"
-          reuse-configuration-cache: false
+          reuse-configuration-cache: true
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: "Store APK"
