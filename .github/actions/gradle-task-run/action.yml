@@ -124,7 +124,7 @@ runs:
     with:
       gradle-version: ${{ steps.eval_gradle.outputs.version }}
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
-      cache-cleanup: true
+      cache-cleanup: "on-success"
       build-scan-publish: true
       build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
       build-scan-terms-of-use-agree: true
