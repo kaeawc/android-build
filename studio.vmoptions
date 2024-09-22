@@ -1,0 +1,6 @@
+# Note that this is my setup for my personal laptop.
+-Xmx4g
+-XX:ReservedCodeCacheSize=512m
+-Dfile.encoding=UTF-8
+-XX:+UseG1GC
+-XX:SoftRefLRUPolicyMSPerMB=1
