@@ -26,7 +26,7 @@ Read my article about [Metaspace in JVM Builds](https://www.jasonpearson.dev/met
 
 ### -XX:ReservedCodeCacheSize
 
-CodeCache is where compiled native method and non-method code is cached in memory, see my article on [CodeCache for JVM Builds](https://www.jasonpearson.dev/codecache-in-jvm-builds/) for an in-depth dive about why its worth considering increasing it from platform defaults.. Since JVM 11 this has been split into 3 distinct parts for performance reasons, but most applications shouldn't be concerned with tuning those individually. Instead we want to ensure the CodeCache is allowed to grow without being forced to flush which speeds up the build time by A) not wasting time with excessive flushing and B) reuse compiled code. We could alternatively leave CodeCache to its defaults, however Kotlin Gradle Plugin would then set the Kotlin daemon's ReservedCodeCacheSize to 320m anyway (see my article on [Kotlin JVM arg Inheritance & Defaults](https://www.jasonpearson.dev/kotlin-jvm-args-inheritance-and-defaults/)).
+Read my articles about [CodeCache for JVM Builds](https://www.jasonpearson.dev/codecache-in-jvm-builds/) and [Kotlin JVM arg Inheritance & Defaults](https://www.jasonpearson.dev/kotlin-jvm-args-inheritance-and-defaults/).
 
 ### -XX:+HeapDumpOnOutOfMemoryError
 
