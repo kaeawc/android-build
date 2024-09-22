@@ -18,7 +18,7 @@ Since we're on the [GitHub actions free tier we have roughly 16GB of memory avai
 
 ### -XX:SoftRefLRUPolicyMSPerMB=1
 
-This property defines how fast soft references can be evicted by the JVM. As they are soft references, if they are evicted the program that depends on them will just have to spend time and resources recreating them. Gradle and Kotlin daemons create a ton of these and the default `1000` means that with a typical Android memory heap of 2GB-8GB soft references don't get released until 33-133 minutes. Using a value of `1` changes this to 2-8 seconds for the same memory heap. If your CI run is that long you've got other problems, but allowing memory to get freed up is a significant resource clawback. I've observed a 10-30% peak memory reduction on large projects without any issues across Kotlin, Dagger, KSP, Compose, Room, etc.
+Read my article about [SoftRefLRUPolicyMSPerMB in JVM Builds](https://www.jasonpearson.dev/softreflrupolicymspermb-in-jvm-builds/)
 
 ### No Metaspace Settings
 
