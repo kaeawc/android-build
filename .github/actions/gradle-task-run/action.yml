@@ -49,9 +49,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-  - name: "Gradle Wrapper Validation"
-    uses: gradle/actions/wrapper-validation@v3
-
   - name: "Install JDK"
     uses: actions/setup-java@v3
     with:
@@ -126,7 +123,7 @@ runs:
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
       cache-cleanup: "on-success"
       build-scan-publish: true
-      build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
+      build-scan-terms-of-use-url: "https://gradle.com/help/legal-terms-of-use"
       build-scan-terms-of-use-agree: true
 
   - name: "Restore Android SDK Platform Tools"
