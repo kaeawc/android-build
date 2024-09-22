@@ -10,11 +10,11 @@ workflow and performance.
 
 ### -XX:+UseG1GC
 
-Every project's performance on G1GC vs ParallelGC seems to have slightly or significant characteristics. It is impossible to reliably test these algorithms with caching enabled due to the variances in network and IO bottlenecks, so I test these algorithms on clean builds with no caching. As of JDK 20 I started to see G1GC generally perform better than Parallel on significantly large Android projects, and every JDK version since has included significant achievements for G1GC. I still recommend testing GC algorithms on a per-project basis for fine tuning, but if you're hitting memory limits on your hardware this is the better option.
+Every project's performance on G1GC vs ParallelGC seems to have slightly or significant characteristics. It is impossible to reliably test these algorithms with caching enabled due to the variances in network and IO bottlenecks, so I test these algorithms on clean builds with no caching. Android projects have a complicated memory footprint that can grow very quickly and as of JDK 17 most of the issues with G1GC have been fixed. This means that G1GC is the reliable option for returning memory and a good default for Android projects to stick with who aren't going to delve into JVM tuning. Also every JDK version since 17 has released iterations to improve upon G1GC to bring it closer and closer to Parallel's throughput performance levels. I still recommend testing GC algorithms on a case-by-case basis for JVM tuning.
 
 ### -Xmx3g and -Xms3g
 
-Since we're on the GitHub actions free tier we have roughly 6GB of memory available in the worker. We therefore can allocate approximately 3GB to the Gradle nad Kotlin daemons each, which is more than plenty for this size project.
+Since we're on the [GitHub actions free tier we have roughly 16GB of memory available](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories) in the worker. We therefore have plenty of resources available to us, but profiling shows we just don't use much in this build.
 
 ### -XX:SoftRefLRUPolicyMSPerMB=1
 
@@ -24,9 +24,9 @@ This property defines how fast soft references can be evicted by the JVM. As the
 
 Read my article about [Metaspace in JVM Builds](https://www.jasonpearson.dev/metaspace-in-jvm-builds/) for my reasoning and approach to sizing metaspace.
 
-### -XX:ReservedCodeCacheSize=256m -XX:CodeCacheExpansionSize=1m -XX:InitialCodeCacheSize=64m
+### -XX:ReservedCodeCacheSize
 
-CodeCache is where compiled native method and non-method code is cached in memory. Since JVM 11 this has been split into 3 distinct parts for performance reasons, but most applications shouldn't be concerned with tuning those individually. Instead we want to ensure the CodeCache is allowed to grow to make loading and use of classes easy to cache if we have the system resources for it - or constrain it so cache flushing occurs more often in a memory-constrained environment.
+CodeCache is where compiled native method and non-method code is cached in memory, see my article on [CodeCache for JVM Builds](https://www.jasonpearson.dev/codecache-in-jvm-builds/) for an in-depth dive about why its worth considering increasing it from platform defaults.. Since JVM 11 this has been split into 3 distinct parts for performance reasons, but most applications shouldn't be concerned with tuning those individually. Instead we want to ensure the CodeCache is allowed to grow without being forced to flush which speeds up the build time by A) not wasting time with excessive flushing and B) reuse compiled code. We could alternatively leave CodeCache to its defaults, however Kotlin Gradle Plugin would then set the Kotlin daemon's ReservedCodeCacheSize to 320m anyway (see my article on [Kotlin JVM arg Inheritance & Defaults](https://www.jasonpearson.dev/kotlin-jvm-args-inheritance-and-defaults/)).
 
 ### -XX:+HeapDumpOnOutOfMemoryError
 
