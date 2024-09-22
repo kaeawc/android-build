@@ -1,8 +1,8 @@
 [![Commit](https://github.com/kaeawc/android-ci/actions/workflows/commit.yml/badge.svg)](https://github.com/kaeawc/android-ci/actions/workflows/commit.yml)
 
-# Android CI Experiments
+# Android Build Experiments
 
-This is a repository for experimenting with Android CI. Different providers, build tools, and
+This is a repository for experimenting with Android Build options. Different providers, build tools, and
 methods are used to showcase the different options available as well as best practices for
 workflow and performance.
 
@@ -12,7 +12,7 @@ workflow and performance.
 
 Every project's performance on G1GC vs ParallelGC seems to have slightly or significant characteristics. It is impossible to reliably test these algorithms with caching enabled due to the variances in network and IO bottlenecks, so I test these algorithms on clean builds with no caching. Android projects have a complicated memory footprint that can grow very quickly and as of JDK 17 most of the issues with G1GC have been fixed. This means that G1GC is the reliable option for returning memory and a good default for Android projects to stick with who aren't going to delve into JVM tuning. Also every JDK version since 17 has released iterations to improve upon G1GC to bring it closer and closer to Parallel's throughput performance levels. I still recommend testing GC algorithms on a case-by-case basis for JVM tuning.
 
-### -Xmx3g and -Xms3g
+### -Xmx and -Xms
 
 Since we're on the [GitHub actions free tier we have roughly 16GB of memory available](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories) in the worker. We therefore have plenty of resources available to us, but profiling shows we just don't use much in this build.
 
@@ -20,9 +20,9 @@ Since we're on the [GitHub actions free tier we have roughly 16GB of memory avai
 
 This property defines how fast soft references can be evicted by the JVM. As they are soft references, if they are evicted the program that depends on them will just have to spend time and resources recreating them. Gradle and Kotlin daemons create a ton of these and the default `1000` means that with a typical Android memory heap of 2GB-8GB soft references don't get released until 33-133 minutes. Using a value of `1` changes this to 2-8 seconds for the same memory heap. If your CI run is that long you've got other problems, but allowing memory to get freed up is a significant resource clawback. I've observed a 10-30% peak memory reduction on large projects without any issues across Kotlin, Dagger, KSP, Compose, Room, etc.
 
-### -XX:MetaspaceSize=1g
+### No Metaspace Settings
 
-Read my article about [Metaspace in JVM Builds](https://www.jasonpearson.dev/metaspace-in-jvm-builds/) for my reasoning and approach to sizing metaspace.
+Read my article about [Metaspace in JVM Builds](https://www.jasonpearson.dev/metaspace-in-jvm-builds/) for my reasoning and approach metaspace.
 
 ### -XX:ReservedCodeCacheSize
 
@@ -53,3 +53,7 @@ Spotless: Performs all configured Spotless plugin checks with ktfmt and spotless
 Module Graph: Validates the module graph, checks that it adheres to the existing rules and limits the depth of the graph.
 
 Android Lint: Runs an Android Lint check on the Release variant.
+
+## Android Studio
+
+[studio.vmoptions](studio.vmoptions): I've included a sample file in this repo with some decent options. Since this is not the only project I work on with Android Studio I set my heap size a bit higher, but otherwise it matches the Gradle & Kotlin Daemon JVM args.
