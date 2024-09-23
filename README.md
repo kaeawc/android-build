@@ -2,9 +2,7 @@
 
 # Android Build Experiments
 
-This is a repository for experimenting with Android Build options. Different providers, build tools, and
-methods are used to showcase the different options available as well as best practices for
-workflow and performance.
+This is a repository for experimenting with Android Build options. Different providers, build tools, and methods are used to showcase the different options available as well as best practices for workflow and performance. I have no intention of building an actual UX of any kind in this repository. This is where I catch and solve bugs that arise from the Android, Gradle, and Kotlin ecosystems or try out build concepts.
 
 ## JVM Args
 
@@ -36,7 +34,11 @@ If your build does have an OOM and you want to analyze why it happened you're go
 
 TBD
 
-## CI Setup
+## Compiler Flags
+
+TBD
+
+# CI Setup
 
 This project includes a comprehensive CI setup that showcases typical automated checks with a focus on speed. I use a fan-in approach for the commit workflow to quickly check and provide as much feedback as possible on the change being tested. This is not overly resource intensive due to the combination of caching every part of the Gradle build process possible (build cache, dependency cache, and configuration cache). I'm also showing how to easily integrate with Emulator.wtf which is currently the fastest and most reliable Android UI test platform.
 
