@@ -159,7 +159,8 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "assembleDebug"
-          reuse-configuration-cache: true
+          reuse-configuration-cache: false
+          reuse-build-cache: false
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: "Perform CodeQL Analysis"
