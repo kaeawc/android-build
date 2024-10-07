@@ -140,3 +140,27 @@ jobs:
         with:
           check_name: "UI Test Report"
           report_paths: 'build/test-results/**/*.xml'
+
+  codeql-analysis:
+    name: "CodeQL Analysis"
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      security-events: write
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Initialize CodeQL"
+        uses: github/codeql-action/init@v2
+        with:
+          languages: 'java'
+
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "assembleDebug"
+          reuse-configuration-cache: true
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: "Perform CodeQL Analysis"
+        uses: github/codeql-action/analyze@v2
