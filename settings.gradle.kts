@@ -44,6 +44,6 @@ pluginManagement {
     }
 }
 
-rootProject.name = "Android CI"
+rootProject.name = "Android Build"
 
 include(":app")
