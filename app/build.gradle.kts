@@ -108,9 +108,7 @@ android {
     buildFeatures { compose = true }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 
-    lint {
-        sarifOutput = file("$buildDir/reports/lint-results.sarif")
-    }
+    lint { sarifOutput = file("$buildDir/reports/lint-results.sarif") }
 }
 
 tasks.withType<KotlinCompile>().configureEach {
