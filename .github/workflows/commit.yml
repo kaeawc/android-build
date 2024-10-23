@@ -11,6 +11,7 @@ on:
 
 permissions:
   checks: write
+  security-events: write
 
 jobs:
   unit-tests:
