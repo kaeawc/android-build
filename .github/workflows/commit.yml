@@ -62,13 +62,17 @@ jobs:
           gradle-tasks: "lintRelease"
           reuse-configuration-cache: false
 
-      - name: "Store Android Lint Report"
-        uses: actions/upload-artifact@v4.4.0
+      - name: "Merge Lint SARIF results"
+        shell: "bash"
+        run: |
+          mkdir -p build/reports
+          find . | grep "lint-results.sarif" | xargs jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  > build/reports/merged-lint.sarif
+
+      - name: "Store Android Lint SARIF Report"
+        uses: github/codeql-action/upload-sarif@v3
         if: success()
         with:
-          name: android-lint-report
-          path: |
-            app/build/reports/lint-results-*.html
+          sarif_file: build/reports/merged-lint.sarif
 
   build-apk:
     name: "Build APK"
