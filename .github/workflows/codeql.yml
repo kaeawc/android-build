@@ -1,0 +1,34 @@
+name: "CodeQL Weekly"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '37 9 * * 1'
+
+jobs:
+  analyze:
+    name: "CodeQL Analysis"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Initialize CodeQL"
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'java-kotlin'
+
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "assembleDebug"
+          reuse-configuration-cache: false
+          reuse-build-cache: false
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: "Perform CodeQL Analysis"
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:java-kotlin"
