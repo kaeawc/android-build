@@ -1,4 +1,4 @@
-name: "CodeQL Weekly"
+name: "CodeQL"
 
 on:
   push:
