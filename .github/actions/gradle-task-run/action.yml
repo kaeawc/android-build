@@ -131,8 +131,6 @@ runs:
       build-scan-publish: true
       build-scan-terms-of-use-url: 'https://gradle.com/help/legal-terms-of-use'
       build-scan-terms-of-use-agree: true
-      build-scan-terms-of-service-url: 'https://gradle.com/help/legal-terms-of-use'
-      build-scan-terms-of-service-agree: true
       validate-wrappers: true
 
   - name: "Restore Android SDK Platform Tools"
