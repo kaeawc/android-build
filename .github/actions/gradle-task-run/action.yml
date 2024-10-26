@@ -130,7 +130,7 @@ runs:
       cache-cleanup: "on-success"
       build-scan-publish: true
       build-scan-terms-of-use-url: 'https://gradle.com/help/legal-terms-of-use'
-      build-scan-terms-of-use-agree: true
+      build-scan-terms-of-use-agree: 'yes'
       validate-wrappers: true
 
   - name: "Restore Android SDK Platform Tools"
