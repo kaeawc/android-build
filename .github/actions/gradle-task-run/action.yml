@@ -101,7 +101,7 @@ runs:
       echo "GRADLE_FLAGS: $GRADLE_FLAGS"
 
   - name: "Hash Gradle Tasks"
-    uses: pplanel/hash-calculator-action@v1.3.1
+    uses: pplanel/hash-calculator-action@v1.3.2
     id: gradle-task-hash
     with:
       input: ${{ inputs.gradle-tasks }}
