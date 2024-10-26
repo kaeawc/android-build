@@ -80,6 +80,12 @@ fun AndroidTheme(
             window.statusBarColor = colorScheme.primary.toArgb()
             window.statusBarColor = colorScheme.primary.toArgb()
             window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = colorScheme.primary.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
         }
     }
