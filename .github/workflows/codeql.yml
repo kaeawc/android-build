@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: '37 9 * * 1'
 
+permissions:
+  checks: write
+  packages: read
+  security-events: write
+
 jobs:
   analyze:
     name: "CodeQL Analysis"
