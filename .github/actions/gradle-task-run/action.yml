@@ -123,7 +123,7 @@ runs:
       echo "ANDROID_HOME: $ANDROID_HOME"
 
   - name: "Build with Gradle"
-    uses: gradle/actions/setup-gradle@v4.1.0
+    uses: gradle/actions/setup-gradle@v4
     with:
       gradle-version: ${{ steps.eval_gradle.outputs.version }}
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
