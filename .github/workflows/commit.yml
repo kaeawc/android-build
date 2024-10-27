@@ -116,6 +116,7 @@ jobs:
           gradle-tasks: "assembleDebug"
           reuse-configuration-cache: true
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          optional-suffix: "-base"
 
       - name: "Change APK file name"
         if: steps.cache-base.outputs.cache-hit != 'true'
@@ -138,6 +139,7 @@ jobs:
         with:
           gradle-tasks: "assembleAndroidTest"
           reuse-configuration-cache: false
+          optional-suffix: "-test"
 
       - name: "Store Test APK"
         uses: actions/upload-artifact@v4.4.0
