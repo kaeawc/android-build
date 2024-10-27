@@ -100,6 +100,33 @@ jobs:
           name: apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
+  build-base-apk:
+    if: contains(github.event.pull_request.changed_files, 'gradle/libs.versions.toml')
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: "Build APK from PR base SHA"
+        uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "assembleDebug"
+          reuse-configuration-cache: true
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: "Change APK file name"
+        if: steps.cache-base.outputs.cache-hit != 'true'
+        run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-base-debug.apk
+
+      - name: "Store Base APK"
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: base-apk
+          path: app/build/outputs/apk/debug/app-base-debug.apk
+
   build-test-apk:
     name: "Build Test APK"
     runs-on: ubuntu-latest
@@ -117,6 +144,50 @@ jobs:
         with:
           name: test-apk
           path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+  diff-apk-from-base:
+    name: "Diff APK from Base"
+    runs-on: ubuntu-latest
+    if: github.secret_source == 'Actions'
+    needs:
+      - build-apk
+      - build-base-apk
+    steps:
+      - uses: actions/download-artifact@v4.1.8
+        with:
+          name: apk
+
+      - uses: actions/download-artifact@v4.1.8
+        with:
+          name: base-apk
+
+      - id: diffuse
+        uses: usefulness/diffuse-action@v1
+        with:
+          old-file-path: app/build/outputs/apk/debug/app-base-debug.apk
+          new-file-path: app/build/outputs/apk/debug/app-debug.apk
+
+      - uses: peter-evans/find-comment@v2
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: Diffuse output
+
+      - uses: peter-evans/create-or-update-comment@v3
+        with:
+          body: |
+            Diffuse output:
+            
+            ${{ steps.diffuse.outputs.diff-gh-comment }}
+          edit-mode: replace
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: diffuse-output
+          path: ${{ steps.diffuse.outputs.diff-file }}
 
   ui-tests:
     name: "Android UI Tests"
