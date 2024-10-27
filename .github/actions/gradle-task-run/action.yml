@@ -188,6 +188,7 @@ runs:
   - name: "Rename Configuration Cache HTML Report"
     shell: bash
     run: |
+      mkdir -p build/reports/configuration-cache
       html_file=$(find build/reports/configuration-cache -type f -name "*.html" | head -n 1)
       if [[ -n "$html_file" ]]; then
         mv "$html_file" build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html
