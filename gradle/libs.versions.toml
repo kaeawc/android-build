@@ -80,22 +80,6 @@ compose-ui = [
     "compose-ui-tooling-preview",
     "compose-material"
 ]
-compose-foundation = [
-    "compose-foundation",
-    "compose-ui-core",
-    "compose-ui-util",
-    "compose-ui-graphics",
-    "compose-ui-tooling",
-    "compose-ui-tooling-preview"
-]
-compose-runtime = [
-    "compose-runtime",
-    "compose-ui-core",
-    "compose-ui-util",
-    "compose-ui-graphics",
-    "compose-ui-tooling",
-    "compose-ui-tooling-preview"
-]
 compose-ui-espresso-test = [
     "androidx-junit",
     "compose-ui-junit",
