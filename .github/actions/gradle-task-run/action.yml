@@ -194,10 +194,10 @@ runs:
         mv "$html_file" build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html
       fi
 
-  - name: "Store Configuration Cache Report"
-    uses: actions/upload-artifact@v4
-    if: steps.configuration-cache-report-exists.outputs.files_exists == 'true'
-    with:
-      name: "configuration-cache-report${{ inputs.optional-suffix }}"
-      path: |
-        ${{ inputs.gradle-project-directory }}/build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html
+#  - name: "Store Configuration Cache Report"
+#    uses: actions/upload-artifact@v4
+#    if: steps.configuration-cache-report-exists.outputs.files_exists == 'true'
+#    with:
+#      name: "configuration-cache-report${{ inputs.optional-suffix }}"
+#      path: |
+#        ${{ inputs.gradle-project-directory }}/build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html
