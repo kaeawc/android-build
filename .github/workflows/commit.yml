@@ -101,7 +101,6 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
 
   build-base-apk:
-    if: contains(github.event.pull_request.changed_files, 'gradle/libs.versions.toml')
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
