@@ -119,7 +119,6 @@ jobs:
           optional-suffix: "-base"
 
       - name: "Change APK file name"
-        if: steps.cache-base.outputs.cache-hit != 'true'
         run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-base-debug.apk
 
       - name: "Store Base APK"
