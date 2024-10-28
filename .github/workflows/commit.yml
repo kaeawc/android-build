@@ -173,11 +173,17 @@ jobs:
         with:
           name: base-apk
 
+
+      - name: "Look for APKs"
+        shell: "bash"
+        run: |
+          find . | grep ".apk"
+
       - id: diffuse
         uses: usefulness/diffuse-action@v1
         with:
-          old-file-path: app/build/outputs/apk/debug/app-base-debug.apk
-          new-file-path: app/build/outputs/apk/debug/app-debug.apk
+          old-file-path: app-base-debug.apk
+          new-file-path: app-debug.apk
 
       - uses: peter-evans/find-comment@v2
         id: find-comment
