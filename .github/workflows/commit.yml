@@ -119,7 +119,9 @@ jobs:
           optional-suffix: "-base"
 
       - name: "Change APK file name"
-        run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-base-debug.apk
+        shell: "bash"
+        run: |
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-base-debug.apk
 
       - name: "Store Base APK"
         uses: actions/upload-artifact@v4.4.0
@@ -154,6 +156,15 @@ jobs:
       - build-apk
       - build-base-apk
     steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+
+      - name: "Create report directory"
+        shell: "bash"
+        run: |
+          mkdir -p app/build/outputs/apk/debug
+
       - uses: actions/download-artifact@v4.1.8
         with:
           name: apk

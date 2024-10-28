@@ -186,7 +186,7 @@ runs:
       files: "build/reports/configuration-cache/**/*.html"
 
   - name: "Rename Configuration Cache HTML Report"
-    shell: bash
+    shell: ${{ inputs.shell }}
     run: |
       mkdir -p build/reports/configuration-cache
       html_file=$(find build/reports/configuration-cache -type f -name "*.html" | head -n 1)
