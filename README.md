@@ -40,11 +40,13 @@ TBD
 
 # CI Setup
 
-This project includes a comprehensive CI setup that showcases typical automated checks with a focus on speed. I use a fan-in approach where it makes sense so the commit workflow quickly checks and provides as much feedback as possible on the change being tested. This is not overly resource intensive due to the combination of caching every part of the Gradle build process possible (build cache, dependency cache, and configuration cache) as well as the performance tuning. I'm also showing how to easily integrate with Emulator.wtf which is currently the fastest and most reliable Android UI test platform.
+This project includes a comprehensive CI setup that showcases typical automated checks with a focus on speed. I use a fan-in approach where it makes sense so the commit workflow on a PR quickly checks and provides as much feedback as possible on the change being tested. This is not overly resource intensive due to the combination of caching every part of the Gradle build process possible (build cache, dependency cache, and configuration cache) as well as the performance tuning. I'm also showing how to easily integrate with Emulator.wtf which is currently the fastest and most reliable Android UI test platform.
 
-<img width="600" alt="Current CI Flow" src="https://github.com/user-attachments/assets/54def1bd-774c-4d89-aaed-7370aa60e558">
+<img width="600" alt="Current CI Flow" src="https://github.com/user-attachments/assets/c3d10c80-fbc8-4cd1-b032-70d7dc8d6bb2">
 
 Build APK: Generates an artifact for debug build that could be shared within a development team and dependency for UI test job.
+
+Build Base APK: Checks out source from base commit and builds a debug build artifact.
 
 Build Test APK: Dependency for UI test job, no artifact.
 
@@ -54,9 +56,11 @@ Spotless: Performs all configured Spotless plugin checks with ktfmt and spotless
 
 Module Graph: Validates the module graph, checks that it adheres to the existing rules and limits the depth of the graph.
 
-Android Lint: Runs an Android Lint check on the Release variant.
+Android Lint: Runs an Android Lint check on the Release variant. Exports in HTML and SARIF formats.
 
 Android UI Tests: Runs Build & Test APKs on Emulator.wtf.
+
+Diff APK from Base: Uses Diffuse against the current and base APK artifacts and comments on the relevant PR.
 
 ## Android Studio
 
