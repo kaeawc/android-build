@@ -156,15 +156,6 @@ jobs:
       - build-apk
       - build-base-apk
     steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-
-      - name: "Create report directory"
-        shell: "bash"
-        run: |
-          mkdir -p app/build/outputs/apk/debug
-
       - uses: actions/download-artifact@v4.1.8
         with:
           name: apk
@@ -173,25 +164,21 @@ jobs:
         with:
           name: base-apk
 
-
-      - name: "Look for APKs"
-        shell: "bash"
-        run: |
-          find . | grep ".apk"
-
       - id: diffuse
         uses: usefulness/diffuse-action@v1
         with:
           old-file-path: app-base-debug.apk
           new-file-path: app-debug.apk
 
-      - uses: peter-evans/find-comment@v2
+      - uses: peter-evans/find-comment@v3
         id: find-comment
+        if: ${{ github.event.pull_request }}
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body-includes: Diffuse output
 
-      - uses: peter-evans/create-or-update-comment@v3
+      - uses: peter-evans/create-or-update-comment@v4
+        if: ${{ github.event.pull_request }}
         with:
           body: |
             Diffuse output:
@@ -202,7 +189,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4.4.0
         with:
           name: diffuse-output
           path: ${{ steps.diffuse.outputs.diff-file }}
