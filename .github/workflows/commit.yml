@@ -9,6 +9,7 @@ on:
 permissions:
   checks: write
   security-events: write
+  pull-requests: write
 
 jobs:
   unit-tests:
@@ -101,7 +102,7 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
 
   build-base-apk:
-    if: contains(github.event.pull_request.changed_files, 'gradle/libs.versions.toml')
+    name: "Build Base APK"
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
@@ -116,10 +117,12 @@ jobs:
           gradle-tasks: "assembleDebug"
           reuse-configuration-cache: true
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          optional-suffix: "-base"
 
       - name: "Change APK file name"
-        if: steps.cache-base.outputs.cache-hit != 'true'
-        run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-base-debug.apk
+        shell: "bash"
+        run: |
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-base-debug.apk
 
       - name: "Store Base APK"
         uses: actions/upload-artifact@v4.4.0
@@ -138,6 +141,7 @@ jobs:
         with:
           gradle-tasks: "assembleAndroidTest"
           reuse-configuration-cache: false
+          optional-suffix: "-test"
 
       - name: "Store Test APK"
         uses: actions/upload-artifact@v4.4.0
@@ -164,16 +168,18 @@ jobs:
       - id: diffuse
         uses: usefulness/diffuse-action@v1
         with:
-          old-file-path: app/build/outputs/apk/debug/app-base-debug.apk
-          new-file-path: app/build/outputs/apk/debug/app-debug.apk
+          old-file-path: app-base-debug.apk
+          new-file-path: app-debug.apk
 
-      - uses: peter-evans/find-comment@v2
+      - uses: peter-evans/find-comment@v3
         id: find-comment
+        if: ${{ github.event.pull_request }}
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body-includes: Diffuse output
 
-      - uses: peter-evans/create-or-update-comment@v3
+      - uses: peter-evans/create-or-update-comment@v4
+        if: ${{ github.event.pull_request }}
         with:
           body: |
             Diffuse output:
@@ -184,7 +190,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4.4.0
         with:
           name: diffuse-output
           path: ${{ steps.diffuse.outputs.diff-file }}

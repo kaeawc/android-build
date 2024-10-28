@@ -41,6 +41,10 @@ inputs:
     description: "The shell to use for any steps that use shells"
     default: "bash"
     required: "true"
+  optional-suffix:
+    description: "Optional suffix to add to file names"
+    required: "true"
+    default: ""
 
 outputs:
   gradle-home-project-cache-hit:
@@ -181,10 +185,19 @@ runs:
     with:
       files: "build/reports/configuration-cache/**/*.html"
 
-  - name: "Store Configuration Cache Report"
-    uses: actions/upload-artifact@v4
-    if: steps.configuration-cache-report-exists.outputs.files_exists == 'true'
-    with:
-      name: configuration-cache-report
-      path: |
-        ${{ inputs.gradle-project-directory }}/build/reports/configuration-cache/**/*.html
+  - name: "Rename Configuration Cache HTML Report"
+    shell: ${{ inputs.shell }}
+    run: |
+      mkdir -p build/reports/configuration-cache
+      html_file=$(find build/reports/configuration-cache -type f -name "*.html" | head -n 1)
+      if [[ -n "$html_file" ]]; then
+        mv "$html_file" build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html
+      fi
+
+#  - name: "Store Configuration Cache Report"
+#    uses: actions/upload-artifact@v4.4.0
+#    if: steps.configuration-cache-report-exists.outputs.files_exists == 'true'
+#    with:
+#      name: "configuration-cache-report${{ inputs.optional-suffix }}"
+#      path: |
+#        ${{ inputs.gradle-project-directory }}/build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html
