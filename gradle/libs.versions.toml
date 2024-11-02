@@ -11,7 +11,6 @@ build-kotlin-ksp = "2.0.21-1.0.26"
 build-kotlin-coroutines = "1.9.0"
 build-java-asm = "9.7.1"
 build-java-target = "22"
-build-compose-kotlinCompiler = "1.7.0-beta02"
 build-gradle-dependencyAnalysis = "2.4.0"
 build-gradle-graphAssertion = "2.7.1"
 build-gradle-doctor = "0.10.0"
@@ -28,6 +27,8 @@ test-junit = "4.13.2"
 test-androidx-junit = "1.2.1"
 test-androidx-espresso = "3.6.1"
 
+kotlin-inject = "0.7.2"
+
 [plugins]
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "build-gradle-dependencyAnalysis" }
 spotless = { id = "com.diffplug.spotless", version.ref = "build-gradle-spotless" }
@@ -35,17 +36,23 @@ sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "build
 doctor = { id = "com.osacky.doctor", version.ref = "build-gradle-doctor" }
 graphAssertion = { id = "com.jraska.module.graph.assertion", version.ref = "build-gradle-graphAssertion" }
 publish = { id = "com.github.triplet.play", version.ref = "build-gradle-triplet-play" }
-jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "build-compose-kotlinCompiler" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "build-kotlin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "build-kotlin" }
 android-library = { id = "com.android.library", version.ref = "build-android-agp" }
 android-application = { id = "com.android.application", version.ref = "build-android-agp" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "build-kotlin-ksp" }
 
 [libraries]
 kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "build-kotlin" }
 agp = { module = "com.android.tools.build:gradle", version.ref = "build-android-agp" }
 # Only necessary to override R8 version
 # r8 = { module = "com.android.tools:r8", version.ref = "build-android-r8" }
+
+kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "build-kotlin" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "build-kotlin-coroutines" }
+
+kotlin-inject-compiler = { module = "me.tatarka.inject:kotlin-inject-compiler-ksp", version.ref = "kotlin-inject" }
+kotlin-inject-runtime = { module = "me.tatarka.inject:kotlin-inject-runtime", version.ref = "kotlin-inject" }
 
 asm-bom = { module = "org.ow2.asm:asm-bom", version.ref = "build-java-asm" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "build-android-desugar" }
@@ -71,6 +78,10 @@ androidx-junit = { module = "androidx.test.ext:junit", version.ref = "test-andro
 androidx-espresso = { module = "androidx.test.espresso:espresso-core", version.ref = "test-androidx-espresso" }
 
 [bundles]
+kotlin = [
+    "kotlin-stdlib-jdk8",
+    "kotlinx-coroutines-core"
+]
 compose-ui = [
     "androidx-activity-compose",
     "compose-ui-core",

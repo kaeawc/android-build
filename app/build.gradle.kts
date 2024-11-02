@@ -32,8 +32,8 @@ plugins {
     alias(libs.plugins.graphAssertion)
     alias(libs.plugins.publish)
     alias(libs.plugins.sortDependencies)
-    alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.ksp)
 }
 
 moduleGraphAssert {
@@ -63,7 +63,7 @@ play {
 android {
     namespace = "dev.jasonpearson.android"
     compileSdk = libs.versions.build.android.compileSdk.get().toInt()
-    // buildToolsVersion = libs.versions.build.android.buildTools.get()
+    buildToolsVersion = libs.versions.build.android.buildTools.get()
 
     defaultConfig {
         applicationId = "dev.jasonpearson.android"
@@ -142,6 +142,10 @@ dependencies {
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.bundles.compose.ui)
+    implementation(libs.bundles.kotlin)
+
+    ksp(libs.kotlin.inject.compiler)
+    implementation(libs.kotlin.inject.runtime)
 
     debugImplementation(libs.bundles.compose.ui.debug)
 
