@@ -61,10 +61,10 @@ runs:
     uses: actions/setup-java@v4
     with:
       distribution: 'zulu'
-      java-version: '23'
+      java-version: '22'
 
-  - uses: ./.github/actions/jemalloc-linux
-    id: cache-jemalloc
+  - name: "Set up jemalloc"
+    uses: kaeawc/setup-jemalloc@v0.0.1
 
   - name: "Print Java Flags & version"
     if: ${{ inputs.debug == 'true' }}
