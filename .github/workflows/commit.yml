@@ -25,7 +25,8 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "testDebugUnitTest"
-          reuse-configuration-cache: false
+          reuse-configuration-cache: true
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   spotless:
     name: "Spotless Check"
@@ -62,7 +63,8 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "lintRelease"
-          reuse-configuration-cache: false
+          reuse-configuration-cache: true
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: "Merge Lint SARIF results & Move HTML report"
         shell: "bash"
