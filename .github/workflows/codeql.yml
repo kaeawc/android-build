@@ -30,6 +30,7 @@ jobs:
           reuse-configuration-cache: false
           reuse-build-cache: false
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          with-jemalloc: false
 
       - name: "Perform CodeQL Analysis"
         uses: github/codeql-action/analyze@v3
