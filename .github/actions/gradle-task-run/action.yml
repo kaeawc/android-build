@@ -133,7 +133,7 @@ runs:
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
       cache-cleanup: "on-success"
       build-scan-publish: true
-      cache-disabled: ${{ reuse-build-cache == "false" }}
+      cache-disabled: ${{ inputs.reuse-build-cache == "false" }}
       build-scan-terms-of-use-url: 'https://gradle.com/help/legal-terms-of-use'
       build-scan-terms-of-use-agree: 'yes'
       validate-wrappers: true
