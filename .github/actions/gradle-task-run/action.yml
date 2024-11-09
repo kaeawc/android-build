@@ -64,7 +64,7 @@ runs:
       java-version: '22'
 
   - name: "Set up jemalloc"
-    uses: kaeawc/setup-jemalloc@v0.0.1
+    uses: kaeawc/setup-jemalloc@v0.0.3
 
   - name: "Print Java Flags & version"
     if: ${{ inputs.debug == 'true' }}
