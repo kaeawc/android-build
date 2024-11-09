@@ -42,7 +42,7 @@ TBD
 
 This project includes a comprehensive CI setup that showcases typical automated checks with a focus on speed. I use a fan-in approach where it makes sense so the commit workflow on a PR quickly checks and provides as much feedback as possible on the change being tested. This is not overly resource intensive due to the combination of caching every part of the Gradle build process possible (build cache, dependency cache, and configuration cache) as well as the performance tuning. I'm also showing how to easily integrate with Emulator.wtf which is currently the fastest and most reliable Android UI test platform.
 
-<img width="600" alt="Current CI Flow" src="https://github.com/user-attachments/assets/c3d10c80-fbc8-4cd1-b032-70d7dc8d6bb2">
+<img width="600" alt="Current CI Flow" src="https://github.com/user-attachments/assets/201b25ef-0d13-44f8-a784-00f8df85d409">
 
 Build APK: Generates an artifact for debug build that could be shared within a development team and dependency for UI test job.
 
