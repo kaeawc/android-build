@@ -90,7 +90,7 @@ runs:
         --continue
         --stacktrace
         $(if [ "${{ inputs.reuse-configuration-cache }}" == "true" ]; then echo ""; else echo "--no-configuration-cache -Dorg.gradle.unsafe.isolated-projects=false"; fi;)
-        $(if [ "${{ inputs.reuse-build-cache }}" == "true" ]; then echo ""; else echo "--no-build-cache"; fi;)
+        $(if [ "${{ inputs.reuse-build-cache }}" == "true" ]; then echo ""; else echo "--no-build-cache --rerun-tasks"; fi;)
         $(echo "${{ inputs.gradle-flags }}" | jq ".[]" -M -r)
         -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
         "
@@ -133,6 +133,7 @@ runs:
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
       cache-cleanup: "on-success"
       build-scan-publish: true
+      cache-disabled: ${{ reuse-build-cache == "false" }}
       build-scan-terms-of-use-url: 'https://gradle.com/help/legal-terms-of-use'
       build-scan-terms-of-use-agree: 'yes'
       validate-wrappers: true
