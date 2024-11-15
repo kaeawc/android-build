@@ -35,7 +35,7 @@ inputs:
     default: true
   with-jemalloc:
     description: "Whether to replace default malloc with jemalloc"
-    required: "false"
+    required: "true"
     default: true
   debug:
     description: "Whether to show debug logging"
@@ -68,7 +68,7 @@ runs:
       java-version: '22'
 
   - name: "Set up jemalloc"
-    if: ${{ inputs.with-jemalloc == "true" }}
+    if: ${{ inputs.with-jemalloc }}
     uses: kaeawc/setup-jemalloc@v0.0.3
 
   - name: "Print Java Flags & version"
