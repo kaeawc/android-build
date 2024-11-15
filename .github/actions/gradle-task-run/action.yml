@@ -68,7 +68,7 @@ runs:
       java-version: '22'
 
   - name: "Set up jemalloc"
-    if: ${{ inputs.with-jemalloc == true }}
+    if: ${{ inputs.with-jemalloc == "true" }}
     uses: kaeawc/setup-jemalloc@v0.0.3
 
   - name: "Print Java Flags & version"
