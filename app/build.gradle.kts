@@ -114,25 +114,6 @@ android {
     }
 }
 
-tasks.withType<KotlinCompile>().configureEach {
-    compilerOptions {
-        languageVersion.set(
-            KotlinVersion.valueOf(
-                "KOTLIN_${libs.versions.build.kotlin.language.get().replace(".", "_")}"))
-        jvmTarget.set(JvmTarget.valueOf("JVM_${libs.versions.build.java.target.get()}"))
-        freeCompilerArgs.addAll(
-            listOf(
-                "-opt-in=kotlin.time.ExperimentalTime,kotlin.RequiresOptIn",
-                "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                "-opt-in=kotlin.ExperimentalUnsignedTypes",
-                "-opt-in=kotlin.time.ExperimentalTime",
-                "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                "-opt-in=kotlinx.coroutines.FlowPreview",
-                "-Xcontext-receivers",
-            ))
-    }
-}
-
 dependencies {
     coreLibraryDesugaring(libs.desugar)
 

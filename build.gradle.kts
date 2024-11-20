@@ -50,6 +50,7 @@ plugins {
 
 val ktfmtVersion = libs.versions.build.gradle.ktfmt.get()
 val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
+val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.worker.jvmargs").get()
 
 allprojects {
     apply(plugin = "com.diffplug.spotless")
@@ -96,6 +97,10 @@ allprojects {
     }
     if (project.rootProject == project) {
         configure<SpotlessExtensionPredeclare> { spotlessFormatters() }
+    }
+
+    tasks.withType<Test>().configureEach {
+        jvmArgs(gradleWorkerJvmArgs)
     }
 
     tasks.withType<KotlinCompile>().configureEach {
