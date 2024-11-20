@@ -132,7 +132,7 @@ runs:
       echo "shell: ${{ inputs.shell }}"
       echo "ANDROID_HOME: $ANDROID_HOME"
 
-  - name: "Build with Gradle"
+  - name: "Setup Gradle"
     uses: gradle/actions/setup-gradle@v4
     with:
       gradle-version: ${{ steps.eval_gradle.outputs.version }}
@@ -166,7 +166,7 @@ runs:
         /home/runner/.config/.android/cache
       key: v2-${{ runner.os }}-android-platform-tools
 
-  - name: "Run Unit Tests via Gradle"
+  - name: "Run Tasks via Gradle"
     shell: ${{ inputs.shell }}
     run: |
       export GRADLE_FLAGS=$(cat /tmp/gradle_flags.txt)
