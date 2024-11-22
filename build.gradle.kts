@@ -99,9 +99,7 @@ allprojects {
         configure<SpotlessExtensionPredeclare> { spotlessFormatters() }
     }
 
-    tasks.withType<Test>().configureEach {
-        jvmArgs(gradleWorkerJvmArgs)
-    }
+    tasks.withType<Test>().configureEach { jvmArgs(gradleWorkerJvmArgs) }
 
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
