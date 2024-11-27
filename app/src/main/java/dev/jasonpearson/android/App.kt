@@ -30,8 +30,13 @@ import android.os.strictmode.DiskReadViolation
 import android.os.strictmode.UntaggedSocketViolation
 import android.util.Log
 import dev.jasonpearson.android.di.ApplicationComponent
+import dev.jasonpearson.android.di.ApplicationModule
+import dev.jasonpearson.android.di.BackgroundAppCoroutineScope
 import dev.jasonpearson.android.di.DaggerApplicationComponent
+import dev.jasonpearson.android.di.DaggerSet
 import java.util.concurrent.Executors
+import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 private typealias InitializerFunction = () -> @JvmSuppressWildcards Unit
 
@@ -42,6 +47,22 @@ class App : Application() {
     }
 
     lateinit var appComponent: ApplicationComponent
+
+    @Inject
+    fun asyncInits(
+        scope: BackgroundAppCoroutineScope,
+        @ApplicationModule.AsyncInitializers asyncInitializers: DaggerSet<InitializerFunction>,
+    ) {
+        scope.launch {
+            // TODO - run these in parallel?
+            asyncInitializers.forEach { it() }
+        }
+    }
+
+    @Inject
+    fun inits(@ApplicationModule.Initializers initializers: DaggerSet<InitializerFunction>) {
+        initializers.forEach { it() }
+    }
 
     override fun onCreate() {
         super.onCreate()
