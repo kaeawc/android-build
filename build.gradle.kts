@@ -27,6 +27,7 @@ import com.diffplug.gradle.spotless.SpotlessExtensionPredeclare
 import com.diffplug.spotless.LineEnding
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
@@ -46,11 +47,14 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.daggerAnvil) apply false
+    alias(libs.plugins.kapt) apply false
 }
 
 val ktfmtVersion = libs.versions.build.gradle.ktfmt.get()
 val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
-val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.worker.jvmargs").get()
+val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.testWorker.jvmargs").get()
+val kaptJvmArgs = providers.gradleProperty("kapt.jvmargs").get()
 
 allprojects {
     apply(plugin = "com.diffplug.spotless")
@@ -119,6 +123,8 @@ allprojects {
                 ))
         }
     }
+
+    tasks.withType<KaptWithoutKotlincTask>().configureEach { kaptProcessJvmArgs.add(kaptJvmArgs) }
 }
 
 // doctor {

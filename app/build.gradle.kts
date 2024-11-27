@@ -30,7 +30,9 @@ plugins {
     alias(libs.plugins.publish)
     alias(libs.plugins.sortDependencies)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.ksp)
+    // alias(libs.plugins.ksp)
+    alias(libs.plugins.kapt)
+    alias(libs.plugins.daggerAnvil)
 }
 
 moduleGraphAssert {
@@ -111,6 +113,8 @@ android {
     }
 }
 
+anvil {}
+
 dependencies {
     coreLibraryDesugaring(libs.desugar)
 
@@ -122,8 +126,14 @@ dependencies {
     implementation(libs.bundles.compose.ui)
     implementation(libs.bundles.kotlin)
 
-    ksp(libs.kotlin.inject.compiler)
-    implementation(libs.kotlin.inject.runtime)
+    implementation(libs.dagger.runtime)
+    kapt(libs.dagger.compiler)
+
+    implementation(libs.daggerAnvil.annotations)
+    implementation(libs.daggerAnvil.annotationsOptional)
+    kapt(libs.daggerAnvil.compiler)
+
+    kaptAndroidTest(libs.daggerAnvil.compiler)
 
     debugImplementation(libs.bundles.compose.ui.debug)
 
