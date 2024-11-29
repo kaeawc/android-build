@@ -29,7 +29,6 @@ jobs:
           java-version: '22'
 
       - name: "Run Tasks via Gradle"
-        shell: ${{ inputs.shell }}
         run: |
           ./gradlew assembleDebug --rerun-tasks --no-build-cache --no-configuration-cache -Dorg.gradle.unsafe.isolated-projects=false
 
