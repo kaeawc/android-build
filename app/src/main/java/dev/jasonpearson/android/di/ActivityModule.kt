@@ -32,5 +32,5 @@ import dagger.multibindings.Multibinds
 @Module
 interface ActivityModule {
 
-     @Multibinds fun activityProviders(): Map<Class<out Activity>, @JvmSuppressWildcards Activity>
+    @Multibinds fun activityProviders(): Map<Class<out Activity>, @JvmSuppressWildcards Activity>
 }

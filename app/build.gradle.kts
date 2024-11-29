@@ -22,9 +22,6 @@
  * SOFTWARE.
  */
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
-import com.google.devtools.ksp.gradle.KspAATask
-import com.google.devtools.ksp.gradle.KspTaskJvm
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(libs.plugins.android.application)
@@ -113,7 +110,6 @@ android {
         sarifOutput = file("${layout.buildDirectory.get()}/reports/lint-results.sarif")
         htmlOutput = file("${layout.buildDirectory.get()}/reports/lint-results.html")
     }
-
 }
 
 anvil {
