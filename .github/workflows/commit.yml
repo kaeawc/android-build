@@ -108,6 +108,7 @@ jobs:
 
   build-base-apk:
     name: "Build Base APK"
+    if: github.ref_name != 'main'
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
@@ -157,7 +158,7 @@ jobs:
   diff-apk-from-base:
     name: "Diff APK from Base"
     runs-on: ubuntu-latest
-    if: github.secret_source == 'Actions'
+    if: github.secret_source == 'Actions' && github.ref_name != 'main'
     needs:
       - build-apk
       - build-base-apk
