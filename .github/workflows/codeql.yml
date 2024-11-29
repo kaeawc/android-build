@@ -22,12 +22,16 @@ jobs:
         with:
           languages: 'java-kotlin'
 
-      - uses: ./.github/actions/gradle-task-run
+      - name: "Install JDK"
+        uses: actions/setup-java@v4
         with:
-          gradle-tasks: "assembleDebug"
-          reuse-configuration-cache: false
-          reuse-build-cache: false
-          with-jemalloc: false
+          distribution: 'zulu'
+          java-version: '22'
+
+      - name: "Run Tasks via Gradle"
+        shell: ${{ inputs.shell }}
+        run: |
+          ./gradlew assembleDebug --rerun-tasks --no-build-cache --no-configuration-cache -Dorg.gradle.unsafe.isolated-projects=false
 
       - name: "Perform CodeQL Analysis"
         uses: github/codeql-action/analyze@v3
