@@ -17,19 +17,19 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v4
 
-#      - name: "Initialize CodeQL"
-#        uses: github/codeql-action/init@v3
-#        with:
-#          languages: 'java-kotlin'
-#
-#      - uses: ./.github/actions/gradle-task-run
-#        with:
-#          gradle-tasks: "assembleDebug"
-#          reuse-configuration-cache: false
-#          reuse-build-cache: false
-#          with-jemalloc: false
-#
-#      - name: "Perform CodeQL Analysis"
-#        uses: github/codeql-action/analyze@v3
-#        with:
-#          category: "/language:java-kotlin"
+      - name: "Initialize CodeQL"
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'java-kotlin'
+
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "assembleDebug"
+          reuse-configuration-cache: false
+          reuse-build-cache: false
+          with-jemalloc: false
+
+      - name: "Perform CodeQL Analysis"
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:java-kotlin"
