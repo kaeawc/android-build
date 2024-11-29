@@ -54,8 +54,6 @@ val ktfmtVersion = libs.versions.build.gradle.ktfmt.get()
 val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
 val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.testWorker.jvmargs").get()
 
-// val kaptJvmArgs = providers.gradleProperty("kapt.jvmargs").get()
-
 allprojects {
     apply(plugin = "com.diffplug.spotless")
     val spotlessFormatters: SpotlessExtension.() -> Unit = {
@@ -123,9 +121,6 @@ allprojects {
                 ))
         }
     }
-
-    //    tasks.withType<KaptWithoutKotlincTask>().configureEach {
-    // kaptProcessJvmArgs.add(kaptJvmArgs) }
 }
 
 // doctor {
