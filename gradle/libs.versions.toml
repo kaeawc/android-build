@@ -7,7 +7,7 @@ build-android-agp = "8.9.0-alpha03"
 build-android-desugar = "2.1.3"
 build-kotlin = "2.0.21"
 # Held back from 2.0 due to https://github.com/square/anvil/issues/733
-build-kotlin-language = "1.9"
+build-kotlin-language = "2.0"
 build-kotlin-ksp = "2.0.21-1.0.28"
 build-kotlin-coroutines = "1.9.0"
 build-kotlin-datetime = "0.6.1"
@@ -47,7 +47,7 @@ android-library = { id = "com.android.library", version.ref = "build-android-agp
 android-application = { id = "com.android.application", version.ref = "build-android-agp" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "build-kotlin-ksp" }
 daggerAnvil = { id = "com.squareup.anvil", version.ref = "dagger-anvil" }
-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "build-kotlin" }
+zacAnvil = { id = "dev.zacsweers.anvil", version.ref = "zac-anvil" }
 
 [libraries]
 kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "build-kotlin" }
@@ -66,9 +66,9 @@ zacAnvil-annotations = { module = "dev.zacsweers.anvil:annotations", version.ref
 zacAnvil-annotationsOptional = { module = "dev.zacsweers.anvil:annotations-optional", version.ref = "zac-anvil" }
 zacAnvil-compiler = { module = "dev.zacsweers.anvil:compiler", version.ref = "zac-anvil" }
 
-daggerAnvil-annotations = { module = "com.squareup.anvil:annotations", version.ref = "dagger-anvil" }
-daggerAnvil-annotationsOptional = { module = "com.squareup.anvil:annotations-optional", version.ref = "dagger-anvil" }
-daggerAnvil-compiler = { module = "com.squareup.anvil:compiler", version.ref = "dagger-anvil" }
+#daggerAnvil-annotations = { module = "com.squareup.anvil:annotations", version.ref = "dagger-anvil" }
+#daggerAnvil-annotationsOptional = { module = "com.squareup.anvil:annotations-optional", version.ref = "dagger-anvil" }
+#daggerAnvil-compiler = { module = "com.squareup.anvil:compiler", version.ref = "dagger-anvil" }
 
 dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
 dagger-runtime = { module = "com.google.dagger:dagger", version.ref = "dagger" }

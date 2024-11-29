@@ -24,8 +24,8 @@
 package dev.jasonpearson.android.widgets
 
 import com.squareup.anvil.annotations.ContributesBinding
-import com.squareup.anvil.annotations.optional.SingleIn
 import dev.jasonpearson.android.di.AppScope
+import dev.jasonpearson.android.di.SingleIn
 import javax.inject.Inject
 
 @ContributesBinding(AppScope::class)

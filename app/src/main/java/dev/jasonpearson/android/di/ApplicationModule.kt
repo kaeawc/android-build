@@ -27,7 +27,6 @@ import android.app.Application
 import android.content.Context
 import android.content.ContextWrapper
 import com.squareup.anvil.annotations.ContributesTo
-import com.squareup.anvil.annotations.optional.SingleIn
 import dagger.Binds
 import dagger.Module
 import dagger.Provides

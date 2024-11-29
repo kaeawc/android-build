@@ -22,6 +22,9 @@
  * SOFTWARE.
  */
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+import com.google.devtools.ksp.gradle.KspAATask
+import com.google.devtools.ksp.gradle.KspTaskJvm
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(libs.plugins.android.application)
@@ -30,9 +33,8 @@ plugins {
     alias(libs.plugins.publish)
     alias(libs.plugins.sortDependencies)
     alias(libs.plugins.compose.compiler)
-    // alias(libs.plugins.ksp)
-    alias(libs.plugins.kapt)
-    alias(libs.plugins.daggerAnvil)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.zacAnvil)
 }
 
 moduleGraphAssert {
@@ -111,9 +113,15 @@ android {
         sarifOutput = file("${layout.buildDirectory.get()}/reports/lint-results.sarif")
         htmlOutput = file("${layout.buildDirectory.get()}/reports/lint-results.html")
     }
+
 }
 
-anvil {}
+anvil {
+    useKsp(
+        contributesAndFactoryGeneration = true,
+        componentMerging = true,
+    )
+}
 
 dependencies {
     coreLibraryDesugaring(libs.desugar)
@@ -127,13 +135,13 @@ dependencies {
     implementation(libs.bundles.kotlin)
 
     implementation(libs.dagger.runtime)
-    kapt(libs.dagger.compiler)
+    ksp(libs.dagger.compiler)
 
-    implementation(libs.daggerAnvil.annotations)
-    implementation(libs.daggerAnvil.annotationsOptional)
-    kapt(libs.daggerAnvil.compiler)
+    implementation(libs.zacAnvil.annotations)
+    implementation(libs.zacAnvil.annotationsOptional)
+    ksp(libs.zacAnvil.compiler)
 
-    kaptAndroidTest(libs.daggerAnvil.compiler)
+    kspAndroidTest(libs.zacAnvil.compiler)
 
     debugImplementation(libs.bundles.compose.ui.debug)
 

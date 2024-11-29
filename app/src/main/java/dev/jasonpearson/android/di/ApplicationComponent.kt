@@ -26,9 +26,7 @@ package dev.jasonpearson.android.di
 import android.app.Activity
 import android.app.Application
 import com.squareup.anvil.annotations.MergeComponent
-import com.squareup.anvil.annotations.optional.SingleIn
 import dagger.BindsInstance
-import dagger.Component
 import dev.jasonpearson.android.App
 import javax.inject.Provider
 
@@ -40,7 +38,7 @@ interface ApplicationComponent {
 
     fun inject(application: App)
 
-    @Component.Factory
+    @MergeComponent.Factory
     fun interface Factory {
         fun create(@BindsInstance application: Application): ApplicationComponent
     }

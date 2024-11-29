@@ -23,7 +23,6 @@
  */
 package dev.jasonpearson.android.di
 
-import com.squareup.anvil.annotations.optional.SingleIn
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
