@@ -185,32 +185,22 @@ runs:
     with:
       report_paths: '**/build/test-results/testDebugUnitTest/TEST-*.xml'
 
-  - name: "Check if any Configuration Cache report was created"
-    id: configuration-cache-report-exists
-    if: success() || failure() # always run even if the previous step fails
-    uses: andstor/file-existence-action@v3
-    with:
-      files: "**/configuration-cache-report.html"
-
   - name: "Rename Configuration Cache HTML Report"
     shell: ${{ inputs.shell }}
-    if: success() || failure() && steps.configuration-cache-report-exists.outputs.files_exists == 'true'
+    if: success() || failure()
     run: |
       mkdir -p build/reports/configuration-cache
       html_file=$(find build/reports/configuration-cache -type f -name "*.html" | head -n 1)
       if [[ -n "$html_file" ]]; then
-        mv "$html_file" build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html
+        echo "Found Config Cache HTML Report"
+      else
+        touch "$html_file"
       fi
-
-  - name: "Convert Configuration Cache Report to SARIF"
-    shell: ${{ inputs.shell }}
-    if: success() || failure() && steps.configuration-cache-report-exists.outputs.files_exists == 'true'
-    run: |
-      mkdir -p build/reports
-      ci/convert-config-cache-report-to-sarif.sh ${{ inputs.gradle-project-directory }}/build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html build/reports/config-cache-report.sarif
+      
+      ci/convert-config-cache-report-to-sarif.sh "$html_file" build/reports/config-cache-report.sarif
 
   - name: "Store Configuration Cache SARIF Report"
     uses: github/codeql-action/upload-sarif@v3
-    if: success() || failure() && steps.configuration-cache-report-exists.outputs.files_exists == 'true'
+    if: success() || failure()
     with:
       sarif_file: build/reports/config-cache-report.sarif

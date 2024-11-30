@@ -35,7 +35,7 @@ while true; do
 
   diagnostic=$(jq -c ".diagnostics[$iterator]" "$CLEANED_FILE")
 
-  if [[ "$diagnostic" == "null" ]]; then
+  if [[ "$diagnostic" == "null" || "$diagnostic" == "" ]]; then
     # Add results to SARIF
     for result in "${results[@]}"; do
       sarif=$(echo "$sarif" | jq ".runs[0].results += [$result]")
