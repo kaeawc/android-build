@@ -194,6 +194,7 @@ runs:
 
   - name: "Rename Configuration Cache HTML Report"
     shell: ${{ inputs.shell }}
+    if: success() || failure() # always run even if the previous step fails
     run: |
       mkdir -p build/reports/configuration-cache
       html_file=$(find build/reports/configuration-cache -type f -name "*.html" | head -n 1)
@@ -201,10 +202,15 @@ runs:
         mv "$html_file" build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html
       fi
 
-#  - name: "Store Configuration Cache Report"
-#    uses: actions/upload-artifact@v4.4.0
-#    if: steps.configuration-cache-report-exists.outputs.files_exists == 'true'
-#    with:
-#      name: "configuration-cache-report${{ inputs.optional-suffix }}"
-#      path: |
-#        ${{ inputs.gradle-project-directory }}/build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html
+  - name: "Convert Configuration Cache Report to SARIF"
+    shell: ${{ inputs.shell }}
+    if: success() || failure() && steps.configuration-cache-report-exists.outputs.files_exists == 'true'
+    run: |
+      mkdir -p build/reports
+      ci/convert-config-cache-report-to-sarif.sh ${{ inputs.gradle-project-directory }}/build/reports/configuration-cache/report${{ inputs.optional-suffix }}.html build/reports/config-cache-report.sarif
+
+  - name: "Store Android Lint SARIF Report"
+    uses: github/codeql-action/upload-sarif@v3
+    if: success() || failure() # always run even if the previous step fails
+    with:
+      sarif_file: build/reports/config-cache-report.sarif
