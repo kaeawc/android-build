@@ -190,7 +190,7 @@ runs:
     if: success() || failure() # always run even if the previous step fails
     uses: andstor/file-existence-action@v3
     with:
-      files: "configuration-cache-report.html"
+      files: "**/configuration-cache-report.html"
 
   - name: "Rename Configuration Cache HTML Report"
     shell: ${{ inputs.shell }}
