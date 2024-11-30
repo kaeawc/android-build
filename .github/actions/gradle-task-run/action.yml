@@ -155,7 +155,7 @@ runs:
 
   - name: Setup Android SDK
     if: steps.cache-android-platform-tools.outputs.cache-hit != 'true'
-    uses: android-actions/setup-android@v3.2.1
+    uses: android-actions/setup-android@v3.2.2
 
   - name: "Save Android SDK Platform Tools"
     uses: actions/cache/save@v4
