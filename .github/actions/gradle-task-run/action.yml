@@ -190,11 +190,11 @@ runs:
     if: success() || failure() # always run even if the previous step fails
     uses: andstor/file-existence-action@v3
     with:
-      files: "build/reports/configuration-cache/**/*.html"
+      files: "configuration-cache-report.html"
 
   - name: "Rename Configuration Cache HTML Report"
     shell: ${{ inputs.shell }}
-    if: success() || failure() # always run even if the previous step fails
+    if: success() || failure() && steps.configuration-cache-report-exists.outputs.files_exists == 'true'
     run: |
       mkdir -p build/reports/configuration-cache
       html_file=$(find build/reports/configuration-cache -type f -name "*.html" | head -n 1)
