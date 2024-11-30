@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Ensure required tools are installed
-if ! command -v xmlstarlet &> /dev/null || ! command -v jq &> /dev/null; then
-    echo "Please install xmlstarlet and jq to run this script."
+if ! command -v jq &> /dev/null; then
+    echo "Please install jq to run this script."
     exit 1
 fi
 
