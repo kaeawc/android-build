@@ -16,6 +16,8 @@ INPUT_FILE="$1"
 CLEANED_FILE="/tmp/config-cache-clean.html"
 OUTPUT_FILE="$2"
 
+GRADLE_VERSION="8.12-nightly"
+
 tail -n 11 "$INPUT_FILE" | head -n 1 | jq . > "$CLEANED_FILE"
 
 # Initialize SARIF structure
@@ -23,8 +25,30 @@ tail -n 11 "$INPUT_FILE" | head -n 1 | jq . > "$CLEANED_FILE"
 sarif_template='{
     "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
     "version": "2.1.0",
-    "runs": []
-}'
+    "runs": [
+        {
+            "tool": {
+                "driver": {
+                    "name": "Configuration Cache",
+                    "fullName": "Configuration Cache (in gradle)",
+                    "version": "$GRADLE_VERSION",
+                    "semanticVersion": "$GRADLE_VERSION",
+                    "organization": "Gradle",
+                    "informationUri": "https://docs.gradle.org/current/userguide/configuration_cache.html",
+                    "fullDescription": {
+                        "text": "Analysis of Gradle configuration phase problems"
+                    },
+                    "language": "en-US",
+                    "rules": [
+                    ]
+                }
+            },
+            "results": [
+            ]
+        }
+    ]
+}
+'
 sarif=$(echo "$sarif_template" | jq '.')
 
 iterator=0
@@ -36,11 +60,6 @@ while true; do
   diagnostic=$(jq -c ".diagnostics[$iterator]" "$CLEANED_FILE")
 
   if [[ "$diagnostic" == "null" || "$diagnostic" == "" ]]; then
-    # Add results to SARIF
-    for result in "${results[@]}"; do
-      sarif=$(echo "$sarif" | jq ".runs[0].results += [$result]")
-    done
-
     # Write SARIF to output file
     echo "$sarif" | jq '.' > "$OUTPUT_FILE"
     echo "SARIF report written to $OUTPUT_FILE"
@@ -76,8 +95,8 @@ while true; do
         ]
     }')
 
-    results+=("$result")
     sarif=$(echo "$sarif" | jq ".runs[0].tool.driver.rules += [$rule]")
+    sarif=$(echo "$sarif" | jq ".runs[0].results += [$result]")
   fi
   iterator=$((iterator+1))
 done
