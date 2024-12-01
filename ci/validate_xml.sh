@@ -23,13 +23,14 @@ fi
 # Start the timer
 start_time=$(bash -c "$(pwd)/ci/get_timestamp.sh")
 
-# Find XML files, excluding files ignored by .gitignore
+# Need to export this function for xargs bash to see it
 export -f validate_xml
 
+# Find XML files, excluding files ignored by .gitignore
 # shellcheck disable=SC2016
 errors=$(git ls-files --cached --others --exclude-standard -z |
   grep -z '\.xml$' |
-  xargs -0 -n 16 -P "$(nproc)" bash -c 'validate_xml val -w -b -e "$0"' 2>&1)
+  xargs -0 -n 1 -P "$(nproc)" bash -c 'validate_xml val -w -b -e "$0"' 2>&1)
 
 # Calculate total elapsed time
 end_time=$(bash -c "$(pwd)/ci/get_timestamp.sh")

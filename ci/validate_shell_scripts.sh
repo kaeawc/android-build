@@ -14,13 +14,11 @@ fi
 # Start the timer
 start_time=$(bash -c "$(pwd)/ci/get_timestamp.sh")
 
-errors=""
-
 # Find shell scripts and validate in parallel
-git ls-files --cached --others --exclude-standard -z |
+# shellcheck disable=SC2016
+errors=$(git ls-files --cached --others --exclude-standard -z |
   grep -z '\.sh$' |
-  xargs -0 -n 16 -P "$(nproc)" bash -c 'shellcheck "$0"' 2>&1 |
-  tee >(errors+=cat)
+  xargs -0 -n 1 -P "$(nproc)" bash -c 'shellcheck "$0"' 2>&1)
 
 # Calculate total elapsed time
 end_time=$(bash -c "$(pwd)/ci/get_timestamp.sh")
