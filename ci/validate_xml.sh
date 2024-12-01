@@ -10,7 +10,7 @@ validate_xml() {
 }
 
 # Check for required XML tools
-if [[ ! $(command -v xml &>/dev/null) && ! $(command -v xmlstarlet &>/dev/null) ]]; then
+if [[ $(! command -v xml &>/dev/null) && $(! command -v xmlstarlet &>/dev/null) ]]; then
   echo "xmlstarlet missing, please install."
   if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Try 'brew install xmlstarlet'"

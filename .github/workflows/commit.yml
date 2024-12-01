@@ -41,6 +41,18 @@ jobs:
           # Due to https://github.com/diffplug/spotless/issues/987
           reuse-configuration-cache: false
 
+  validate-xml:
+    name: "Validate XML"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Run XMLStarlet"
+        shell: "bash"
+        run: |
+          ci/validate_xml.sh
+
   module-graph:
     name: "Module Graph Check"
     runs-on: ubuntu-latest
