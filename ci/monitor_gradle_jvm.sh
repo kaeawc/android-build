@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Set the Grafana Cloud Prometheus remote write URL and API Key
+# shellcheck disable=SC2034
 GRAFANA_CLOUD_URL=""
 GRAFANA_USER=""
 GRAFANA_API_KEY=""
@@ -34,26 +35,26 @@ convert_to_bytes() {
 
     case $unit in
         KB)
-            echo $(printf "%.0f" $(echo "$value * 1024" | bc))
+            printf "%.0f" "$(echo "$value * 1024" | bc)"
             ;;
         k)
-            echo $(printf "%.0f" $(echo "$value * 1024" | bc))
+            printf "%.0f" "$(echo "$value * 1024" | bc)"
             ;;
         K)
-            echo $(printf "%.0f" $(echo "$value * 1024" | bc))
+            printf "%.0f" "$(echo "$value * 1024" | bc)"
             ;;
         MB)
-            echo $(printf "%.0f" $(echo "$value * 1024 * 1024" | bc))
+            printf "%.0f" "$(echo "$value * 1024 * 1024" | bc)"
             ;;
         m)
-            echo $(printf "%.0f" $(echo "$value * 1024 * 1024" | bc))
+            printf "%.0f" "$(echo "$value * 1024 * 1024" | bc)"
             ;;
         M)
-            echo $(printf "%.0f" $(echo "$value * 1024 * 1024" | bc))
+            printf "%.0f" "$(echo "$value * 1024 * 1024" | bc)"
             ;;
         *)
             
-            echo $(printf "%.0f" $value)  # Already in bytes, ensure it's an integer
+            printf "%.0f" $value  # Already in bytes, ensure it's an integer
             ;;
     esac
 }
@@ -63,12 +64,26 @@ convert_to_bytes() {
 extract_code_cache_segment_data() {
   local segment_name=$1
   local code_cache_output=$2
+  # shellcheck disable=SC2155
   local used_space=$(echo "$code_cache_output" | sed -n "/Global CodeHeap statistics for segment CodeHeap '$segment_name'/,/Verifying collected data/p" | grep 'usedSpace' | awk '{print $3}' | head -1)
+
+  # shellcheck disable=SC2155
   local used_space_value=$(echo "$used_space" | grep -o -E '[0-9]+')
+
+  # shellcheck disable=SC2155
   local used_space_unit=$(echo "$used_space" | grep -o -E '[^0-9, ]+')
+
+  # shellcheck disable=SC2155
   local commited_size=$(echo "$code_cache_output" | sed -n "/C O D E   H E A P   A N A L Y S I S   (used blocks) for segment CodeHeap '$segment_name'/,/Verifying collected data/p" | grep "CodeHeap committed size" | awk '{print $4}' | head -1)
+
+  # shellcheck disable=SC2155
   local commited_size_value=$(echo "$commited_size" | grep -o -E '[0-9]+')
+
+  # shellcheck disable=SC2155
   local commited_size_unit=$(echo "$commited_size" | grep -o -E '[^0-9, ]+')
+
+  # We do not double quote here because we want this behavior
+  # shellcheck disable=SC2086
   echo "$(convert_to_bytes $used_space_value $used_space_unit)" "$(convert_to_bytes $commited_size_value $commited_size_unit)"
 }
 
@@ -76,61 +91,62 @@ extract_code_cache_segment_data() {
 push_metrics() {
 
     # Metaspace
-    local metaspace_data=$(jcmd $GRADLE_PID VM.metaspace)
-    local non_class_line=$(echo "$metaspace_data" | grep ' Non-Class: ' | head -n 1)
-    local non_class_metaspace_used=$(echo "$non_class_line" | awk '{print $11, $12}')
-    local class_line=$(echo "$metaspace_data" | grep ' Class: ' | head -n 1)
-    local class_metaspace_used=$(echo "$class_line" | awk '{print $11, $12}')
+    metaspace_data=$(jcmd $GRADLE_PID VM.metaspace)
+    non_class_line=$(echo "$metaspace_data" | grep ' Non-Class: ' | head -n 1)
+    non_class_metaspace_used=$(echo "$non_class_line" | awk '{print $11, $12}')
+    class_line=$(echo "$metaspace_data" | grep ' Class: ' | head -n 1)
+    class_metaspace_used=$(echo "$class_line" | awk '{print $11, $12}')
 
-    local non_class_value=$(echo "$non_class_metaspace_used" | awk '{print $1}')
-    local non_class_unit=$(echo "$non_class_metaspace_used" | awk '{print $2}')
-    local non_class_metaspace_used_bytes=$(convert_to_bytes $non_class_value $non_class_unit)
+    non_class_value=$(echo "$non_class_metaspace_used" | awk '{print $1}')
+    non_class_unit=$(echo "$non_class_metaspace_used" | awk '{print $2}')
+    non_class_metaspace_used_bytes=$(convert_to_bytes $non_class_value $non_class_unit)
 
-    local class_value=$(echo "$class_metaspace_used" | awk '{print $1}')
-    local class_unit=$(echo "$class_metaspace_used" | awk '{print $2}')
-    local class_metaspace_used_bytes=$(convert_to_bytes $class_value $class_unit)
+    class_value=$(echo "$class_metaspace_used" | awk '{print $1}')
+    class_unit=$(echo "$class_metaspace_used" | awk '{print $2}')
+    class_metaspace_used_bytes=$(convert_to_bytes $class_value $class_unit)
 
     # Heap
-    local heap_data=$(jstat -gc $GRADLE_PID | awk 'NR==2 {print "Eden Space: " $6*1024 "\nSurvivor Space: " $3*1024 + $4*1024 "\nOld Generation: " $8*1024}')
+    heap_data=$(jstat -gc $GRADLE_PID | awk 'NR==2 {print "Eden Space: " $6*1024 "\nSurvivor Space: " $3*1024 + $4*1024 "\nOld Generation: " $8*1024}')
 
-    local eden_line=$(echo "$heap_data" | grep 'Eden Space: ' | head -n 1)
-    local eden_value=$(echo "$eden_line" | awk '{print $3}')
-    local eden_bytes=$(convert_to_bytes $eden_value "")
-    local survivor_line=$(echo "$heap_data" | grep 'Survivor Space: ' | head -n 1)
-    local survivor_value=$(echo "$survivor_line" | awk '{print $3}')
-    local survivor_bytes=$(convert_to_bytes $survivor_value "")
-    local old_line=$(echo "$heap_data" | grep 'Old Generation: ' | head -n 1)
-    local old_value=$(echo "$old_line" | awk '{print $3}')
-    local old_bytes=$(convert_to_bytes $old_value "")
+    eden_line=$(echo "$heap_data" | grep 'Eden Space: ' | head -n 1)
+    eden_value=$(echo "$eden_line" | awk '{print $3}')
+    eden_bytes=$(convert_to_bytes $eden_value "")
+    survivor_line=$(echo "$heap_data" | grep 'Survivor Space: ' | head -n 1)
+    survivor_value=$(echo "$survivor_line" | awk '{print $3}')
+    survivor_bytes=$(convert_to_bytes $survivor_value "")
+    old_line=$(echo "$heap_data" | grep 'Old Generation: ' | head -n 1)
+    old_value=$(echo "$old_line" | awk '{print $3}')
+    old_bytes=$(convert_to_bytes $old_value "")
 
     # CodeCache
-    local codecache_analysis=$(jcmd $GRADLE_PID Compiler.CodeHeap_Analytics)
-    local non_profiled_data=$(extract_code_cache_segment_data 'non-profiled nmethods' "$codecache_analysis")
-    local profiled_data=$(extract_code_cache_segment_data 'profiled nmethods' "$codecache_analysis")
-    local non_nmethods_data=$(extract_code_cache_segment_data 'non-nmethods' "$codecache_analysis")
+    codecache_analysis=$(jcmd $GRADLE_PID Compiler.CodeHeap_Analytics)
+    non_profiled_data=$(extract_code_cache_segment_data 'non-profiled nmethods' "$codecache_analysis")
+    profiled_data=$(extract_code_cache_segment_data 'profiled nmethods' "$codecache_analysis")
+    non_nmethods_data=$(extract_code_cache_segment_data 'non-nmethods' "$codecache_analysis")
 
-    local non_profiled_used=$(echo $non_profiled_data | awk '{print $1}')
-    local non_profiled_committed=$(echo $non_profiled_data | awk '{print $2}')
-    local non_profiled_used_value=$(echo "$non_profiled_used" | grep -o -E '[0-9]+')
-    local non_profiled_committed_value=$(echo "$non_profiled_committed" | grep -o -E '[0-9]+')
+    non_profiled_used=$(echo $non_profiled_data | awk '{print $1}')
+    non_profiled_committed=$(echo $non_profiled_data | awk '{print $2}')
+    non_profiled_used_value=$(echo "$non_profiled_used" | grep -o -E '[0-9]+')
+    non_profiled_committed_value=$(echo "$non_profiled_committed" | grep -o -E '[0-9]+')
 
-    local profiled_used=$(echo $profiled_data | awk '{print $1}')
-    local profiled_committed=$(echo $profiled_data | awk '{print $2}')
-    local profiled_used_value=$(echo "$profiled_used" | grep -o -E '[0-9]+')
-    local profiled_committed_value=$(echo "$profiled_committed" | grep -o -E '[0-9]+')
+    profiled_used=$(echo $profiled_data | awk '{print $1}')
+    profiled_committed=$(echo $profiled_data | awk '{print $2}')
+    profiled_used_value=$(echo "$profiled_used" | grep -o -E '[0-9]+')
+    profiled_committed_value=$(echo "$profiled_committed" | grep -o -E '[0-9]+')
 
-    local non_nmethods_used=$(echo $non_nmethods_data | awk '{print $1}')
-    local non_nmethods_committed=$(echo $non_nmethods_data | awk '{print $2}')
-    local non_nmethods_used_value=$(echo "$non_nmethods_used" | grep -o -E '[0-9]+')
-    local non_nmethods_committed_value=$(echo "$non_nmethods_committed" | grep -o -E '[0-9]+')
+    non_nmethods_used=$(echo $non_nmethods_data | awk '{print $1}')
+    non_nmethods_committed=$(echo $non_nmethods_data | awk '{print $2}')
+    non_nmethods_used_value=$(echo "$non_nmethods_used" | grep -o -E '[0-9]+')
+    non_nmethods_committed_value=$(echo "$non_nmethods_committed" | grep -o -E '[0-9]+')
 
-    local code_cache_used_value=$((non_profiled_used_value + profiled_used_value + non_nmethods_used_value))
-    local code_cache_committed_value=$((non_profiled_committed_value + profiled_committed_value + non_nmethods_committed_value))
+    code_cache_used_value=$((non_profiled_used_value + profiled_used_value + non_nmethods_used_value))
+    code_cache_committed_value=$((non_profiled_committed_value + profiled_committed_value + non_nmethods_committed_value))
 
     # Get the current timestamp in milliseconds
-    local current_timestamp=$(date +%s)
+    current_timestamp=$(date +%s)
 
     # Prepare Prometheus metrics format
+    # shellcheck disable=SC2034
     METRICS=$(cat <<EOF
 # HELP jvm_class_space_used_bytes JVM class space used (in bytes)
 # TYPE jvm_class_space_used_bytes gauge

@@ -16,6 +16,8 @@ INPUT_FILE="$1"
 CLEANED_FILE="/tmp/config-cache-clean.html"
 OUTPUT_FILE="$2"
 
+# TODO: Read Gradle version as an arg
+# shellcheck disable=SC2034
 GRADLE_VERSION="8.12-nightly"
 
 tail -n 11 "$INPUT_FILE" | head -n 1 | jq . > "$CLEANED_FILE"
@@ -54,7 +56,6 @@ sarif=$(echo "$sarif_template" | jq '.')
 iterator=0
 
 # Process diagnostics into SARIF results
-results=()
 while true; do
 
   diagnostic=$(jq -c ".diagnostics[$iterator]" "$CLEANED_FILE")

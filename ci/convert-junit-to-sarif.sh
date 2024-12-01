@@ -80,7 +80,7 @@ if [[ "$testsuite_failures" -gt 0 ]]; then
     echo "done with originalUriBaseIds"
 
     rule_index=0
-    while IFS='|' read -r testcase_name testcase_type failure_message failure_text; do
+    while IFS='|' read -r testcase_name testcase_type failure_message; do
         if [[ -z "$failure_message" ]]; then
             continue
         fi
