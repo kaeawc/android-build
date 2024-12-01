@@ -41,23 +41,21 @@ sarif_template='{
                         "text": "Analysis of Gradle configuration phase problems"
                     },
                     "language": "en-US",
-                    "rules": [
-                    ]
+                    "rules": []
                 }
             },
-            "results": [
-            ]
+            "results": []
         }
     ]
 }
 '
-sarif=$(echo "$sarif_template" | jq '.')
 
+sarif=$(echo "$sarif_template" | jq '.')
 iterator=0
+seen_rules=() # Array to track seen rule IDs
 
 # Process diagnostics into SARIF results
 while true; do
-
   diagnostic=$(jq -c ".diagnostics[$iterator]" "$CLEANED_FILE")
 
   if [[ "$diagnostic" == "null" || "$diagnostic" == "" ]]; then
@@ -71,17 +69,22 @@ while true; do
   any_error=$(echo "$diagnostic" | jq -r '.error.summary')
 
   if [[ "$any_problem" != "null" && "$any_error" != "null" ]]; then
-    problem_text=$(echo "$diagnostic" | jq -r '.problem[] | if has("text") then .text else .name end' | tr '\n' '\0')
-    error_summary=$(echo "$diagnostic" | jq -r '.error.summary[] | if has("text") then .text else .name end' | tr '\n' '\0')
+    problem_text=$(echo "$diagnostic" | jq -r '.problem[] | if has("text") then .text else .name end' | tr '\n' ' ')
+    error_summary=$(echo "$diagnostic" | jq -r '.error.summary[] | if has("text") then .text else .name end' | tr '\n' ' ')
 
     rule_id=$(echo -n "$problem_text" | md5sum | awk '{print $1}')
     severity="error"
 
-    rule=$(jq -n --arg id "$rule_id" --arg text "$problem_text" '{
-        id: $id,
-        shortDescription: { text: $text },
-        help: { text: $text, markdown: $text }
-    }')
+    # Check if ruleId has already been added
+    if [[ ! "${seen_rules[*]}" =~ $rule_id ]]; then
+      rule=$(jq -n --arg id "$rule_id" --arg text "$problem_text" '{
+          id: $id,
+          shortDescription: { text: $text },
+          help: { text: $text, markdown: $text }
+      }')
+      sarif=$(echo "$sarif" | jq ".runs[0].tool.driver.rules += [$rule]")
+      seen_rules+=("$rule_id")
+    fi
 
     result=$(jq -n --arg id "$rule_id" --arg sev "$severity" --arg msg "$problem_text" --arg loc "$error_summary" '{
         ruleId: $id,
@@ -96,7 +99,6 @@ while true; do
         ]
     }')
 
-    sarif=$(echo "$sarif" | jq ".runs[0].tool.driver.rules += [$rule]")
     sarif=$(echo "$sarif" | jq ".runs[0].results += [$result]")
   fi
   iterator=$((iterator+1))
