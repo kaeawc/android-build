@@ -109,6 +109,9 @@ android {
     lint {
         sarifOutput = file("${layout.buildDirectory.get()}/reports/lint-results.sarif")
         htmlOutput = file("${layout.buildDirectory.get()}/reports/lint-results.html")
+        abortOnError = true
+        checkAllWarnings = true
+        warningsAsErrors = true
     }
 }
 
