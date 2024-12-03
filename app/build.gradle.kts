@@ -116,8 +116,8 @@ android {
         ignoreTestSources = true
         disable.addAll(
             listOf(
-                "WrongThreadInterprocedural", // Example issue to disable
-                "ObsoleteSdkInt",            // Add other issue IDs you want to disable
+                "WrongThreadInterprocedural",
+                "ObsoleteSdkInt",
                 "UnusedResources"
             )
         )
