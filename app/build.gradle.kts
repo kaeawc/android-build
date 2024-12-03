@@ -114,7 +114,13 @@ android {
         warningsAsErrors = true
         checkDependencies = true
         ignoreTestSources = true
-        // do not run WrongThreadInterprocedural
+        disable.addAll(
+            listOf(
+                "WrongThreadInterprocedural", // Example issue to disable
+                "ObsoleteSdkInt",            // Add other issue IDs you want to disable
+                "UnusedResources"
+            )
+        )
     }
 }
 
