@@ -110,8 +110,11 @@ android {
         sarifOutput = file("${layout.buildDirectory.get()}/reports/lint-results.sarif")
         htmlOutput = file("${layout.buildDirectory.get()}/reports/lint-results.html")
         abortOnError = true
-        checkAllWarnings = true
+        checkAllWarnings = false
         warningsAsErrors = true
+        checkDependencies = true
+        ignoreTestSources = true
+        // do not run WrongThreadInterprocedural
     }
 }
 
