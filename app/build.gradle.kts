@@ -114,13 +114,7 @@ android {
         warningsAsErrors = true
         checkDependencies = true
         ignoreTestSources = true
-        disable.addAll(
-            listOf(
-                "WrongThreadInterprocedural",
-                "ObsoleteSdkInt",
-                "UnusedResources"
-            )
-        )
+        disable.addAll(listOf("WrongThreadInterprocedural", "ObsoleteSdkInt", "UnusedResources"))
     }
 }
 
