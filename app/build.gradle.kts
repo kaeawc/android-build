@@ -32,6 +32,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.zacAnvil)
+    alias(libs.plugins.kover)
 }
 
 moduleGraphAssert {

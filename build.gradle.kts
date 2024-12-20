@@ -48,6 +48,7 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.zacAnvil) apply false
     alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.kover)
 }
 
 val ktfmtVersion = libs.versions.build.gradle.ktfmt.get()
@@ -122,6 +123,24 @@ allprojects {
         }
     }
 }
+
+kover {
+
+    reports {
+        // filters for all report types of all build variants
+        filters {
+            excludes {
+                androidGeneratedClasses()
+            }
+        }
+
+    }
+}
+//kover {
+//    // Example configuration, customize as needed:
+//    isDisabled.set(false)
+//    // Additional configuration can go here
+//}
 
 // doctor {
 //    /**
