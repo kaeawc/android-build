@@ -1,0 +1,75 @@
+ARG ZULU_VERSION=22.0.2
+
+FROM azul/zulu-openjdk-alpine:${ZULU_VERSION}
+
+ENV TERM=dumb
+ENV PAGER=cat
+
+RUN apk --no-cache add \
+    bash \
+    curl \
+    envsubst \
+    gcompat \
+    gettext \
+    git \
+    git-lfs \
+    gzip \
+    grep \
+    jemalloc-dev \
+    jq \
+    openssh-client \
+    openssl-dev \
+    ripgrep \
+    sudo \
+    tar \
+    unzip \
+    wget \
+    xmlstarlet \
+    yq \
+    zip \
+    zstd
+
+# Change default shell from /bin/sh to /bin/bash
+SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
+
+# Replace malloc with jemalloc
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+
+# Android SDK + Tools
+ENV ANDROID_HOME="/usr/lib/android-sdk"
+ENV ANDROID_SDK_ROOT="${ANDROID_HOME}"
+ENV ANDROID_CMDLINE_TOOLS_ROOT="${ANDROID_HOME}/cmdline-tools"
+ENV ANDROID_CMDLINE_TOOLS_BIN="${ANDROID_CMDLINE_TOOLS_ROOT}/latest/bin"
+ENV PATH="${ANDROID_CMDLINE_TOOLS_BIN}:${ANDROID_HOME}/platform-tools:${PATH}"
+
+# Make directories we will need
+RUN mkdir -p "/tmp" && \
+    mkdir -p "${ANDROID_HOME}" && \
+    mkdir -p "${ANDROID_CMDLINE_TOOLS_ROOT}" && \
+    mkdir -p "${ANDROID_HOME}/ndk" && \
+    mkdir -p "${ANDROID_HOME}/platforms"
+
+# Download & Install Android Command Line Tools
+# See https://developer.android.com/tools for general documentation
+# See https://github.com/Homebrew/homebrew-cask/blob/master/Casks/a/android-commandlinetools.rb for latest version number
+ARG ANDROID_CMDLINE_TOOLS_VERSION="11076708"
+ENV SDK_TOOLS_URL="https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMDLINE_TOOLS_VERSION}_latest.zip"
+ENV TMP_SDK_TOOLS_ZIP="/tmp/android-cli.zip"
+RUN wget -O /tmp/android-cli.zip -t 5 "${SDK_TOOLS_URL}" && \
+    unzip -q /tmp/android-cli.zip -d "${ANDROID_CMDLINE_TOOLS_ROOT}" && \
+    rm /tmp/android-cli.zip && \
+    mv "${ANDROID_HOME}/cmdline-tools/cmdline-tools" "${ANDROID_HOME}/cmdline-tools/latest" && \
+    chmod +x "${ANDROID_CMDLINE_TOOLS_BIN}/sdkmanager"
+
+# If there is a new version of Android OS, SDK, or other tools update these values
+ARG ANDROID_API_TARGET="35"
+ARG ANDROID_BUILD_TOOLS_VERSION="35.0.0"
+
+# Installs Android SDK + Platform Tools. Automatically agrees to licenses
+# Run `sdkmanager --list` to see all available options
+RUN (yes || true) | "${ANDROID_CMDLINE_TOOLS_BIN}/sdkmanager" --verbose \
+    "platform-tools" \
+    "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" \
+    "platforms;android-${ANDROID_API_TARGET}"
+
+RUN cd "${HOME}"
