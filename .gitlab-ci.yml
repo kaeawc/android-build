@@ -1,0 +1,289 @@
+variables:
+  HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
+  FF_USE_FASTZIP: 1
+  ARTIFACT_COMPRESSION_LEVEL: "fastest"
+  CACHE_COMPRESSION_LEVEL: "fastest"
+  ANDROID_TARGET_SDK: "35"
+
+stages:
+  - images
+  - basic
+  - complex
+
+workflow:
+  auto_cancel:
+    on_job_failure: all
+    on_new_commit: interruptible
+
+.aliases:
+  - &artifacts_apk_path "app/build/outputs/apk/debug/app-debug.apk"
+  - &artifacts_test_apk_path "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
+  - &reports_lint_path "app/build/reports/lint-results-release.html"
+  - &artifacts_release_aab_path "build/outputs/bundle/**/*.aab"
+  - &reports_config_cache_path "build/reports/configuration-cache/**/*.html"
+
+.cache-android-gradle-distribution: &cache_android_gradle_distribution
+  - key:
+      files:
+        - gradle/wrapper/gradle-wrapper.properties
+    paths:
+      - "cache/.gradle/wrapper/dists"
+    policy: pull-push
+
+# Gradle User Home & Project (with Configuration Cache)
+.cache-android-gradle-user-home-and-project: &cache_android_gradle_user_home_and_project
+  - key:
+      files:
+        - "**gradle*"
+      prefix: $CI_JOB_NAME
+    paths:
+      - "cache/.gradle/caches/${GRADLE_VERSION}"
+      - "cache/.gradle/caches/modules-2"
+      - "cache/.gradle/caches/jars-9"
+      - ".gradle"
+    policy: pull-push
+
+# Gradle Build Cache - eventually move to Gradle Enterprise
+.cache-android-build-cache: &cache_android_build_cache
+  - key:
+      files:
+        - "**gradle*"
+      prefix: $CI_JOB_NAME
+    paths:
+      - "cache/.gradle/caches/build-cache-1"
+    policy: pull-push
+
+.android-global-cache:
+  cache: &android_global_cache_policy
+    - *cache_android_gradle_distribution
+    - *cache_android_gradle_user_home_and_project
+    - *cache_android_build_cache
+
+.alpine_tools_job:
+  image: $CI_REGISTRY_IMAGE:tools-latest
+  needs:
+    - job: build_deploy_alpine_tools_ci_image
+      optional: true
+  tags:
+    - saas-linux-small-amd64
+
+.alpine_jdk_job:
+  image: $CI_REGISTRY_IMAGE:jdk-latest
+  needs:
+    - job: build_deploy_alpine_jdk_ci_image
+      optional: true
+  tags:
+    - saas-linux-small-amd64
+
+.android_sdk_job:
+  image: $CI_REGISTRY_IMAGE:android-sdk-latest
+  needs:
+    - job: build_deploy_android_sdk_ci_image
+      optional: true
+  tags:
+    - saas-linux-small-amd64
+  cache:
+    *android_global_cache_policy
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/cache/.gradle
+    - mkdir -p $GRADLE_USER_HOME
+    - export GRADLE_PROJECT_HOME=`pwd`/.gradle
+    - export GRADLE_VERSION="$(grep "distributionUrl" gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-(all|bin).zip/\1/')"
+    - git config core.hooksPath .githooks
+    - git lfs pull
+
+build_apk:
+  extends: .android_sdk_job
+  stage: basic
+  script:
+    - ./gradlew :app:assembleDebug -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
+  artifacts:
+    paths:
+      - *artifacts_apk_path
+      - *reports_config_cache_path
+    expire_in: 1 hrs
+
+build_base_apk:
+  extends: .android_sdk_job
+  stage: basic
+  rules:
+    - if: $CI_MERGE_REQUEST_EVENT_TYPE == "merge_train"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
+  before_script:
+    - git checkout $CI_MERGE_REQUEST_DIFF_BASE_SHA
+  script:
+    - ./gradlew :app:assembleDebug -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
+  artifacts:
+    paths:
+      - *artifacts_apk_path
+      - *reports_config_cache_path
+    expire_in: 1 hrs
+
+build_test_apk:
+  extends: .android_sdk_job
+  stage: basic
+  script:
+    - ./gradlew :app:assembleDebugAndroidTest -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
+  artifacts:
+    paths:
+      - *artifacts_test_apk_path
+      - *reports_config_cache_path
+    expire_in: 1 hrs
+
+unit_tests:
+  extends: .android_sdk_job
+  stage: basic
+  script:
+    - ./gradlew testDebugUnitTest -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
+  artifacts:
+    reports:
+      junit: "**/build/test-results/**/TEST-*.xml"
+    paths:
+      - *reports_config_cache_path
+    expire_in: 90 days
+
+spotless_check:
+  extends: .android_sdk_job
+  stage: basic
+  script:
+    # Cannot reuse configuration cache due to https://github.com/diffplug/spotless/issues/987
+    - ./gradlew spotlessCheck --no-configuration-cache -Dorg.gradle.unsafe.isolated-projects=false
+
+module_graph_check:
+  extends: .android_sdk_job
+  stage: basic
+  script:
+    - ./gradlew assertModuleGraph -Dorg.gradle.configuration-cache.internal.report-link-as-warning=true
+
+validate_xml:
+  extends: .alpine_tools_job
+  stage: basic
+  script:
+    - ci/validate_xml.sh
+
+validate_shell_scripts:
+  extends: .alpine_tools_job
+  stage: basic
+  script:
+    - ci/validate_shell_scripts.sh
+
+android_lint:
+  extends: .android_sdk_job
+  stage: basic
+  script:
+    - ./gradlew :app:lintRelease
+  artifacts:
+    paths:
+      - *reports_lint_path
+      - *reports_config_cache_path
+    expire_in: 1 week
+
+android_ui_tests:
+  extends: .alpine_jdk_job
+  stage: complex
+  variables:
+    APK_PATH: *artifacts_apk_path
+    TEST_APK_PATH: *artifacts_test_apk_path
+  needs:
+    - job: build_apk
+    - job: build_test_apk
+  script:
+    # https://docs.emulator.wtf/integrations/cli/#installation
+    - mkdir -p /tmp/bin
+    - curl https://maven.emulator.wtf/releases/ew-cli -o /tmp/bin/ew-cli
+    - chmod a+x /tmp/bin/ew-cli
+    - export PATH=$PATH:/tmp/bin
+    - mkdir -p build/test-results
+    - ew-cli --token $EMULATOR_WTF_API_KEY --app $APK_PATH --test $TEST_APK_PATH --outputs-dir build/test-results
+  artifacts:
+    reports:
+      junit: "build/test-results/**/*.xml"
+
+diff_apk_from_base:
+  extends: .alpine_jdk_job
+  stage: complex
+  rules:
+    - if: $CI_MERGE_REQUEST_EVENT_TYPE == "merge_train"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  variables:
+    APK_PATH: *artifacts_apk_path
+    TEST_APK_PATH: *artifacts_test_apk_path
+  needs:
+    - job: build_apk
+    - job: build_base_apk
+  script:
+    # Ensure the two artifacts are downloaded correctly
+    - echo "Diff the APKs with Diffuse"
+    # Find or create the MR comment with updated Diffuse report
+
+build_deploy_alpine_tools_ci_image:
+  stage: images
+  tags:
+    - saas-linux-small-amd64
+  image: docker:24.0.9
+  services:
+    - name: docker:24.0.9-dind
+      command: ["--experimental"]
+  script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - docker pull $CI_REGISTRY_IMAGE:tools-latest || true
+    - docker buildx create --use --name repobuilder
+    - docker buildx build --platform linux/x86_64 -t $CI_REGISTRY_IMAGE:tools-latest -f ci/Dockerfile-tools --push .
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - ci/Dockerfile-tools
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          - ci/Dockerfile-tools
+        compare_to: 'refs/heads/main'
+
+build_deploy_alpine_jdk_ci_image:
+  stage: images
+  tags:
+    - saas-linux-small-amd64
+  image: docker:24.0.9
+  services:
+    - name: docker:24.0.9-dind
+      command: ["--experimental"]
+  script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - docker pull $CI_REGISTRY_IMAGE:jdk-latest || true
+    - docker buildx create --use --name repobuilder
+    - docker buildx build --platform linux/x86_64 -t $CI_REGISTRY_IMAGE:jdk-latest -f ci/Dockerfile-jdk --push .
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - ci/Dockerfile-jdk
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          - ci/Dockerfile-jdk
+        compare_to: 'refs/heads/main'
+
+build_deploy_android_sdk_ci_image:
+  stage: images
+  tags:
+    - saas-linux-small-amd64
+  image: docker:24.0.9
+  services:
+    - name: docker:24.0.9-dind
+      command: ["--experimental"]
+  script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - docker pull $CI_REGISTRY_IMAGE:android-sdk-latest || true
+    - docker buildx create --use --name repobuilder
+    - docker buildx build --platform linux/x86_64 -t $CI_REGISTRY_IMAGE:android-sdk-latest -f ci/Dockerfile-android-sdk --push .
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - ci/Dockerfile-android-sdk
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          - ci/Dockerfile-android-sdk
+        compare_to: 'refs/heads/main'

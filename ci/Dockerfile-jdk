@@ -1,0 +1,36 @@
+ARG ZULU_VERSION=22.0.2
+
+FROM azul/zulu-openjdk-alpine:${ZULU_VERSION}
+
+ENV TERM=dumb
+ENV PAGER=cat
+
+RUN apk --no-cache add \
+    bash \
+    curl \
+    envsubst \
+    gcompat \
+    gettext \
+    git \
+    git-lfs \
+    gzip \
+    grep \
+    jemalloc-dev \
+    jq \
+    openssh-client \
+    openssl-dev \
+    ripgrep \
+    sudo \
+    tar \
+    unzip \
+    wget \
+    xmlstarlet \
+    yq \
+    zip \
+    zstd
+
+# Change default shell from /bin/ash to /bin/bash
+SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
+
+# Replace malloc with jemalloc
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2

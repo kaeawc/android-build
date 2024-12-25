@@ -1,0 +1,32 @@
+ARG ALPINE_VERSION=3.21.0
+
+FROM alpine:${ALPINE_VERSION}
+
+ENV TERM=dumb
+ENV PAGER=cat
+
+RUN apk --no-cache add \
+    bash \
+    curl \
+    envsubst \
+    gcompat \
+    gettext \
+    git \
+    git-lfs \
+    gzip \
+    grep \
+    jemalloc-dev \
+    jq \
+    openssh-client \
+    openssl-dev \
+    shellcheck \
+    sudo \
+    tar \
+    unzip \
+    wget \
+    xmlstarlet \
+    yq \
+    zip
+
+# Change default shell from /bin/ash to /bin/bash
+SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
