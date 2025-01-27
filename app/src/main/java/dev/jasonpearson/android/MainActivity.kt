@@ -23,16 +23,25 @@
  */
 package dev.jasonpearson.android
 
+import android.content.Context
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import dev.jasonpearson.android.ui.theme.AndroidTheme
 
 class MainActivity : ComponentActivity() {
@@ -45,9 +54,38 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background) {
-                        Greeting("Android")
+                        Column {
+                            Greeting("Android")
+                            val androidVersion = Build.VERSION.SDK_INT
+                            val targetSdkVersion = getTargetSdkVersion()
+
+                            when (androidVersion.compareTo(targetSdkVersion)) {
+                                0 ->
+                                    DescribeVersion("The codebase is correctly targeting this device!")
+                                -1 ->
+                                    DescribeVersion("Device could be upgraded to target $targetSdkVersion SDK version.")
+                                else ->
+                                    DescribeVersion("Codebase should be upgraded to a more recent target version $targetSdkVersion.")
+                            }
+                        }
                     }
             }
+        }
+    }
+
+    /**
+     * Retrieves the target SDK version of the current application.
+     *
+     * @return The target SDK version as an integer. Returns -1 if unable to retrieve.
+     */
+    private fun getTargetSdkVersion(): Int {
+        return try {
+            packageManager.getPackageInfo(packageName, 0)
+                .applicationInfo
+                ?.targetSdkVersion ?: -1
+
+        } catch (e: PackageManager.NameNotFoundException) {
+            -1
         }
     }
 }
@@ -57,8 +95,19 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(text = "Hello $name!", modifier = modifier)
 }
 
+@Composable
+fun DescribeVersion(version: String, modifier: Modifier = Modifier) {
+    Text(
+        text = version,
+        style = MaterialTheme.typography.bodyMedium.copy(letterSpacing = 0.5.sp),
+        modifier = modifier
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    AndroidTheme { Greeting("Android") }
+    AndroidTheme {
+        Greeting("Android")
+    }
 }
