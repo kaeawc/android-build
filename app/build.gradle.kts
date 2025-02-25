@@ -113,8 +113,14 @@ android {
         checkAllWarnings = false
         warningsAsErrors = true
         checkDependencies = true
+
+        lintConfig = file("android-lint/fast-checks/lint.xml")
         ignoreTestSources = true
-        disable.addAll(listOf("WrongThreadInterprocedural", "ObsoleteSdkInt", "UnusedResources"))
+        disable.addAll(listOf(
+            "WrongThreadInterprocedural",
+            "ObsoleteSdkInt",
+            "UnusedResources",
+        ))
     }
 }
 
