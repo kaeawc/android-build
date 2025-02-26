@@ -89,8 +89,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-accessibility:
     name: "Android Lint Accessibility"
@@ -102,8 +101,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='accessibility'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-all:
     name: "Android Lint All"
@@ -115,8 +113,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='all'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
       - name: "Merge Lint SARIF results & Move HTML report"
         shell: "bash"
@@ -149,8 +146,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='compliance'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-correctness:
     name: "Android Lint Correctness"
@@ -162,8 +158,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='correctness'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-i18n-strings:
     name: "Android Lint i18n Strings"
@@ -175,8 +170,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='internationalization-strings'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-i18n-rtl:
     name: "Android Lint i18n RTL"
@@ -188,8 +182,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='internationalization-rtl'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-interop:
     name: "Android Lint Interop"
@@ -201,8 +194,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='interoperability'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-impl-issues:
     name: "Android Lint Impl Issues"
@@ -214,8 +206,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='lint-implementation-issues'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-performance:
     name: "Android Lint Performance"
@@ -227,8 +218,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='performance'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-productivity:
     name: "Android Lint Productivity"
@@ -240,8 +230,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='productivity'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-security:
     name: "Android Lint Security"
@@ -253,8 +242,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='security'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-testing:
     name: "Android Lint Testing"
@@ -266,8 +254,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='testing'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   android-lint-usability:
     name: "Android Lint Usability"
@@ -279,8 +266,7 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='usability'"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          reuse-configuration-cache: false
 
   build-apk:
     name: "Build APK"
