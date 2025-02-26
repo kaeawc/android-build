@@ -111,21 +111,19 @@ android {
         htmlOutput = file("${layout.buildDirectory.get()}/reports/lint-results.html")
         abortOnError = true
         checkDependencies = true
-        checkAllWarnings = true
-        warningsAsErrors = true
         ignoreTestSources = true
 
         // Detect command line arguments
-        // val customLintConfig = project.findProperty("lint-config") as? String ?: "default"
+        val customLintConfig = project.findProperty("lint-config") as? String ?: "default"
 
-        // val lintConfigFile = file("../android-lint/${customLintConfig}-lint.xml")
-        // if (!lintConfigFile.exists()) {
-        //     throw GradleException("Lint config file not found: ${lintConfigFile.absolutePath}")
-        // } else {
-        //     println("Using ${lintConfigFile.absolutePath} for lint config")
-        // }
+        val lintConfigFile = file("../android-lint/${customLintConfig}-lint.xml")
+        if (!lintConfigFile.exists()) {
+            throw GradleException("Lint config file not found: ${lintConfigFile.absolutePath}")
+        } else {
+            println("Using ${lintConfigFile.absolutePath} for lint config")
+        }
 
-        // lintConfig = lintConfigFile
+        lintConfig = lintConfigFile
     }
 }
 
