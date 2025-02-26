@@ -122,7 +122,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: ":app:lintRelease"
+          gradle-tasks: ":app:lintRelease -Plint-config='compliance'"
           reuse-configuration-cache: true
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 

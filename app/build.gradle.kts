@@ -111,9 +111,17 @@ android {
         htmlOutput = file("${layout.buildDirectory.get()}/reports/lint-results.html")
         abortOnError = true
         checkDependencies = true
-
-        lintConfig = file("android-lint/default-lint.xml")
         ignoreTestSources = true
+
+        // Detect command line arguments
+        val customLintConfig = project.findProperty("lint-config") as? String ?: "default"
+
+        val lintConfigFile = file("../android-lint/${customLintConfig}-lint.xml")
+        if (!lintConfigFile.exists()) {
+            throw GradleException("Lint config file not found: ${lintConfigFile.absolutePath}")
+        }
+
+        lintConfig = lintConfigFile
     }
 }
 
