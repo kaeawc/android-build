@@ -115,6 +115,7 @@ jobs:
           #  -Plint-config='all'
           gradle-tasks: ":app:lintRelease"
           reuse-configuration-cache: false
+          reuse-build-cache: false
 
       - name: "Merge Lint SARIF results & Move HTML report"
         shell: "bash"
