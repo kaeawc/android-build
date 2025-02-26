@@ -217,7 +217,7 @@ jobs:
             build/reports/lint-results.html
 
   android-lint-correctness:
-    name: "Android Lint correctness"
+    name: "Android Lint Correctness"
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
