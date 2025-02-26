@@ -193,14 +193,7 @@ runs:
       html_file=$(find build/reports/configuration-cache -type f -name "*.html" | head -n 1)
       if [[ -n "$html_file" ]]; then
         echo "Found Config Cache HTML Report"
-        ci/convert-config-cache-report-to-sarif.sh "$html_file" build/reports/config-cache-report.sarif
+        mv "$html_file" build/reports/config-cache-report.html
       else
         touch build/reports/config-cache-report.html
-        ci/convert-config-cache-report-to-sarif.sh build/reports/config-cache-report.html build/reports/config-cache-report.sarif
       fi
-
-#  - name: "Store Configuration Cache SARIF Report"
-#    uses: github/codeql-action/upload-sarif@v3
-#    if: success() || failure()
-#    with:
-#      sarif_file: build/reports/config-cache-report.sarif
