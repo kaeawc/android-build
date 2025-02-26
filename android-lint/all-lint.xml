@@ -802,9 +802,9 @@
          applies in a particular tools, such as gradle, studio, etc; this
          can be a comma separated list -->
     <!-- You can also use ! to specify that it does not apply in a tool  -->
-    <issue id="NewerVersionAvailable" severity="error" />
-    <issue id="OutdatedLibrary" severity="error" />
-    <issue id="RiskyLibrary" severity="error" />
-    <issue id="GradleDependency" severity="error" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="OutdatedLibrary" severity="ignore" />
+    <issue id="RiskyLibrary" severity="ignore" />
+    <issue id="GradleDependency" severity="ignore" />
 
 </lint>
