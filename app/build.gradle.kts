@@ -110,17 +110,10 @@ android {
         sarifOutput = file("${layout.buildDirectory.get()}/reports/lint-results.sarif")
         htmlOutput = file("${layout.buildDirectory.get()}/reports/lint-results.html")
         abortOnError = true
-        checkAllWarnings = false
-        warningsAsErrors = true
         checkDependencies = true
 
-        lintConfig = file("android-lint/fast-checks/lint.xml")
+        lintConfig = file("android-lint/default-lint.xml")
         ignoreTestSources = true
-        disable.addAll(listOf(
-            "WrongThreadInterprocedural",
-            "ObsoleteSdkInt",
-            "UnusedResources",
-        ))
     }
 }
 
