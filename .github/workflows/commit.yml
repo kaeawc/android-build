@@ -79,17 +79,18 @@ jobs:
           gradle-tasks: "assertModuleGraph"
           reuse-configuration-cache: false
 
-  # android-lint-default:
-  #   name: "Android Lint Default"
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: "Git Checkout"
-  #       uses: actions/checkout@v4
+  android-lint-default:
+    name: "Android Lint Default"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
 
-  #     - uses: ./.github/actions/gradle-task-run
-  #       with:
-  #         gradle-tasks: ":app:lintRelease"
-  #         reuse-configuration-cache: false
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: ":app:lintRelease"
+          reuse-configuration-cache: false
+          reuse-build-cache: false
 
   # android-lint-accessibility:
   #   name: "Android Lint Accessibility"
@@ -103,8 +104,8 @@ jobs:
   #         gradle-tasks: ":app:lintRelease -Plint-config='accessibility'"
   #         reuse-configuration-cache: false
 
-  android-lint:
-    name: "Android Lint"
+  android-lint-all:
+    name: "Android Lint All"
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
@@ -112,8 +113,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          #  -Plint-config='all'
-          gradle-tasks: ":app:lintRelease"
+          gradle-tasks: ":app:lintRelease -Plint-config='all'"
           reuse-configuration-cache: false
           reuse-build-cache: false
 
