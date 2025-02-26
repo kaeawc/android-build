@@ -119,6 +119,8 @@ android {
         val lintConfigFile = file("../android-lint/${customLintConfig}-lint.xml")
         if (!lintConfigFile.exists()) {
             throw GradleException("Lint config file not found: ${lintConfigFile.absolutePath}")
+        } else {
+            println("Using ${lintConfigFile.absolutePath} for lint config")
         }
 
         lintConfig = lintConfigFile

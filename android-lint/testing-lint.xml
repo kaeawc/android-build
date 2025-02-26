@@ -15,13 +15,13 @@
     <issue id="LabelFor" severity="ignore" />
 
     <!-- Compliance Checks -->
-    <issue id="PlaySdkIndexDeprecated" severity="error" />
-    <issue id="PlaySdkIndexGenericIssues" severity="error" />
-    <issue id="PlaySdkIndexNonCompliant" severity="error" />
-    <issue id="PlaySdkIndexVulnerability" severity="error" />
-    <issue id="ExpiredTargetSdkVersion" severity="error" />
-    <issue id="ExpiringTargetSdkVersion" severity="error" />
-    <issue id="QueryAllPackagesPermission" severity="error" />
+    <issue id="PlaySdkIndexDeprecated" severity="ignore" />
+    <issue id="PlaySdkIndexGenericIssues" severity="ignore" />
+    <issue id="PlaySdkIndexNonCompliant" severity="ignore" />
+    <issue id="PlaySdkIndexVulnerability" severity="ignore" />
+    <issue id="ExpiredTargetSdkVersion" severity="ignore" />
+    <issue id="ExpiringTargetSdkVersion" severity="ignore" />
+    <issue id="QueryAllPackagesPermission" severity="ignore" />
 
     <!-- Correctness -->
     <issue id="AccidentalOctal" severity="ignore" />
@@ -738,7 +738,7 @@
     <issue id="WorldWriteableFiles" severity="ignore" />
 
     <!-- Testing -->
-    <issue id="IgnoreWithoutReason" severity="ignore" />
+    <issue id="IgnoreWithoutReason" severity="error" />
 
     <!-- Usability -->
     <issue id="MenuTitle" severity="ignore" />

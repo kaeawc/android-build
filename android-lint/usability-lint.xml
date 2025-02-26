@@ -15,13 +15,13 @@
     <issue id="LabelFor" severity="ignore" />
 
     <!-- Compliance Checks -->
-    <issue id="PlaySdkIndexDeprecated" severity="error" />
-    <issue id="PlaySdkIndexGenericIssues" severity="error" />
-    <issue id="PlaySdkIndexNonCompliant" severity="error" />
-    <issue id="PlaySdkIndexVulnerability" severity="error" />
-    <issue id="ExpiredTargetSdkVersion" severity="error" />
-    <issue id="ExpiringTargetSdkVersion" severity="error" />
-    <issue id="QueryAllPackagesPermission" severity="error" />
+    <issue id="PlaySdkIndexDeprecated" severity="ignore" />
+    <issue id="PlaySdkIndexGenericIssues" severity="ignore" />
+    <issue id="PlaySdkIndexNonCompliant" severity="ignore" />
+    <issue id="PlaySdkIndexVulnerability" severity="ignore" />
+    <issue id="ExpiredTargetSdkVersion" severity="ignore" />
+    <issue id="ExpiringTargetSdkVersion" severity="ignore" />
+    <issue id="QueryAllPackagesPermission" severity="ignore" />
 
     <!-- Correctness -->
     <issue id="AccidentalOctal" severity="ignore" />
@@ -741,44 +741,44 @@
     <issue id="IgnoreWithoutReason" severity="ignore" />
 
     <!-- Usability -->
-    <issue id="MenuTitle" severity="ignore" />
-    <issue id="WearPasswordInput" severity="ignore" />
-    <issue id="ReportShortcutUsage" severity="ignore" />
-    <issue id="AlwaysShowAction" severity="ignore" />
-    <issue id="Autofill" severity="ignore" />
-    <issue id="ButtonCase" severity="ignore" />
-    <issue id="ButtonOrder" severity="ignore" />
-    <issue id="ButtonStyle" severity="ignore" />
-    <issue id="SmallSp" severity="ignore" />
-    <issue id="TextFields" severity="ignore" />
-    <issue id="UnnecessaryRequiredFeature" severity="ignore" />
-    <issue id="ViewConstructor" severity="ignore" />
-    <issue id="WearBackNavigation" severity="ignore" />
-    <issue id="WearRecents" severity="ignore" />
-    <issue id="WearSplashScreen" severity="ignore" />
-    <issue id="TilePreviewImageFormat" severity="ignore" />
-    <issue id="WebpUnsupported" severity="ignore" />
-    <issue id="ActivityIconColor" severity="ignore" />
-    <issue id="GifUsage" severity="ignore" />
-    <issue id="IconColors" severity="ignore" />
-    <issue id="IconDensities" severity="ignore" />
-    <issue id="IconDipSize" severity="ignore" />
-    <issue id="IconDuplicates" severity="ignore" />
-    <issue id="IconDuplicatesConfig" severity="ignore" />
-    <issue id="IconExtension" severity="ignore" />
-    <issue id="IconLauncherShape" severity="ignore" />
-    <issue id="IconLocation" severity="ignore" />
-    <issue id="IconMissingDensityFolder" severity="ignore" />
-    <issue id="IconMixedNinePatch" severity="ignore" />
-    <issue id="IconNoDpi" severity="ignore" />
-    <issue id="IconXmlAndPng" severity="ignore" />
-    <issue id="MipmapIcons" severity="ignore" />
-    <issue id="MissingApplicationIcon" severity="ignore" />
-    <issue id="MonochromeLauncherIcon" severity="ignore" />
-    <issue id="SquareAndRoundTilePreviews" severity="ignore" />
-    <issue id="AllCaps" severity="ignore" />
-    <issue id="TypographyDashes" severity="ignore" />
-    <issue id="TypographyEllipsis" severity="ignore" />
-    <issue id="TypographyFractions" severity="ignore" />
-    <issue id="TypographyOther" severity="ignore" />
+    <issue id="MenuTitle" severity="error" />
+    <issue id="WearPasswordInput" severity="error" />
+    <issue id="ReportShortcutUsage" severity="error" />
+    <issue id="AlwaysShowAction" severity="error" />
+    <issue id="Autofill" severity="error" />
+    <issue id="ButtonCase" severity="error" />
+    <issue id="ButtonOrder" severity="error" />
+    <issue id="ButtonStyle" severity="error" />
+    <issue id="SmallSp" severity="error" />
+    <issue id="TextFields" severity="error" />
+    <issue id="UnnecessaryRequiredFeature" severity="error" />
+    <issue id="ViewConstructor" severity="error" />
+    <issue id="WearBackNavigation" severity="error" />
+    <issue id="WearRecents" severity="error" />
+    <issue id="WearSplashScreen" severity="error" />
+    <issue id="TilePreviewImageFormat" severity="error" />
+    <issue id="WebpUnsupported" severity="error" />
+    <issue id="ActivityIconColor" severity="error" />
+    <issue id="GifUsage" severity="error" />
+    <issue id="IconColors" severity="error" />
+    <issue id="IconDensities" severity="error" />
+    <issue id="IconDipSize" severity="error" />
+    <issue id="IconDuplicates" severity="error" />
+    <issue id="IconDuplicatesConfig" severity="error" />
+    <issue id="IconExtension" severity="error" />
+    <issue id="IconLauncherShape" severity="error" />
+    <issue id="IconLocation" severity="error" />
+    <issue id="IconMissingDensityFolder" severity="error" />
+    <issue id="IconMixedNinePatch" severity="error" />
+    <issue id="IconNoDpi" severity="error" />
+    <issue id="IconXmlAndPng" severity="error" />
+    <issue id="MipmapIcons" severity="error" />
+    <issue id="MissingApplicationIcon" severity="error" />
+    <issue id="MonochromeLauncherIcon" severity="error" />
+    <issue id="SquareAndRoundTilePreviews" severity="error" />
+    <issue id="AllCaps" severity="error" />
+    <issue id="TypographyDashes" severity="error" />
+    <issue id="TypographyEllipsis" severity="error" />
+    <issue id="TypographyFractions" severity="error" />
+    <issue id="TypographyOther" severity="error" />
 </lint>

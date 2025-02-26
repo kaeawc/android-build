@@ -4,24 +4,24 @@
     <!-- Possible severities: ignore, information, warning, error, fatal -->
 
     <!-- Accessibility -->
-    <issue id="GetContentDescriptionOverride" severity="ignore" />
-    <issue id="AccessibilityFocus" severity="ignore" />
-    <issue id="AccessibilityScrollActions" severity="ignore" />
-    <issue id="AccessibilityWindowStateChangedEvent" severity="ignore" />
-    <issue id="ClickableViewAccessibility" severity="ignore" />
-    <issue id="ContentDescription" severity="ignore" />
-    <issue id="InflationInItemDecoration" severity="ignore" />
-    <issue id="KeyboardInaccessibleWidget" severity="ignore" />
-    <issue id="LabelFor" severity="ignore" />
+    <issue id="GetContentDescriptionOverride" severity="error" />
+    <issue id="AccessibilityFocus" severity="error" />
+    <issue id="AccessibilityScrollActions" severity="error" />
+    <issue id="AccessibilityWindowStateChangedEvent" severity="error" />
+    <issue id="ClickableViewAccessibility" severity="error" />
+    <issue id="ContentDescription" severity="error" />
+    <issue id="InflationInItemDecoration" severity="error" />
+    <issue id="KeyboardInaccessibleWidget" severity="error" />
+    <issue id="LabelFor" severity="error" />
 
     <!-- Compliance Checks -->
-    <issue id="PlaySdkIndexDeprecated" severity="error" />
-    <issue id="PlaySdkIndexGenericIssues" severity="error" />
-    <issue id="PlaySdkIndexNonCompliant" severity="error" />
-    <issue id="PlaySdkIndexVulnerability" severity="error" />
-    <issue id="ExpiredTargetSdkVersion" severity="error" />
-    <issue id="ExpiringTargetSdkVersion" severity="error" />
-    <issue id="QueryAllPackagesPermission" severity="error" />
+    <issue id="PlaySdkIndexDeprecated" severity="ignore" />
+    <issue id="PlaySdkIndexGenericIssues" severity="ignore" />
+    <issue id="PlaySdkIndexNonCompliant" severity="ignore" />
+    <issue id="PlaySdkIndexVulnerability" severity="ignore" />
+    <issue id="ExpiredTargetSdkVersion" severity="ignore" />
+    <issue id="ExpiringTargetSdkVersion" severity="ignore" />
+    <issue id="QueryAllPackagesPermission" severity="ignore" />
 
     <!-- Correctness -->
     <issue id="AccidentalOctal" severity="ignore" />

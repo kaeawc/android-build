@@ -15,13 +15,13 @@
     <issue id="LabelFor" severity="ignore" />
 
     <!-- Compliance Checks -->
-    <issue id="PlaySdkIndexDeprecated" severity="error" />
-    <issue id="PlaySdkIndexGenericIssues" severity="error" />
-    <issue id="PlaySdkIndexNonCompliant" severity="error" />
-    <issue id="PlaySdkIndexVulnerability" severity="error" />
-    <issue id="ExpiredTargetSdkVersion" severity="error" />
-    <issue id="ExpiringTargetSdkVersion" severity="error" />
-    <issue id="QueryAllPackagesPermission" severity="error" />
+    <issue id="PlaySdkIndexDeprecated" severity="ignore" />
+    <issue id="PlaySdkIndexGenericIssues" severity="ignore" />
+    <issue id="PlaySdkIndexNonCompliant" severity="ignore" />
+    <issue id="PlaySdkIndexVulnerability" severity="ignore" />
+    <issue id="ExpiredTargetSdkVersion" severity="ignore" />
+    <issue id="ExpiringTargetSdkVersion" severity="ignore" />
+    <issue id="QueryAllPackagesPermission" severity="ignore" />
 
     <!-- Correctness -->
     <issue id="AccidentalOctal" severity="ignore" />
@@ -636,26 +636,26 @@
     <issue id="WakelockTimeout" severity="ignore" />
 
     <!-- Productivity -->
-    <issue id="ComposeCompositionLocalGetter" severity="ignore" />
-    <issue id="ComposeContentEmitterReturningValues" severity="ignore" />
-    <issue id="ComposeModifierMissing" severity="ignore" />
-    <issue id="ComposeModifierReused" severity="ignore" />
-    <issue id="ComposeModifierWithoutDefault" severity="ignore" />
-    <issue id="ComposeMultipleContentEmitters" severity="ignore" />
-    <issue id="ComposeMutableParameters" severity="ignore" />
-    <issue id="ComposeNamingLowercase" severity="ignore" />
-    <issue id="ComposeNamingUppercase" severity="ignore" />
-    <issue id="ComposeParameterOrder" severity="ignore" />
-    <issue id="ComposePreviewNaming" severity="ignore" />
-    <issue id="ComposePreviewPublic" severity="ignore" />
-    <issue id="ComposeRememberMissing" severity="ignore" />
-    <issue id="KtxExtensionAvailable" severity="ignore" />
-    <issue id="ModifierNodeInspectableProperties" severity="ignore" />
-    <issue id="ComposeCompositionLocalUsage" severity="ignore" />
-    <issue id="ComposeUnstableCollections" severity="ignore" />
-    <issue id="ComposeUnstableReceiver" severity="ignore" />
-    <issue id="UseKtx" severity="ignore" />
-    <issue id="UseTomlInstead" severity="ignore" />
+    <issue id="ComposeCompositionLocalGetter" severity="error" />
+    <issue id="ComposeContentEmitterReturningValues" severity="error" />
+    <issue id="ComposeModifierMissing" severity="error" />
+    <issue id="ComposeModifierReused" severity="error" />
+    <issue id="ComposeModifierWithoutDefault" severity="error" />
+    <issue id="ComposeMultipleContentEmitters" severity="error" />
+    <issue id="ComposeMutableParameters" severity="error" />
+    <issue id="ComposeNamingLowercase" severity="error" />
+    <issue id="ComposeNamingUppercase" severity="error" />
+    <issue id="ComposeParameterOrder" severity="error" />
+    <issue id="ComposePreviewNaming" severity="error" />
+    <issue id="ComposePreviewPublic" severity="error" />
+    <issue id="ComposeRememberMissing" severity="error" />
+    <issue id="KtxExtensionAvailable" severity="error" />
+    <issue id="ModifierNodeInspectableProperties" severity="error" />
+    <issue id="ComposeCompositionLocalUsage" severity="error" />
+    <issue id="ComposeUnstableCollections" severity="error" />
+    <issue id="ComposeUnstableReceiver" severity="error" />
+    <issue id="UseKtx" severity="error" />
+    <issue id="UseTomlInstead" severity="error" />
 
     <!-- Security -->
     <issue id="BidiSpoofing" severity="ignore" />
