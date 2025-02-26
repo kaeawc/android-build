@@ -110,11 +110,20 @@ android {
         sarifOutput = file("${layout.buildDirectory.get()}/reports/lint-results.sarif")
         htmlOutput = file("${layout.buildDirectory.get()}/reports/lint-results.html")
         abortOnError = true
-        checkAllWarnings = false
-        warningsAsErrors = true
         checkDependencies = true
         ignoreTestSources = true
-        disable.addAll(listOf("WrongThreadInterprocedural", "ObsoleteSdkInt", "UnusedResources"))
+
+        // Detect command line arguments
+        val customLintConfig = project.findProperty("lint-config") as? String ?: "default"
+
+        val lintConfigFile = file("../android-lint/${customLintConfig}-lint.xml")
+        if (!lintConfigFile.exists()) {
+            throw GradleException("Lint config file not found: ${lintConfigFile.absolutePath}")
+        } else {
+            println("Using ${lintConfigFile.absolutePath} for lint config")
+        }
+
+        lintConfig = lintConfigFile
     }
 }
 
