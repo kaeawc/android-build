@@ -103,6 +103,17 @@ allprojects {
 
     tasks.withType<Test>().configureEach { jvmArgs(gradleWorkerJvmArgs) }
 
+    // Making Android Lint tasks cacheable
+    project(":app") {
+        tasks.matching { it.name == "lintRelease" }.configureEach {
+            onlyIf { false }
+        }
+        tasks.withType<com.android.build.gradle.internal.lint.AndroidLintCopyReportTask>().configureEach {
+            outputs.upToDateWhen { true }
+            outputs.cacheIf { true }
+        }
+    }
+
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             languageVersion.set(
