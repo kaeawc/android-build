@@ -104,14 +104,30 @@ allprojects {
     tasks.withType<Test>().configureEach { jvmArgs(gradleWorkerJvmArgs) }
 
     // Making Android Lint tasks cacheable
-    tasks.withType<org.jetbrains.kotlin.gradle.tooling.BuildKotlinToolingMetadataTask>().configureEach { outputs.cacheIf { true } }
-    tasks.withType<com.android.build.gradle.internal.lint.AndroidLintTask>().configureEach { outputs.cacheIf { true } }
-    tasks.withType<com.android.build.gradle.internal.lint.LintModelWriterTask>().configureEach { outputs.cacheIf { true } }
-    tasks.withType<com.android.build.gradle.internal.tasks.CheckAarMetadataTask>().configureEach { outputs.cacheIf { true } }
-    tasks.withType<com.android.build.gradle.tasks.MapSourceSetPathsTask>().configureEach { outputs.cacheIf { true } }
-    tasks.withType<com.android.build.gradle.internal.tasks.ExtractProguardFiles>().configureEach { outputs.cacheIf { true } }
-    tasks.withType<com.android.build.gradle.tasks.CompatibleScreensManifest>().configureEach { outputs.cacheIf { true } }
-    tasks.withType<com.android.build.gradle.internal.lint.AndroidLintTextOutputTask>().configureEach { outputs.cacheIf { true } }
+    tasks
+        .withType<org.jetbrains.kotlin.gradle.tooling.BuildKotlinToolingMetadataTask>()
+        .configureEach { outputs.cacheIf { true } }
+    tasks.withType<com.android.build.gradle.internal.lint.AndroidLintTask>().configureEach {
+        outputs.cacheIf { true }
+    }
+    tasks.withType<com.android.build.gradle.internal.lint.LintModelWriterTask>().configureEach {
+        outputs.cacheIf { true }
+    }
+    tasks.withType<com.android.build.gradle.internal.tasks.CheckAarMetadataTask>().configureEach {
+        outputs.cacheIf { true }
+    }
+    tasks.withType<com.android.build.gradle.tasks.MapSourceSetPathsTask>().configureEach {
+        outputs.cacheIf { true }
+    }
+    tasks.withType<com.android.build.gradle.internal.tasks.ExtractProguardFiles>().configureEach {
+        outputs.cacheIf { true }
+    }
+    tasks.withType<com.android.build.gradle.tasks.CompatibleScreensManifest>().configureEach {
+        outputs.cacheIf { true }
+    }
+    tasks
+        .withType<com.android.build.gradle.internal.lint.AndroidLintTextOutputTask>()
+        .configureEach { outputs.cacheIf { true } }
     project(":app") {
         tasks.matching { it.name == "lintRelease" }.configureEach { onlyIf { false } }
         tasks
