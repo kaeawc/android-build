@@ -123,6 +123,8 @@ android {
             println("Using ${lintConfigFile.absolutePath} for lint config")
         }
 
+        absolutePaths = false
+
         lintConfig = lintConfigFile
     }
 }
