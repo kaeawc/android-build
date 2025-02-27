@@ -89,8 +89,9 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease"
-          reuse-configuration-cache: false
-          reuse-build-cache: false
+          reuse-configuration-cache: true
+          reuse-build-cache: true
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   # android-lint-accessibility:
   #   name: "Android Lint Accessibility"
@@ -114,8 +115,9 @@ jobs:
       - uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: ":app:lintRelease -Plint-config='all'"
-          reuse-configuration-cache: false
-          reuse-build-cache: false
+          reuse-configuration-cache: true
+          reuse-build-cache: true
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: "Merge Lint SARIF results & Move HTML report"
         shell: "bash"
