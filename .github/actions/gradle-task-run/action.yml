@@ -65,7 +65,7 @@ runs:
     uses: actions/setup-java@v4
     with:
       distribution: 'zulu'
-      java-version: '22'
+      java-version: '23'
 
   - name: "Set up tcmalloc"
     if: ${{ inputs.with-tcmalloc }}
