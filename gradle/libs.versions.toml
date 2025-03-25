@@ -28,6 +28,8 @@ test-junit = "4.13.2"
 test-androidx-junit = "1.2.1"
 test-androidx-espresso = "3.6.1"
 
+navigation = "2.8.9"
+
 kotlin-inject = "0.7.2"
 zac-anvil = "0.4.1"
 dagger = "2.55"
@@ -56,6 +58,8 @@ kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", versi
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "build-kotlin-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "build-kotlin-datetime" }
 
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+
 kotlin-inject-compiler = { module = "me.tatarka.inject:kotlin-inject-compiler-ksp", version.ref = "kotlin-inject" }
 kotlin-inject-runtime = { module = "me.tatarka.inject:kotlin-inject-runtime", version.ref = "kotlin-inject" }
 
@@ -75,6 +79,7 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "androidx-compose-bom" }
 compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+compose-material-icons = { group = "androidx.compose.material", name = "material-icons-extended" }
 compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 compose-ui-core = { group = "androidx.compose.ui", name = "ui" }
 compose-ui-util = { group = "androidx.compose.ui", name = "ui-util" }

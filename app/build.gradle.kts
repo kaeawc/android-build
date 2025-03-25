@@ -140,8 +140,8 @@ dependencies {
     // Needed for reading Java 19+ class files due to JVM target higher than 11
     implementation(platform(libs.asm.bom))
     implementation(platform(libs.compose.bom))
-    implementation("androidx.compose.foundation:foundation:1.7.8")
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material.icons)
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.bundles.compose.ui)
@@ -162,5 +162,5 @@ dependencies {
 
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.bundles.compose.ui.espresso.test)
-    implementation("androidx.navigation:navigation-compose:2.7.0")
+    implementation(libs.navigation.compose)
 }
