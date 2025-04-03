@@ -32,7 +32,7 @@ navigation = "2.8.9"
 
 kotlin-inject = "0.7.2"
 zac-anvil = "0.4.1"
-dagger = "2.56"
+dagger = "2.56.1"
 
 [plugins]
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "build-gradle-dependencyAnalysis" }
