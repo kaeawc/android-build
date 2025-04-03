@@ -50,7 +50,6 @@ plugins {
   alias(libs.plugins.ksp) apply false
 }
 
-val ktfmtVersion = libs.versions.build.gradle.ktfmt.get()
 val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
 val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.testWorker.jvmargs").get()
 
@@ -67,7 +66,6 @@ allprojects {
     kotlin {
       target("src/**/*.kt")
       targetExclude(externalFiles)
-      ktfmt(ktfmtVersion).dropboxStyle()
       trimTrailingWhitespace()
       endWithNewline()
       licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
@@ -75,14 +73,12 @@ allprojects {
     }
     format("kotlinExternal", KotlinExtension::class.java) {
       target(externalFiles)
-      ktfmt(ktfmtVersion).dropboxStyle()
       trimTrailingWhitespace()
       endWithNewline()
       targetExclude("**/copyright.kt")
     }
     kotlinGradle {
       target("*.kts")
-      ktfmt(ktfmtVersion).dropboxStyle()
       trimTrailingWhitespace()
       endWithNewline()
       licenseHeaderFile(
