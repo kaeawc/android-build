@@ -34,12 +34,12 @@ import javax.inject.Provider
 @SingleIn(AppScope::class)
 interface ApplicationComponent {
 
-    val activityProviders: Map<Class<out Activity>, @JvmSuppressWildcards Provider<Activity>>
+  val activityProviders: Map<Class<out Activity>, @JvmSuppressWildcards Provider<Activity>>
 
-    fun inject(application: App)
+  fun inject(application: App)
 
-    @MergeComponent.Factory
-    fun interface Factory {
-        fun create(@BindsInstance application: Application): ApplicationComponent
-    }
+  @MergeComponent.Factory
+  fun interface Factory {
+    fun create(@BindsInstance application: Application): ApplicationComponent
+  }
 }

@@ -25,26 +25,26 @@ package dev.jasonpearson.android.widgets
 
 interface WidgetRepository {
 
-    fun add(widget: Widget)
+  fun add(widget: Widget)
 
-    fun getByName(name: String): Widget?
+  fun getByName(name: String): Widget?
 
-    fun getAll(): List<Widget>
+  fun getAll(): List<Widget>
 }
 
 internal class WidgetRepositoryImpl : WidgetRepository {
 
-    private val widgets = mutableListOf<Widget>()
+  private val widgets = mutableListOf<Widget>()
 
-    override fun add(widget: Widget) {
-        widgets.add(widget)
-    }
+  override fun add(widget: Widget) {
+    widgets.add(widget)
+  }
 
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
+  override fun getByName(name: String): Widget? {
+    return widgets.firstOrNull { it.name == name }
+  }
 
-    override fun getAll(): List<Widget> {
-        return widgets
-    }
+  override fun getAll(): List<Widget> {
+    return widgets
+  }
 }

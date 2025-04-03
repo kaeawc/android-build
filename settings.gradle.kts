@@ -22,26 +22,26 @@
  * SOFTWARE.
  */
 dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-    }
+  repositories {
+    google()
+    mavenCentral()
+  }
 }
 
 pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
 
-        // R8 repo for R8/D8 releases
-        exclusiveContent {
-            forRepository {
-                maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
-            }
-            filter { includeModule("com.android.tools", "r8") }
-        }
+    // R8 repo for R8/D8 releases
+    exclusiveContent {
+      forRepository {
+        maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
+      }
+      filter { includeModule("com.android.tools", "r8") }
     }
+  }
 }
 
 rootProject.name = "Android Build"

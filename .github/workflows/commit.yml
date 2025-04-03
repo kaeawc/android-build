@@ -55,6 +55,18 @@ jobs:
           sudo apt-get install xmlstarlet
           ci/validate_xml.sh
 
+  ktfmt:
+    name: "ktfmt"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Run ktfmt"
+        shell: "bash"
+        run: |
+          ci/validate_ktfmt.sh
+
   validate-shell-scripts:
     name: "Validate Shell Scripts"
     runs-on: ubuntu-latest
