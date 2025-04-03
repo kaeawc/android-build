@@ -65,7 +65,7 @@ jobs:
       - name: "Run ktfmt"
         shell: "bash"
         run: |
-          ci/validate_ktfmt.sh
+          ONLY_TOUCHED_FILES=false ci/validate_ktfmt.sh
 
   validate-shell-scripts:
     name: "Validate Shell Scripts"
