@@ -52,7 +52,7 @@ Build Test APK: Dependency for UI test job, no artifact.
 
 Unit Tests: Regular Android JVM Unit tests.
 
-Spotless: Performs all configured Spotless plugin checks with ktfmt and spotless. This validates code format and ensures expected precommit checks have already been run.
+Spotless: Performs all configured Spotless plugin checks. This mostly validates that copyright headers have been applied to source files.
 
 Module Graph: Validates the module graph, checks that it adheres to the existing rules and limits the depth of the graph.
 

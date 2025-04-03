@@ -54,330 +54,326 @@ import dev.jasonpearson.android.ui.theme.AndroidTheme
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent { AndroidTheme { ResumeNavigation() } }
-    }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContent { AndroidTheme { ResumeNavigation() } }
+  }
 }
 
 @Composable
 fun ResumeNavigation() {
-    val navController = rememberNavController()
+  val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "resume") {
-        composable("resume") {
-            ResumeApp(onShareLinkedIn = { navController.navigate("linkedin_qr") })
-        }
-        composable("linkedin_qr") { LinkedInQRScreen(onBack = { navController.popBackStack() }) }
-    }
+  NavHost(navController = navController, startDestination = "resume") {
+    composable("resume") { ResumeApp(onShareLinkedIn = { navController.navigate("linkedin_qr") }) }
+    composable("linkedin_qr") { LinkedInQRScreen(onBack = { navController.popBackStack() }) }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResumeApp(onShareLinkedIn: () -> Unit) {
-    val scrollState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-    var visibleItems by remember { mutableStateOf<List<ResumeItem>>(emptyList()) }
+  val scrollState = rememberLazyListState()
+  val scope = rememberCoroutineScope()
+  var visibleItems by remember { mutableStateOf<List<ResumeItem>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
-        delay(200)
-        visibleItems = resumeItems
-    }
+  LaunchedEffect(Unit) {
+    delay(200)
+    visibleItems = resumeItems
+  }
 
-    Scaffold(
-        topBar = {
-            Surface(shadowElevation = 4.dp, color = MaterialTheme.colorScheme.primary) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Jason Pearson",
-                                style =
-                                    MaterialTheme.typography.headlineMedium.copy(
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        fontWeight = FontWeight.Bold))
+  Scaffold(
+      topBar = {
+        Surface(shadowElevation = 4.dp, color = MaterialTheme.colorScheme.primary) {
+          Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically) {
+                  Text(
+                      text = "Jason Pearson",
+                      style =
+                          MaterialTheme.typography.headlineMedium.copy(
+                              color = MaterialTheme.colorScheme.onPrimary,
+                              fontWeight = FontWeight.Bold))
 
-                            // LinkedIn Share button
-                            IconButton(
-                                onClick = onShareLinkedIn,
-                                colors =
-                                    IconButtonDefaults.iconButtonColors(
-                                        contentColor = MaterialTheme.colorScheme.onPrimary)) {
-                                    Icon(
-                                        imageVector = Icons.Default.Share,
-                                        contentDescription = "Share LinkedIn")
-                                }
-                        }
+                  // LinkedIn Share button
+                  IconButton(
+                      onClick = onShareLinkedIn,
+                      colors =
+                          IconButtonDefaults.iconButtonColors(
+                              contentColor = MaterialTheme.colorScheme.onPrimary)) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share LinkedIn")
+                      }
+                }
 
+            Text(
+                text = "Principal Software Engineer",
+                style =
+                    MaterialTheme.typography.titleMedium.copy(
+                        color = MaterialTheme.colorScheme.onPrimary))
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween) {
+                  Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Phone,
+                        contentDescription = "Phone",
+                        tint = MaterialTheme.colorScheme.onPrimary)
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Principal Software Engineer",
+                        text = "929-235-2418",
                         style =
-                            MaterialTheme.typography.titleMedium.copy(
+                            MaterialTheme.typography.bodyMedium.copy(
                                 color = MaterialTheme.colorScheme.onPrimary))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.Phone,
-                                    contentDescription = "Phone",
-                                    tint = MaterialTheme.colorScheme.onPrimary)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "929-235-2418",
-                                    style =
-                                        MaterialTheme.typography.bodyMedium.copy(
-                                            color = MaterialTheme.colorScheme.onPrimary))
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.Email,
-                                    contentDescription = "Email",
-                                    tint = MaterialTheme.colorScheme.onPrimary)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "jason.d.pearson@gmail.com",
-                                    style =
-                                        MaterialTheme.typography.bodyMedium.copy(
-                                            color = MaterialTheme.colorScheme.onPrimary))
-                            }
-                        }
+                  }
+                  Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Email,
+                        contentDescription = "Email",
+                        tint = MaterialTheme.colorScheme.onPrimary)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "jason.d.pearson@gmail.com",
+                        style =
+                            MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onPrimary))
+                  }
                 }
-            }
-        }) { paddingValues ->
-            LazyColumn(
-                state = scrollState,
-                contentPadding =
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding() + 16.dp,
-                        bottom = 16.dp,
-                        start = 16.dp,
-                        end = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    itemsIndexed(visibleItems) { index, item ->
-                        val isVisible by remember {
-                            derivedStateOf {
-                                val firstVisibleItem = scrollState.firstVisibleItemIndex
-                                val lastVisibleItem =
-                                    firstVisibleItem + scrollState.layoutInfo.visibleItemsInfo.size
-                                index <= lastVisibleItem + 1 && index >= firstVisibleItem - 1
-                            }
-                        }
-
-                        AnimatedVisibility(
-                            visible = isVisible, enter = fadeIn() + slideInVertically { it / 5 }) {
-                                when (item) {
-                                    is ResumeItem.Profile -> ProfileSection(item)
-                                    is ResumeItem.Experience -> ExperienceSection(item)
-                                    is ResumeItem.Skills -> SkillsSection(item)
-                                    is ResumeItem.Education -> EducationSection(item)
-                                    is ResumeItem.Talks -> TalksSection(item)
-                                }
-                            }
-                    }
-                }
+          }
         }
+      }) { paddingValues ->
+        LazyColumn(
+            state = scrollState,
+            contentPadding =
+                PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = 16.dp,
+                    start = 16.dp,
+                    end = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+              itemsIndexed(visibleItems) { index, item ->
+                val isVisible by remember {
+                  derivedStateOf {
+                    val firstVisibleItem = scrollState.firstVisibleItemIndex
+                    val lastVisibleItem =
+                        firstVisibleItem + scrollState.layoutInfo.visibleItemsInfo.size
+                    index <= lastVisibleItem + 1 && index >= firstVisibleItem - 1
+                  }
+                }
+
+                AnimatedVisibility(
+                    visible = isVisible, enter = fadeIn() + slideInVertically { it / 5 }) {
+                      when (item) {
+                        is ResumeItem.Profile -> ProfileSection(item)
+                        is ResumeItem.Experience -> ExperienceSection(item)
+                        is ResumeItem.Skills -> SkillsSection(item)
+                        is ResumeItem.Education -> EducationSection(item)
+                        is ResumeItem.Talks -> TalksSection(item)
+                      }
+                    }
+              }
+            }
+      }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LinkedInQRScreen(onBack: () -> Unit) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Connect with me") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                })
-        }) { paddingValues ->
-            Column(
-                modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            title = { Text("Connect with me") },
+            navigationIcon = {
+              IconButton(onClick = onBack) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+              }
+            })
+      }) { paddingValues ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center) {
+              Text(
+                  text = "👋 Hi, nice to meet you!",
+                  style = MaterialTheme.typography.headlineMedium,
+                  textAlign = TextAlign.Center,
+                  modifier = Modifier.padding(bottom = 24.dp))
+
+              // Placeholder for LinkedIn QR code
+              Box(
+                  modifier =
+                      Modifier.size(280.dp)
+                          .background(MaterialTheme.colorScheme.surfaceVariant)
+                          .padding(16.dp),
+                  contentAlignment = Alignment.Center) {
+                    // Replace R.drawable.linkedin_qr with your actual QR code image
+                    // For now, we'll use a placeholder
                     Text(
-                        text = "👋 Hi, nice to meet you!",
-                        style = MaterialTheme.typography.headlineMedium,
+                        text = "LinkedIn QR Code\nPlaceholder",
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 24.dp))
+                        style = MaterialTheme.typography.bodyLarge)
 
-                    // Placeholder for LinkedIn QR code
-                    Box(
-                        modifier =
-                            Modifier.size(280.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .padding(16.dp),
-                        contentAlignment = Alignment.Center) {
-                            // Replace R.drawable.linkedin_qr with your actual QR code image
-                            // For now, we'll use a placeholder
-                            Text(
-                                text = "LinkedIn QR Code\nPlaceholder",
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyLarge)
+                    // When you have a QR code image:
+                    // Image(
+                    //     painter = painterResource(id = R.drawable.linkedin_qr),
+                    //     contentDescription = "LinkedIn QR Code",
+                    //     modifier = Modifier.fillMaxSize()
+                    // )
+                  }
 
-                            // When you have a QR code image:
-                            // Image(
-                            //     painter = painterResource(id = R.drawable.linkedin_qr),
-                            //     contentDescription = "LinkedIn QR Code",
-                            //     modifier = Modifier.fillMaxSize()
-                            // )
-                        }
-
-                    Text(
-                        text = "Scan this code to connect on LinkedIn",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 24.dp))
-                }
-        }
+              Text(
+                  text = "Scan this code to connect on LinkedIn",
+                  style = MaterialTheme.typography.bodyLarge,
+                  textAlign = TextAlign.Center,
+                  modifier = Modifier.padding(top = 24.dp))
+            }
+      }
 }
 
 @Composable
 fun ProfileSection(profile: ResumeItem.Profile) {
-    ResumeCard {
-        Column {
-            SectionHeader(title = "Profile")
-            Text(text = profile.description)
-        }
+  ResumeCard {
+    Column {
+      SectionHeader(title = "Profile")
+      Text(text = profile.description)
     }
+  }
 }
 
 @Composable
 fun ExperienceSection(experience: ResumeItem.Experience) {
-    ResumeCard {
-        Column {
-            SectionHeader(title = experience.title)
-            Text(
-                text = "${experience.company} — ${experience.location}",
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 4.dp))
-            Text(
-                text = experience.period,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp))
+  ResumeCard {
+    Column {
+      SectionHeader(title = experience.title)
+      Text(
+          text = "${experience.company} — ${experience.location}",
+          fontWeight = FontWeight.Bold,
+          modifier = Modifier.padding(bottom = 4.dp))
+      Text(
+          text = experience.period,
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          modifier = Modifier.padding(bottom = 8.dp))
 
-            experience.responsibilities.forEach { responsibility ->
-                Row(
-                    modifier = Modifier.padding(vertical = 2.dp),
-                    verticalAlignment = Alignment.Top) {
-                        Text(
-                            text = "•",
-                            modifier = Modifier.padding(end = 8.dp, top = 0.dp),
-                            style = MaterialTheme.typography.bodyMedium)
-                        Text(text = responsibility, style = MaterialTheme.typography.bodyMedium)
-                    }
-            }
+      experience.responsibilities.forEach { responsibility ->
+        Row(modifier = Modifier.padding(vertical = 2.dp), verticalAlignment = Alignment.Top) {
+          Text(
+              text = "•",
+              modifier = Modifier.padding(end = 8.dp, top = 0.dp),
+              style = MaterialTheme.typography.bodyMedium)
+          Text(text = responsibility, style = MaterialTheme.typography.bodyMedium)
         }
+      }
     }
+  }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SkillsSection(skills: ResumeItem.Skills) {
-    ResumeCard {
-        Column {
-            SectionHeader(title = "Skills")
+  ResumeCard {
+    Column {
+      SectionHeader(title = "Skills")
 
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    skills.skills.forEach { skill ->
-                        AssistChip(
-                            colors =
-                                AssistChipDefaults.assistChipColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    labelColor = MaterialTheme.colorScheme.onSecondaryContainer),
-                            onClick = {},
-                            label = { Text(skill) })
-                    }
-                }
-        }
+      FlowRow(
+          horizontalArrangement = Arrangement.spacedBy(8.dp),
+          verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            skills.skills.forEach { skill ->
+              AssistChip(
+                  colors =
+                      AssistChipDefaults.assistChipColors(
+                          containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                          labelColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                  onClick = {},
+                  label = { Text(skill) })
+            }
+          }
     }
+  }
 }
 
 @Composable
 fun EducationSection(education: ResumeItem.Education) {
-    ResumeCard {
-        Column {
-            SectionHeader(title = "Education")
-            Text(
-                text = education.degree,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 4.dp))
-            Text(text = education.institution, style = MaterialTheme.typography.bodyMedium)
-            Text(
-                text = education.period,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+  ResumeCard {
+    Column {
+      SectionHeader(title = "Education")
+      Text(
+          text = education.degree,
+          fontWeight = FontWeight.Bold,
+          modifier = Modifier.padding(bottom = 4.dp))
+      Text(text = education.institution, style = MaterialTheme.typography.bodyMedium)
+      Text(
+          text = education.period,
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+  }
 }
 
 @Composable
 fun TalksSection(talks: ResumeItem.Talks) {
-    ResumeCard {
-        Column {
-            SectionHeader(title = "Talks")
+  ResumeCard {
+    Column {
+      SectionHeader(title = "Talks")
 
-            talks.talks.forEach { talk ->
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Text(text = talk.title, fontWeight = FontWeight.Bold)
-                    Text(text = talk.event, style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        text = talk.date,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+      talks.talks.forEach { talk ->
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+          Text(text = talk.title, fontWeight = FontWeight.Bold)
+          Text(text = talk.event, style = MaterialTheme.typography.bodyMedium)
+          Text(
+              text = talk.date,
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+      }
     }
+  }
 }
 
 @Composable
 fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.headlineSmall,
-        color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(bottom = 12.dp))
+  Text(
+      text = title,
+      style = MaterialTheme.typography.headlineSmall,
+      color = MaterialTheme.colorScheme.primary,
+      fontWeight = FontWeight.Bold,
+      modifier = Modifier.padding(bottom = 12.dp))
 }
 
 @Composable
 fun ResumeCard(content: @Composable () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-            Box(modifier = Modifier.padding(16.dp)) { content() }
-        }
+  Card(
+      modifier = Modifier.fillMaxWidth(),
+      colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+      elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+        Box(modifier = Modifier.padding(16.dp)) { content() }
+      }
 }
 
 // Data models for the resume
 sealed class ResumeItem {
-    data class Profile(val description: String) : ResumeItem()
+  data class Profile(val description: String) : ResumeItem()
 
-    data class Experience(
-        val title: String,
-        val company: String,
-        val location: String,
-        val period: String,
-        val responsibilities: List<String>
-    ) : ResumeItem()
+  data class Experience(
+      val title: String,
+      val company: String,
+      val location: String,
+      val period: String,
+      val responsibilities: List<String>
+  ) : ResumeItem()
 
-    data class Skills(val skills: List<String>) : ResumeItem()
+  data class Skills(val skills: List<String>) : ResumeItem()
 
-    data class Education(val degree: String, val institution: String, val period: String) :
-        ResumeItem()
+  data class Education(val degree: String, val institution: String, val period: String) :
+      ResumeItem()
 
-    data class Talks(val talks: List<Talk>) : ResumeItem()
+  data class Talks(val talks: List<Talk>) : ResumeItem()
 
-    data class Talk(val title: String, val event: String, val date: String)
+  data class Talk(val title: String, val event: String, val date: String)
 }
 
 // Resume data
@@ -479,11 +475,11 @@ val resumeItems =
 @Preview(showBackground = true)
 @Composable
 fun ResumeAppPreview() {
-    AndroidTheme { ResumeApp(onShareLinkedIn = {}) }
+  AndroidTheme { ResumeApp(onShareLinkedIn = {}) }
 }
 
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ResumeAppDarkPreview() {
-    AndroidTheme { ResumeApp(onShareLinkedIn = {}) }
+  AndroidTheme { ResumeApp(onShareLinkedIn = {}) }
 }
