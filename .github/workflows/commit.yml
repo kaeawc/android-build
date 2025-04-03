@@ -79,8 +79,8 @@ jobs:
           gradle-tasks: "assertModuleGraph"
           reuse-configuration-cache: false
 
-  android-lint-all:
-    name: "Android Lint All"
+  android-lint:
+    name: "Android Lint"
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
