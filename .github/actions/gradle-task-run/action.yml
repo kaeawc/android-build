@@ -33,10 +33,10 @@ inputs:
     description: "Whether to allow Gradle Build Cache reuse"
     required: "false"
     default: true
-  with-tcmalloc:
-    description: "Whether to replace default malloc with tcmalloc"
+  malloc-replacement:
+    description: "Which implementation to replace malloc with"
     required: "true"
-    default: true
+    default: "jemalloc"
   debug:
     description: "Whether to show debug logging"
     required: "true"
@@ -67,8 +67,12 @@ runs:
       distribution: 'zulu'
       java-version: '23'
 
+  - name: "Set up jemalloc"
+    if: ${{ inputs.malloc-replacement == 'jemalloc' }}
+    uses: kaeawc/setup-jemalloc@v0.0.1
+
   - name: "Set up tcmalloc"
-    if: ${{ inputs.with-tcmalloc }}
+    if: ${{ inputs.malloc-replacement == 'tcmalloc' }}
     uses: kaeawc/setup-tcmalloc@v0.0.1
 
   - name: "Print Java Flags & version"
