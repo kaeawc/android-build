@@ -69,7 +69,7 @@ runs:
 
   - name: "Set up jemalloc"
     if: ${{ inputs.malloc-replacement == 'jemalloc' }}
-    uses: kaeawc/setup-jemalloc@v0.0.1
+    uses: kaeawc/setup-jemalloc@v0.0.3
 
   - name: "Set up tcmalloc"
     if: ${{ inputs.malloc-replacement == 'tcmalloc' }}
