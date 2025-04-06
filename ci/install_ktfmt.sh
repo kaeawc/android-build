@@ -24,11 +24,12 @@ if ! command -v ktfmt &>/dev/null; then
     
     # Create a temporary directory
     TMP_DIR=$(mktemp -d)
-    cd "$TMP_DIR" || exit 1
+    JAR_PATH="$TMP_DIR/ktfmt.jar"
     
     # Download ktfmt jar
-    if ! curl -L -o ktfmt.jar "https://github.com/facebook/ktfmt/releases/download/$KTFMT_VERSION/ktfmt-$KTFMT_VERSION-jar-with-dependencies.jar"; then
+    if ! curl -L -o "$JAR_PATH" "https://github.com/facebook/ktfmt/releases/download/$KTFMT_VERSION/ktfmt-$KTFMT_VERSION-jar-with-dependencies.jar"; then
       echo "Error: Failed to download ktfmt jar"
+      rm -rf "$TMP_DIR"
       exit 1
     fi
     
@@ -36,10 +37,14 @@ if ! command -v ktfmt &>/dev/null; then
     mkdir -p "$HOME/bin"
     
     # Move jar to a permanent location
-    if ! mv ktfmt.jar "$HOME/bin/"; then
+    if ! mv "$JAR_PATH" "$HOME/bin/"; then
       echo "Error: Failed to move ktfmt jar to $HOME/bin/"
+      rm -rf "$TMP_DIR"
       exit 1
     fi
+    
+    # Clean up temporary directory
+    rm -rf "$TMP_DIR"
     
     # Create wrapper script
     if ! cat > "$HOME/bin/ktfmt" << EOF
