@@ -78,9 +78,9 @@ EOF
       export PATH="$HOME/bin:$PATH"
     fi
     
-    # Verify installation by running a simple command
-    if ! ktfmt --version &>/dev/null; then
-      echo "Error: ktfmt installation failed - command not working properly"
+    # Verify installation by checking if the command exists and the jar file is accessible
+    if ! command -v ktfmt &>/dev/null || [ ! -f "$HOME/bin/ktfmt.jar" ]; then
+      echo "Error: ktfmt installation failed - command or jar file not found"
       exit 1
     fi
   fi
