@@ -41,7 +41,7 @@ if [[ "${ONLY_TOUCHED_FILES}" == "true" ]]; then
   
   # Apply ktfmt to the modified files (without --dry-run)
   echo "Formatting $(echo "$unique_files" | wc -l | xargs) files..."
-  errors=$(echo "$unique_files" | xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt 2>&1)
+  errors=$(echo "$unique_files" | xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style 2>&1)
 
 else
   # simply apply ktfmt to all kotlin source files
@@ -57,7 +57,7 @@ else
   
   # Apply ktfmt to all kotlin files (without --dry-run)
   echo "Formatting $(echo "$files" | wc -l | xargs) files..."
-  errors=$(echo "$files" | xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt 2>&1)
+  errors=$(echo "$files" | xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style 2>&1)
 
 fi
 
