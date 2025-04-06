@@ -8,6 +8,8 @@ if ! command -v ktfmt &>/dev/null; then
     echo "ktfmt missing"
     if [[ "${INSTALL_KTFMT_WHEN_MISSING}" == "true" ]]; then
       ci/install_ktfmt.sh
+      # Ensure ktfmt is in PATH for subsequent commands
+      export PATH="$HOME/bin:$PATH"
     else
       if [[ "$OSTYPE" == "darwin"* ]]; then
         # macos specific advice
@@ -17,6 +19,12 @@ if ! command -v ktfmt &>/dev/null; then
       fi
       exit 1
     fi
+fi
+
+# Verify ktfmt is available
+if ! command -v ktfmt &>/dev/null; then
+    echo "Error: ktfmt is not available in PATH"
+    exit 1
 fi
 
 # Start the timer
@@ -40,7 +48,7 @@ if [[ "${ONLY_TOUCHED_FILES}" == "true" ]]; then
   fi
   
   # Run ktfmt check on the modified files
-  errors=$(echo "$unique_files" | xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
+  errors=$(echo "$unique_files" | PATH="$PATH" xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
 else
   # simply apply ktfmt to all kotlin source files
   echo "Checking all Kotlin files in the project..."
@@ -54,7 +62,7 @@ else
   fi
   
   # Run ktfmt check on all Kotlin files
-  errors=$(echo "$files" | xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
+  errors=$(echo "$files" | PATH="$PATH" xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
 fi
 
 # Calculate total elapsed time
