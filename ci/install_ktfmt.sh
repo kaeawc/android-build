@@ -26,9 +26,17 @@ if ! command -v ktfmt &>/dev/null; then
     TMP_DIR=$(mktemp -d)
     JAR_PATH="$TMP_DIR/ktfmt.jar"
     
-    # Download ktfmt jar
-    if ! curl -L -o "$JAR_PATH" "https://github.com/facebook/ktfmt/releases/download/$KTFMT_VERSION/ktfmt-$KTFMT_VERSION-jar-with-dependencies.jar"; then
+    # Download ktfmt jar with progress and error handling
+    echo "Downloading ktfmt jar..."
+    if ! curl -L --fail --show-error -o "$JAR_PATH" "https://github.com/facebook/ktfmt/releases/download/v$KTFMT_VERSION/ktfmt-$KTFMT_VERSION-jar-with-dependencies.jar"; then
       echo "Error: Failed to download ktfmt jar"
+      rm -rf "$TMP_DIR"
+      exit 1
+    fi
+    
+    # Verify the jar file is valid
+    if ! java -jar "$JAR_PATH" --version &>/dev/null; then
+      echo "Error: Downloaded jar file is invalid or corrupted"
       rm -rf "$TMP_DIR"
       exit 1
     fi
