@@ -44,7 +44,8 @@ moduleGraphAssert {
             ":subsystem:.* -> :foundation:.*",
             ":subsystem:.* -> :core:.*",
             ":foundation:.* -> :core:.*",
-            ":core:.* -> :core:.*")
+            ":core:.* -> :core:.*",
+        )
     configurations = setOf("api", "implementation")
     assertOnAnyBuild = false
 }
@@ -127,12 +128,7 @@ android {
     }
 }
 
-anvil {
-    useKsp(
-        contributesAndFactoryGeneration = true,
-        componentMerging = true,
-    )
-}
+anvil { useKsp(contributesAndFactoryGeneration = true, componentMerging = true) }
 
 dependencies {
     coreLibraryDesugaring(libs.desugar)

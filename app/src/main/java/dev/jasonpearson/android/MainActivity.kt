@@ -91,95 +91,115 @@ fun ResumeApp(onShareLinkedIn: () -> Unit) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Jason Pearson",
-                                style =
-                                    MaterialTheme.typography.headlineMedium.copy(
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        fontWeight = FontWeight.Bold))
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Jason Pearson",
+                            style =
+                                MaterialTheme.typography.headlineMedium.copy(
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                ),
+                        )
 
-                            // LinkedIn Share button
-                            IconButton(
-                                onClick = onShareLinkedIn,
-                                colors =
-                                    IconButtonDefaults.iconButtonColors(
-                                        contentColor = MaterialTheme.colorScheme.onPrimary)) {
-                                    Icon(
-                                        imageVector = Icons.Default.Share,
-                                        contentDescription = "Share LinkedIn")
-                                }
+                        // LinkedIn Share button
+                        IconButton(
+                            onClick = onShareLinkedIn,
+                            colors =
+                                IconButtonDefaults.iconButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share LinkedIn",
+                            )
                         }
+                    }
 
                     Text(
                         text = "Principal Software Engineer",
                         style =
                             MaterialTheme.typography.titleMedium.copy(
-                                color = MaterialTheme.colorScheme.onPrimary))
+                                color = MaterialTheme.colorScheme.onPrimary
+                            ),
+                    )
 
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.Phone,
-                                    contentDescription = "Phone",
-                                    tint = MaterialTheme.colorScheme.onPrimary)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "929-235-2418",
-                                    style =
-                                        MaterialTheme.typography.bodyMedium.copy(
-                                            color = MaterialTheme.colorScheme.onPrimary))
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.Email,
-                                    contentDescription = "Email",
-                                    tint = MaterialTheme.colorScheme.onPrimary)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "jason.d.pearson@gmail.com",
-                                    style =
-                                        MaterialTheme.typography.bodyMedium.copy(
-                                            color = MaterialTheme.colorScheme.onPrimary))
-                            }
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Phone,
+                                contentDescription = "Phone",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "929-235-2418",
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    ),
+                            )
                         }
-                }
-            }
-        }) { paddingValues ->
-            LazyColumn(
-                state = scrollState,
-                contentPadding =
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding() + 16.dp,
-                        bottom = 16.dp,
-                        start = 16.dp,
-                        end = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    itemsIndexed(visibleItems) { index, item ->
-                        val isVisible by remember {
-                            derivedStateOf {
-                                val firstVisibleItem = scrollState.firstVisibleItemIndex
-                                val lastVisibleItem =
-                                    firstVisibleItem + scrollState.layoutInfo.visibleItemsInfo.size
-                                index <= lastVisibleItem + 1 && index >= firstVisibleItem - 1
-                            }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Email,
+                                contentDescription = "Email",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "jason.d.pearson@gmail.com",
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    ),
+                            )
                         }
-
-                        AnimatedVisibility(
-                            visible = isVisible, enter = fadeIn() + slideInVertically { it / 5 }) {
-                                when (item) {
-                                    is ResumeItem.Profile -> ProfileSection(item)
-                                    is ResumeItem.Experience -> ExperienceSection(item)
-                                    is ResumeItem.Skills -> SkillsSection(item)
-                                    is ResumeItem.Education -> EducationSection(item)
-                                    is ResumeItem.Talks -> TalksSection(item)
-                                }
-                            }
                     }
                 }
+            }
         }
+    ) { paddingValues ->
+        LazyColumn(
+            state = scrollState,
+            contentPadding =
+                PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = 16.dp,
+                    start = 16.dp,
+                    end = 16.dp,
+                ),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            itemsIndexed(visibleItems) { index, item ->
+                val isVisible by remember {
+                    derivedStateOf {
+                        val firstVisibleItem = scrollState.firstVisibleItemIndex
+                        val lastVisibleItem =
+                            firstVisibleItem + scrollState.layoutInfo.visibleItemsInfo.size
+                        index <= lastVisibleItem + 1 && index >= firstVisibleItem - 1
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = fadeIn() + slideInVertically { it / 5 },
+                ) {
+                    when (item) {
+                        is ResumeItem.Profile -> ProfileSection(item)
+                        is ResumeItem.Experience -> ExperienceSection(item)
+                        is ResumeItem.Skills -> SkillsSection(item)
+                        is ResumeItem.Education -> EducationSection(item)
+                        is ResumeItem.Talks -> TalksSection(item)
+                    }
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -193,47 +213,54 @@ fun LinkedInQRScreen(onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                })
-        }) { paddingValues ->
-            Column(
-                modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
-                    Text(
-                        text = "👋 Hi, nice to meet you!",
-                        style = MaterialTheme.typography.headlineMedium,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 24.dp))
-
-                    // Placeholder for LinkedIn QR code
-                    Box(
-                        modifier =
-                            Modifier.size(280.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .padding(16.dp),
-                        contentAlignment = Alignment.Center) {
-                            // Replace R.drawable.linkedin_qr with your actual QR code image
-                            // For now, we'll use a placeholder
-                            Text(
-                                text = "LinkedIn QR Code\nPlaceholder",
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyLarge)
-
-                            // When you have a QR code image:
-                            // Image(
-                            //     painter = painterResource(id = R.drawable.linkedin_qr),
-                            //     contentDescription = "LinkedIn QR Code",
-                            //     modifier = Modifier.fillMaxSize()
-                            // )
-                        }
-
-                    Text(
-                        text = "Scan this code to connect on LinkedIn",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 24.dp))
-                }
+                },
+            )
         }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = "👋 Hi, nice to meet you!",
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 24.dp),
+            )
+
+            // Placeholder for LinkedIn QR code
+            Box(
+                modifier =
+                    Modifier.size(280.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                // Replace R.drawable.linkedin_qr with your actual QR code image
+                // For now, we'll use a placeholder
+                Text(
+                    text = "LinkedIn QR Code\nPlaceholder",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+
+                // When you have a QR code image:
+                // Image(
+                //     painter = painterResource(id = R.drawable.linkedin_qr),
+                //     contentDescription = "LinkedIn QR Code",
+                //     modifier = Modifier.fillMaxSize()
+                // )
+            }
+
+            Text(
+                text = "Scan this code to connect on LinkedIn",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 24.dp),
+            )
+        }
+    }
 }
 
 @Composable
@@ -254,23 +281,27 @@ fun ExperienceSection(experience: ResumeItem.Experience) {
             Text(
                 text = "${experience.company} — ${experience.location}",
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 4.dp))
+                modifier = Modifier.padding(bottom = 4.dp),
+            )
             Text(
                 text = experience.period,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp))
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
 
             experience.responsibilities.forEach { responsibility ->
                 Row(
                     modifier = Modifier.padding(vertical = 2.dp),
-                    verticalAlignment = Alignment.Top) {
-                        Text(
-                            text = "•",
-                            modifier = Modifier.padding(end = 8.dp, top = 0.dp),
-                            style = MaterialTheme.typography.bodyMedium)
-                        Text(text = responsibility, style = MaterialTheme.typography.bodyMedium)
-                    }
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Text(
+                        text = "•",
+                        modifier = Modifier.padding(end = 8.dp, top = 0.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(text = responsibility, style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
     }
@@ -285,17 +316,20 @@ fun SkillsSection(skills: ResumeItem.Skills) {
 
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    skills.skills.forEach { skill ->
-                        AssistChip(
-                            colors =
-                                AssistChipDefaults.assistChipColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    labelColor = MaterialTheme.colorScheme.onSecondaryContainer),
-                            onClick = {},
-                            label = { Text(skill) })
-                    }
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                skills.skills.forEach { skill ->
+                    AssistChip(
+                        colors =
+                            AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            ),
+                        onClick = {},
+                        label = { Text(skill) },
+                    )
                 }
+            }
         }
     }
 }
@@ -308,12 +342,14 @@ fun EducationSection(education: ResumeItem.Education) {
             Text(
                 text = education.degree,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 4.dp))
+                modifier = Modifier.padding(bottom = 4.dp),
+            )
             Text(text = education.institution, style = MaterialTheme.typography.bodyMedium)
             Text(
                 text = education.period,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -331,7 +367,8 @@ fun TalksSection(talks: ResumeItem.Talks) {
                     Text(
                         text = talk.date,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
@@ -345,7 +382,8 @@ fun SectionHeader(title: String) {
         style = MaterialTheme.typography.headlineSmall,
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(bottom = 12.dp))
+        modifier = Modifier.padding(bottom = 12.dp),
+    )
 }
 
 @Composable
@@ -353,9 +391,10 @@ fun ResumeCard(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-            Box(modifier = Modifier.padding(16.dp)) { content() }
-        }
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Box(modifier = Modifier.padding(16.dp)) { content() }
+    }
 }
 
 // Data models for the resume
@@ -367,7 +406,7 @@ sealed class ResumeItem {
         val company: String,
         val location: String,
         val period: String,
-        val responsibilities: List<String>
+        val responsibilities: List<String>,
     ) : ResumeItem()
 
     data class Skills(val skills: List<String>) : ResumeItem()
@@ -384,7 +423,8 @@ sealed class ResumeItem {
 val resumeItems =
     listOf(
         ResumeItem.Profile(
-            "Over a decade of experience in Mobile, Backend, DevOps, BI, and now AI. I love building and maintaining software that helps other people."),
+            "Over a decade of experience in Mobile, Backend, DevOps, BI, and now AI. I love building and maintaining software that helps other people."
+        ),
         ResumeItem.Experience(
             title = "Staff Software Engineer",
             company = "webAI",
@@ -397,7 +437,9 @@ val resumeItems =
                     "Started dogfooding practices with internal employees, secured data at rest with GRDB+SQLCipher.",
                     "Designed and implemented the distributed systems to support on-demand networked RAG that opened up distributed systems for the business.",
                     "Revamped the entire engineering org's documentation by working with individuals on pain points during onboarding and executives seeking the availability of information.",
-                    "Created vision and strategy for a KMP on-device ML Mobile SDK that would tie together with existing ecosystem of products via PyTorch ExecuTorch & MLX.")),
+                    "Created vision and strategy for a KMP on-device ML Mobile SDK that would tie together with existing ecosystem of products via PyTorch ExecuTorch & MLX.",
+                ),
+        ),
         ResumeItem.Experience(
             title = "Senior Staff Android Engineer",
             company = "Hinge",
@@ -410,7 +452,9 @@ val resumeItems =
                     "Planned the execution of half a dozen features while contributing my own to a new multi-tier monetization initiative. This initiative led to a 30% increase in ARR.",
                     "Spearheaded and aligned Hinge's internationalization efforts with C-suite to adapt all department workflows.",
                     "Orchestrated multiple transformative updates to the codebase over a decade to ensure our technology stack remained ahead of the curve.",
-                    "R&D efforts established an industry-leading CI/CD pipeline that optimized for speed and quality.")),
+                    "R&D efforts established an industry-leading CI/CD pipeline that optimized for speed and quality.",
+                ),
+        ),
         ResumeItem.Experience(
             title = "Software Engineer",
             company = "Hinge",
@@ -422,7 +466,9 @@ val resumeItems =
                     "Created internal tools to aid QA and customer service.",
                     "Introduced testing, CI/CD, and modern monitoring & alerting systems, async data processing pipelines.",
                     "During Hinge's 2016 pivot I implemented load testing to guarantee our relaunch would be successful.",
-                    "Designed and tested Hinge's original payment processing systems.")),
+                    "Designed and tested Hinge's original payment processing systems.",
+                ),
+        ),
         ResumeItem.Experience(
             title = "Software Engineer",
             company = "Echo360, Inc.",
@@ -431,7 +477,9 @@ val resumeItems =
             responsibilities =
                 listOf(
                     "Built real-time collaborative tools that got startup ThinkBinder acquired by Echo360.",
-                    "Handled product and platform workload for a greenfield project while mentoring new team members.")),
+                    "Handled product and platform workload for a greenfield project while mentoring new team members.",
+                ),
+        ),
         ResumeItem.Experience(
             title = "IT Tools Developer",
             company = "Shutterstock",
@@ -440,7 +488,9 @@ val resumeItems =
             responsibilities =
                 listOf(
                     "Built comprehensive BI dashboards for several business units and executives.",
-                    "Integrated cube reader for drill-through functionality on the data warehouse.")),
+                    "Integrated cube reader for drill-through functionality on the data warehouse.",
+                ),
+        ),
         ResumeItem.Skills(
             skills =
                 listOf(
@@ -455,26 +505,35 @@ val resumeItems =
                     "Communication",
                     "Mentorship",
                     "System Design",
-                    "Project Management")),
+                    "Project Management",
+                )
+        ),
         ResumeItem.Education(
             degree = "Bachelor of Science",
             institution = "New Jersey Institute of Technology",
-            period = "January 2005 — January 2010"),
+            period = "January 2005 — January 2010",
+        ),
         ResumeItem.Talks(
             talks =
                 listOf(
                     ResumeItem.Talk(
                         title = "From Laptop Builds to Advanced CI",
                         event = "Droidcon London",
-                        date = "October 2023"),
+                        date = "October 2023",
+                    ),
                     ResumeItem.Talk(
                         title = "MotionLayout & RecyclerView",
                         event = "Droidcon Italy",
-                        date = "November 2020"),
+                        date = "November 2020",
+                    ),
                     ResumeItem.Talk(
                         title = "Advanced MotionLayout",
                         event = "Droidcon SF",
-                        date = "November 2019"))))
+                        date = "November 2019",
+                    ),
+                )
+        ),
+    )
 
 @Preview(showBackground = true)
 @Composable

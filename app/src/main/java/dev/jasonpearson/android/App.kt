@@ -76,14 +76,17 @@ class App : Application() {
                     .penaltyListener(Executors.newSingleThreadExecutor()) { violation ->
                         if (violation is UntaggedSocketViolation) {
                             // This is a known issue with Flipper
-                        } else if (violation is DiskReadViolation &&
-                            violation.stackTraceToString().contains("CustomTabsConnection")) {
+                        } else if (
+                            violation is DiskReadViolation &&
+                                violation.stackTraceToString().contains("CustomTabsConnection")
+                        ) {
                             // This is a known issue with Chrome Custom Tabs
                         } else {
                             Log.e(TAG, violation.toString())
                         }
                     }
-                    .build())
+                    .build()
+            )
         }
     }
 }
