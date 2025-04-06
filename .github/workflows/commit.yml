@@ -265,6 +265,7 @@ jobs:
           app: app-debug.apk
           test: app-debug-androidTest.apk
           outputs-dir: build/test-results
+          record-video: true
 
       - name: "Publish Test Report"
         uses: mikepenz/action-junit-report@v4
