@@ -40,7 +40,7 @@ if [[ "${ONLY_TOUCHED_FILES}" == "true" ]]; then
   fi
   
   # Run ktfmt check on the modified files
-  errors=$(echo "$unique_files" | xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --dry-run 2>&1)
+  errors=$(echo "$unique_files" | xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
 else
   # simply apply ktfmt to all kotlin source files
   echo "Checking all Kotlin files in the project..."
@@ -54,7 +54,7 @@ else
   fi
   
   # Run ktfmt check on all Kotlin files
-  errors=$(echo "$files" | xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --dry-run 2>&1)
+  errors=$(echo "$files" | xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
 fi
 
 # Calculate total elapsed time
