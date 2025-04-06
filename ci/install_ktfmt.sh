@@ -15,27 +15,60 @@ if ! command -v ktfmt &>/dev/null; then
   else
     # Linux
     echo "Detected Linux system"
+    
+    # Check if Java is installed
+    if ! command -v java &>/dev/null; then
+      echo "Error: Java is required to run ktfmt but is not installed"
+      exit 1
+    fi
+    
     # Create a temporary directory
     TMP_DIR=$(mktemp -d)
     cd "$TMP_DIR" || exit 1
     
-    curl -L -o ktfmt.jar "https://github.com/facebook/ktfmt/releases/download/$KTFMT_VERSION/ktfmt-$KTFMT_VERSION-jar-with-dependencies.jar"
+    # Download ktfmt jar
+    if ! curl -L -o ktfmt.jar "https://github.com/facebook/ktfmt/releases/download/$KTFMT_VERSION/ktfmt-$KTFMT_VERSION-jar-with-dependencies.jar"; then
+      echo "Error: Failed to download ktfmt jar"
+      exit 1
+    fi
+    
+    # Create bin directory if it doesn't exist
     mkdir -p "$HOME/bin"
+    
     # Move jar to a permanent location
-    mv ktfmt.jar "$HOME/bin/"
+    if ! mv ktfmt.jar "$HOME/bin/"; then
+      echo "Error: Failed to move ktfmt jar to $HOME/bin/"
+      exit 1
+    fi
     
     # Create wrapper script
-    cat > "$HOME/bin/ktfmt" << EOF
+    if ! cat > "$HOME/bin/ktfmt" << EOF
 #!/usr/bin/env bash
 java -jar "$HOME/bin/ktfmt.jar" "\$@"
 EOF
-    chmod +x "$HOME/bin/ktfmt"
-
+    then
+      echo "Error: Failed to create ktfmt wrapper script"
+      exit 1
+    fi
+    
+    # Make wrapper script executable
+    if ! chmod +x "$HOME/bin/ktfmt"; then
+      echo "Error: Failed to make ktfmt wrapper script executable"
+      exit 1
+    fi
+    
     # Add to PATH if not already there
     if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
       echo "export PATH=\"\$HOME/bin:\$PATH\"" >> "$HOME/.bashrc"
       echo "export PATH=\"\$HOME/bin:\$PATH\"" >> "$HOME/.bash_profile"
+      # Add to current PATH immediately
       export PATH="$HOME/bin:$PATH"
+    fi
+    
+    # Verify installation
+    if ! command -v ktfmt &>/dev/null; then
+      echo "Error: ktfmt installation failed - command not found in PATH"
+      exit 1
     fi
   fi
 
