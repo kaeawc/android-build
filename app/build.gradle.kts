@@ -22,6 +22,9 @@
  * SOFTWARE.
  */
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(libs.plugins.android.application)
@@ -30,8 +33,7 @@ plugins {
     alias(libs.plugins.publish)
     alias(libs.plugins.sortDependencies)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.zacAnvil)
+    id("dev.zacsweers.metro")
 }
 
 moduleGraphAssert {
@@ -128,8 +130,6 @@ android {
     }
 }
 
-anvil { useKsp(contributesAndFactoryGeneration = true, componentMerging = true) }
-
 dependencies {
     coreLibraryDesugaring(libs.desugar)
 
@@ -143,15 +143,6 @@ dependencies {
     implementation(libs.bundles.compose.ui)
     implementation(libs.bundles.kotlin)
 
-    implementation(libs.dagger.runtime)
-    ksp(libs.dagger.compiler)
-
-    implementation(libs.zacAnvil.annotations)
-    implementation(libs.zacAnvil.annotationsOptional)
-    ksp(libs.zacAnvil.compiler)
-
-    kspAndroidTest(libs.zacAnvil.compiler)
-
     debugImplementation(libs.bundles.compose.ui.debug)
 
     testImplementation(libs.bundles.unit.test)
@@ -159,4 +150,26 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.bundles.compose.ui.espresso.test)
     implementation(libs.navigation.compose)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        languageVersion.set(
+            KotlinVersion.valueOf(
+                "KOTLIN_${libs.versions.build.kotlin.language.get().replace(".", "_")}"
+            )
+        )
+        jvmTarget.set(JvmTarget.valueOf("JVM_${libs.versions.build.java.target.get()}"))
+        freeCompilerArgs.addAll(
+            listOf(
+                "-opt-in=kotlin.time.ExperimentalTime,kotlin.RequiresOptIn",
+                "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                "-opt-in=kotlin.ExperimentalUnsignedTypes",
+                "-opt-in=kotlin.time.ExperimentalTime",
+                "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                "-opt-in=kotlinx.coroutines.FlowPreview",
+                "-Xcontext-receivers",
+            )
+        )
+    }
 }
