@@ -30,93 +30,96 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
-  dependencies {
-    // Necessary if we are to override R8
-    // classpath(libs.r8)
-    classpath(libs.agp)
-    classpath(libs.kgp)
-  }
+    dependencies {
+        // Necessary if we are to override R8
+        // classpath(libs.r8)
+        classpath(libs.agp)
+        classpath(libs.kgp)
+    }
 }
 
 plugins {
-  `version-catalog`
-  alias(libs.plugins.spotless)
-  //    alias(libs.plugins.doctor)
-  alias(libs.plugins.dependencyAnalysis)
-  alias(libs.plugins.kotlin.android) apply false
-  alias(libs.plugins.android.library) apply false
-  alias(libs.plugins.android.application) apply false
-  alias(libs.plugins.zacAnvil) apply false
-  alias(libs.plugins.ksp) apply false
+    `version-catalog`
+    alias(libs.plugins.spotless)
+    //    alias(libs.plugins.doctor)
+    alias(libs.plugins.dependencyAnalysis)
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.zacAnvil) apply false
+    alias(libs.plugins.ksp) apply false
 }
 
 val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
 val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.testWorker.jvmargs").get()
 
 allprojects {
-  apply(plugin = "com.diffplug.spotless")
-  val spotlessFormatters: SpotlessExtension.() -> Unit = {
-    lineEndings = LineEnding.PLATFORM_NATIVE
+    apply(plugin = "com.diffplug.spotless")
+    val spotlessFormatters: SpotlessExtension.() -> Unit = {
+        lineEndings = LineEnding.PLATFORM_NATIVE
 
-    format("misc") {
-      target("*.md", ".gitignore")
-      trimTrailingWhitespace()
-      endWithNewline()
+        format("misc") {
+            target("*.md", ".gitignore")
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+        kotlin {
+            target("src/**/*.kt")
+            targetExclude(externalFiles)
+            trimTrailingWhitespace()
+            endWithNewline()
+            licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
+            targetExclude("**/copyright.kt", *externalFiles.toTypedArray())
+        }
+        format("kotlinExternal", KotlinExtension::class.java) {
+            target(externalFiles)
+            trimTrailingWhitespace()
+            endWithNewline()
+            targetExclude("**/copyright.kt")
+        }
+        kotlinGradle {
+            target("*.kts")
+            trimTrailingWhitespace()
+            endWithNewline()
+            licenseHeaderFile(
+                rootProject.file("spotless/copyright.kt"),
+                "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
+            )
+        }
     }
-    kotlin {
-      target("src/**/*.kt")
-      targetExclude(externalFiles)
-      trimTrailingWhitespace()
-      endWithNewline()
-      licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
-      targetExclude("**/copyright.kt", *externalFiles.toTypedArray())
+    configure<SpotlessExtension> {
+        spotlessFormatters()
+        if (project.rootProject == project) {
+            predeclareDeps()
+        }
     }
-    format("kotlinExternal", KotlinExtension::class.java) {
-      target(externalFiles)
-      trimTrailingWhitespace()
-      endWithNewline()
-      targetExclude("**/copyright.kt")
-    }
-    kotlinGradle {
-      target("*.kts")
-      trimTrailingWhitespace()
-      endWithNewline()
-      licenseHeaderFile(
-          rootProject.file("spotless/copyright.kt"),
-          "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
-      )
-    }
-  }
-  configure<SpotlessExtension> {
-    spotlessFormatters()
     if (project.rootProject == project) {
-      predeclareDeps()
+        configure<SpotlessExtensionPredeclare> { spotlessFormatters() }
     }
-  }
-  if (project.rootProject == project) {
-    configure<SpotlessExtensionPredeclare> { spotlessFormatters() }
-  }
 
-  tasks.withType<Test>().configureEach { jvmArgs(gradleWorkerJvmArgs) }
+    tasks.withType<Test>().configureEach { jvmArgs(gradleWorkerJvmArgs) }
 
-  tasks.withType<KotlinCompile>().configureEach {
-    compilerOptions {
-      languageVersion.set(
-          KotlinVersion.valueOf(
-              "KOTLIN_${libs.versions.build.kotlin.language.get().replace(".", "_")}"))
-      jvmTarget.set(JvmTarget.valueOf("JVM_${libs.versions.build.java.target.get()}"))
-      freeCompilerArgs.addAll(
-          listOf(
-              "-opt-in=kotlin.time.ExperimentalTime,kotlin.RequiresOptIn",
-              "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-              "-opt-in=kotlin.ExperimentalUnsignedTypes",
-              "-opt-in=kotlin.time.ExperimentalTime",
-              "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-              "-opt-in=kotlinx.coroutines.FlowPreview",
-              "-Xcontext-receivers",
-          ))
+    tasks.withType<KotlinCompile>().configureEach {
+        compilerOptions {
+            languageVersion.set(
+                KotlinVersion.valueOf(
+                    "KOTLIN_${libs.versions.build.kotlin.language.get().replace(".", "_")}"
+                )
+            )
+            jvmTarget.set(JvmTarget.valueOf("JVM_${libs.versions.build.java.target.get()}"))
+            freeCompilerArgs.addAll(
+                listOf(
+                    "-opt-in=kotlin.time.ExperimentalTime,kotlin.RequiresOptIn",
+                    "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                    "-opt-in=kotlin.ExperimentalUnsignedTypes",
+                    "-opt-in=kotlin.time.ExperimentalTime",
+                    "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                    "-opt-in=kotlinx.coroutines.FlowPreview",
+                    "-Xcontext-receivers",
+                )
+            )
+        }
     }
-  }
 }
 
 // doctor {

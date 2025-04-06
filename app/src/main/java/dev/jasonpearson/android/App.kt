@@ -42,48 +42,51 @@ private typealias InitializerFunction = () -> @JvmSuppressWildcards Unit
 
 class App : Application() {
 
-  companion object {
-    internal val TAG = App::class.simpleName!!
-  }
-
-  lateinit var appComponent: ApplicationComponent
-
-  @Inject
-  fun asyncInits(
-      scope: BackgroundAppCoroutineScope,
-      @ApplicationModule.AsyncInitializers asyncInitializers: DaggerSet<InitializerFunction>,
-  ) {
-    scope.launch {
-      // TODO - run these in parallel?
-      asyncInitializers.forEach { it() }
+    companion object {
+        internal val TAG = App::class.simpleName!!
     }
-  }
 
-  @Inject
-  fun inits(@ApplicationModule.Initializers initializers: DaggerSet<InitializerFunction>) {
-    initializers.forEach { it() }
-  }
+    lateinit var appComponent: ApplicationComponent
 
-  override fun onCreate() {
-    super.onCreate()
-
-    appComponent = DaggerApplicationComponent.factory().create(this).apply { inject(this@App) }
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-      StrictMode.setVmPolicy(
-          StrictMode.VmPolicy.Builder()
-              .detectAll()
-              .penaltyListener(Executors.newSingleThreadExecutor()) { violation ->
-                if (violation is UntaggedSocketViolation) {
-                  // This is a known issue with Flipper
-                } else if (violation is DiskReadViolation &&
-                    violation.stackTraceToString().contains("CustomTabsConnection")) {
-                  // This is a known issue with Chrome Custom Tabs
-                } else {
-                  Log.e(TAG, violation.toString())
-                }
-              }
-              .build())
+    @Inject
+    fun asyncInits(
+        scope: BackgroundAppCoroutineScope,
+        @ApplicationModule.AsyncInitializers asyncInitializers: DaggerSet<InitializerFunction>,
+    ) {
+        scope.launch {
+            // TODO - run these in parallel?
+            asyncInitializers.forEach { it() }
+        }
     }
-  }
+
+    @Inject
+    fun inits(@ApplicationModule.Initializers initializers: DaggerSet<InitializerFunction>) {
+        initializers.forEach { it() }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        appComponent = DaggerApplicationComponent.factory().create(this).apply { inject(this@App) }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            StrictMode.setVmPolicy(
+                StrictMode.VmPolicy.Builder()
+                    .detectAll()
+                    .penaltyListener(Executors.newSingleThreadExecutor()) { violation ->
+                        if (violation is UntaggedSocketViolation) {
+                            // This is a known issue with Flipper
+                        } else if (
+                            violation is DiskReadViolation &&
+                                violation.stackTraceToString().contains("CustomTabsConnection")
+                        ) {
+                            // This is a known issue with Chrome Custom Tabs
+                        } else {
+                            Log.e(TAG, violation.toString())
+                        }
+                    }
+                    .build()
+            )
+        }
+    }
 }

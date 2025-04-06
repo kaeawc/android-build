@@ -41,43 +41,43 @@ import kotlinx.datetime.Clock
 @Module
 abstract class ApplicationModule {
 
-  @Qualifier @Retention(BINARY) annotation class Initializers
+    @Qualifier @Retention(BINARY) annotation class Initializers
 
-  @Qualifier @Retention(BINARY) annotation class AsyncInitializers
+    @Qualifier @Retention(BINARY) annotation class AsyncInitializers
 
-  @Qualifier @Retention(BINARY) annotation class LazyDelegate
+    @Qualifier @Retention(BINARY) annotation class LazyDelegate
 
-  /** Provides initializers for app startup. */
-  @Initializers @Multibinds abstract fun initializers(): Set<() -> Unit>
+    /** Provides initializers for app startup. */
+    @Initializers @Multibinds abstract fun initializers(): Set<() -> Unit>
 
-  /** Provides initializers for app startup that can be initialized async. */
-  @AsyncInitializers @Multibinds abstract fun asyncInitializers(): Set<() -> Unit>
+    /** Provides initializers for app startup that can be initialized async. */
+    @AsyncInitializers @Multibinds abstract fun asyncInitializers(): Set<() -> Unit>
 
-  @Binds
-  @ApplicationContext
-  @SingleIn(AppScope::class)
-  abstract fun provideApplicationContext(real: Application): Context
-
-  companion object {
-
-    /**
-     * This Context is only available for things that don't care what type of Context they need.
-     *
-     * Wrapped so no one can try to cast it as an Application.
-     */
-    @Provides
+    @Binds
+    @ApplicationContext
     @SingleIn(AppScope::class)
-    internal fun provideGeneralUseContext(@ApplicationContext appContext: Context): Context =
-        ContextWrapper(appContext)
+    abstract fun provideApplicationContext(real: Application): Context
 
-    @AsyncInitializers
-    @IntoSet
-    @Provides
-    fun mainDispatcherInit(): () -> Unit = {
-      // This makes a call to disk, so initialize it off the main thread first... ironically
-      Dispatchers.Main
+    companion object {
+
+        /**
+         * This Context is only available for things that don't care what type of Context they need.
+         *
+         * Wrapped so no one can try to cast it as an Application.
+         */
+        @Provides
+        @SingleIn(AppScope::class)
+        internal fun provideGeneralUseContext(@ApplicationContext appContext: Context): Context =
+            ContextWrapper(appContext)
+
+        @AsyncInitializers
+        @IntoSet
+        @Provides
+        fun mainDispatcherInit(): () -> Unit = {
+            // This makes a call to disk, so initialize it off the main thread first... ironically
+            Dispatchers.Main
+        }
+
+        @Provides @SingleIn(AppScope::class) fun provideClock(): Clock = Clock.System
     }
-
-    @Provides @SingleIn(AppScope::class) fun provideClock(): Clock = Clock.System
-  }
 }
