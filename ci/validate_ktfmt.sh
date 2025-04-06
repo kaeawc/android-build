@@ -32,7 +32,6 @@ fi
 start_time=$(bash -c "$(pwd)/ci/get_timestamp.sh")
 
 # run ktfmt as efficiently as possible against all kt and kts source files
-# use validate_shell_scripts as an example of how to collect error
 if [[ -n "$ONLY_CHANGED_SINCE_SHA" ]]; then
   # Validate that the SHA exists in git history
   if ! git rev-parse --verify "$ONLY_CHANGED_SINCE_SHA" &>/dev/null; then
