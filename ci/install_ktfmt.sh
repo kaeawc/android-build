@@ -34,9 +34,9 @@ if ! command -v ktfmt &>/dev/null; then
       exit 1
     fi
     
-    # Verify the jar file is valid
-    if ! java -jar "$JAR_PATH" --version &>/dev/null; then
-      echo "Error: Downloaded jar file is invalid or corrupted"
+    # Verify the jar file exists and has content
+    if [ ! -f "$JAR_PATH" ] || [ ! -s "$JAR_PATH" ]; then
+      echo "Error: Downloaded jar file is empty or does not exist"
       rm -rf "$TMP_DIR"
       exit 1
     fi
@@ -78,9 +78,9 @@ EOF
       export PATH="$HOME/bin:$PATH"
     fi
     
-    # Verify installation
-    if ! command -v ktfmt &>/dev/null; then
-      echo "Error: ktfmt installation failed - command not found in PATH"
+    # Verify installation by running a simple command
+    if ! ktfmt --version &>/dev/null; then
+      echo "Error: ktfmt installation failed - command not working properly"
       exit 1
     fi
   fi
