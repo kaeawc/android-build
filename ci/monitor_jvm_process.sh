@@ -1,10 +1,8 @@
 #!/bin/bash
 
-# Set the Grafana Cloud Prometheus remote write URL and API Key
-# shellcheck disable=SC2034
-GRAFANA_CLOUD_URL=""
-GRAFANA_USER=""
-GRAFANA_API_KEY=""
+
+# Output file for metrics
+METRICS_LOG="/tmp/gradle_jvm_metrics.log"
 
 # Check if jstat is available
 if ! command -v jstat &> /dev/null; then
@@ -27,11 +25,18 @@ if [ -z "$GRADLE_PID" ]; then
 fi
 
 echo "Monitoring Gradle Daemon (PID: $GRADLE_PID)"
+echo "Logging metrics to: $METRICS_LOG"
 
 # Function to convert size with units (KB, MB) into bytes
 convert_to_bytes() {
     local value=$1
     local unit=$2
+
+    # Check if value is a valid number
+    if ! [[ "$value" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+        echo "0"
+        return
+    fi
 
     case $unit in
         KB)
@@ -53,7 +58,6 @@ convert_to_bytes() {
             printf "%.0f" "$(echo "$value * 1024 * 1024" | bc)"
             ;;
         *)
-            
             printf "%.0f" "$value"  # Already in bytes, ensure it's an integer
             ;;
     esac
@@ -105,18 +109,19 @@ push_metrics() {
     class_unit=$(echo "$class_metaspace_used" | awk '{print $2}')
     class_metaspace_used_bytes=$(convert_to_bytes "$class_value" "$class_unit")
 
-    # Heap
-    heap_data=$(jstat -gc "$GRADLE_PID" | awk 'NR==2 {print "Eden Space: " $6*1024 "\nSurvivor Space: " $3*1024 + $4*1024 "\nOld Generation: " $8*1024}')
+    # Heap - Using direct jstat output for more accurate values
+    jstat_output=$(jstat -gc "$GRADLE_PID")
+    # Get the values
+    values=$(echo "$jstat_output" | tail -n1)
 
-    eden_line=$(echo "$heap_data" | grep 'Eden Space: ' | head -n 1)
-    eden_value=$(echo "$eden_line" | awk '{print $3}')
-    eden_bytes=$(convert_to_bytes "$eden_value" "")
-    survivor_line=$(echo "$heap_data" | grep 'Survivor Space: ' | head -n 1)
-    survivor_value=$(echo "$survivor_line" | awk '{print $3}')
-    survivor_bytes=$(convert_to_bytes "$survivor_value" "")
-    old_line=$(echo "$heap_data" | grep 'Old Generation: ' | head -n 1)
-    old_value=$(echo "$old_line" | awk '{print $3}')
-    old_bytes=$(convert_to_bytes "$old_value" "")
+    # Parse Eden space (E column for Eden usage)
+    eden_bytes=$(echo "$values" | awk '{printf "%.0f", $6*1024}')
+
+    # Parse Survivor space (S0 + S1 columns for Survivor spaces)
+    survivor_bytes=$(echo "$values" | awk '{printf "%.0f", ($3+$4)*1024}')
+
+    # Parse Old Generation space (O column for Old Gen usage)
+    old_bytes=$(echo "$values" | awk '{printf "%.0f", $10*1024}')
 
     # CodeCache
     codecache_analysis=$(jcmd "$GRADLE_PID" Compiler.CodeHeap_Analytics)
@@ -146,48 +151,24 @@ push_metrics() {
     # Get the current timestamp in milliseconds
     current_timestamp=$(date +%s)
 
-    # Prepare Prometheus metrics format
+    # Prepare metrics format
     # shellcheck disable=SC2034
     METRICS=$(cat <<EOF
-# HELP jvm_class_space_used_bytes JVM class space used (in bytes)
-# TYPE jvm_class_space_used_bytes gauge
-jvm_class_space_used_bytes $class_metaspace_used_bytes $current_timestamp
-# HELP jvm_non_class_metaspace_used_bytes JVM non-class metaspace used (in bytes)
-# TYPE jvm_non_class_metaspace_used_bytes gauge
-jvm_non_class_metaspace_used_bytes $non_class_metaspace_used_bytes $current_timestamp
-# HELP jvm_eden_space_used JVM Eden space used (in bytes)
-# TYPE jvm_eden_space_used gauge
-jvm_eden_space_used $eden_bytes $current_timestamp
-# HELP jvm_survivor_space_used JVM Survivor space used (in bytes)
-# TYPE jvm_survivor_space_used gauge
-jvm_survivor_space_used $survivor_bytes $current_timestamp
-# HELP jvm_old_gen_space_used JVM Old Generation space used (in bytes)
-# TYPE jvm_old_gen_space_used gauge
-jvm_old_gen_space_used $old_bytes $current_timestamp
-# HELP jvm_code_cache_non_profiled_used Description (in bytes)
-# TYPE jvm_code_cache_non_profiled_used gauge
-jvm_code_cache_non_profiled_used $non_profiled_used_value $current_timestamp
-# HELP jvm_code_cache_profiled_used Description (in bytes)
-# TYPE jvm_code_cache_profiled_used gauge
-jvm_code_cache_profiled_used $profiled_used_value $current_timestamp
-# HELP jvm_code_cache_non_nmethods_used Description (in bytes)
-# TYPE jvm_code_cache_non_nmethods_used gauge
-jvm_code_cache_non_nmethods_used $non_nmethods_used_value $current_timestamp
-# HELP jvm_code_cache_total_used Description (in bytes)
-# TYPE jvm_code_cache_total_used gauge
-jvm_code_cache_total_used $code_cache_used_value $current_timestamp
+$current_timestamp jvm_class_space_used_bytes $class_metaspace_used_bytes
+$current_timestamp jvm_non_class_metaspace_used_bytes $non_class_metaspace_used_bytes
+$current_timestamp jvm_eden_space_used $eden_bytes
+$current_timestamp jvm_survivor_space_used $survivor_bytes
+$current_timestamp jvm_old_gen_space_used $old_bytes
+$current_timestamp jvm_code_cache_non_profiled_used $non_profiled_used_value
+$current_timestamp jvm_code_cache_profiled_used $profiled_used_value
+$current_timestamp jvm_code_cache_non_nmethods_used $non_nmethods_used_value
+$current_timestamp jvm_code_cache_total_used $code_cache_used_value
+$current_timestamp jvm_code_cache_total_committed $code_cache_committed_value
 EOF
 )
 
-    # TODO: Still iterating on Grafana/Prometheus setup
-    # echo "$METRICS" | snzip -c > metrics.snappy
-
-    # # Send the metrics to Grafana Cloud Prometheus using curl
-    # curl -X POST "$GRAFANA_CLOUD_URL" \
-    #      -u "$GRAFANA_USER:$GRAFANA_API_KEY" \
-    #      --header "Content-Type: text/plain" \
-    #      --header "Content-Encoding: identity" \
-    #      --data-binary "$METRICS"
+    # Log metrics to file
+    echo "$METRICS" > "$METRICS_LOG"
 
 }
 
