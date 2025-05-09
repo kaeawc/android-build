@@ -20,14 +20,14 @@ build-gradle-spotless = "7.0.3"
 build-gradle-triplet-play = "3.12.1"
 androidx-core = "1.16.0"
 androidx-activity-compose = "1.10.1"
-androidx-compose-bom = "2025.04.01"
-androidx-lifecycle = "2.8.7"
+androidx-compose-bom = "2025.05.00"
+androidx-lifecycle = "2.9.0"
 
 test-junit = "4.13.2"
 test-androidx-junit = "1.2.1"
 test-androidx-espresso = "3.6.1"
 
-navigation = "2.8.9"
+navigation = "2.9.0"
 
 kotlin-inject = "0.8.0"
 zac-anvil = "0.4.1"
