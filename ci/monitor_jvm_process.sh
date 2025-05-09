@@ -1,8 +1,7 @@
 #!/bin/bash
 
-
 # Output file for metrics
-METRICS_LOG="/tmp/gradle_jvm_metrics.log"
+METRICS_LOG="/tmp/gradle_jvm_metrics.csv"
 
 # Check if jstat is available
 if ! command -v jstat &> /dev/null; then
@@ -62,7 +61,6 @@ convert_to_bytes() {
             ;;
     esac
 }
-
 
 # Function to extract the used and committed space for a segment
 extract_code_cache_segment_data() {
@@ -151,24 +149,17 @@ push_metrics() {
     # Get the current timestamp in milliseconds
     current_timestamp=$(date +%s)
 
-    # Prepare metrics format
-    # shellcheck disable=SC2034
-    METRICS=$(cat <<EOF
-$current_timestamp jvm_class_space_used_bytes $class_metaspace_used_bytes
-$current_timestamp jvm_non_class_metaspace_used_bytes $non_class_metaspace_used_bytes
-$current_timestamp jvm_eden_space_used $eden_bytes
-$current_timestamp jvm_survivor_space_used $survivor_bytes
-$current_timestamp jvm_old_gen_space_used $old_bytes
-$current_timestamp jvm_code_cache_non_profiled_used $non_profiled_used_value
-$current_timestamp jvm_code_cache_profiled_used $profiled_used_value
-$current_timestamp jvm_code_cache_non_nmethods_used $non_nmethods_used_value
-$current_timestamp jvm_code_cache_total_used $code_cache_used_value
-$current_timestamp jvm_code_cache_total_committed $code_cache_committed_value
-EOF
-)
+    # Check if file exists and has content
+    if [ ! -s "$METRICS_LOG" ]; then
+        # Write header if file doesn't exist or is empty
+        echo "timestamp,jvm_class_space_used_bytes,jvm_non_class_metaspace_used_bytes,jvm_eden_space_used,jvm_survivor_space_used,jvm_old_gen_space_used,jvm_code_cache_non_profiled_used,jvm_code_cache_profiled_used,jvm_code_cache_non_nmethods_used,jvm_code_cache_total_used,jvm_code_cache_total_committed" > "$METRICS_LOG"
+    fi
 
-    # Log metrics to file
-    echo "$METRICS" > "$METRICS_LOG"
+    # Prepare metrics format in CSV
+    METRICS="$current_timestamp,$class_metaspace_used_bytes,$non_class_metaspace_used_bytes,$eden_bytes,$survivor_bytes,$old_bytes,$non_profiled_used_value,$profiled_used_value,$non_nmethods_used_value,$code_cache_used_value,$code_cache_committed_value"
+
+    # Append metrics to file
+    echo "$METRICS" >> "$METRICS_LOG"
 
 }
 
