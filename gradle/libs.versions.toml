@@ -27,7 +27,7 @@ test-junit = "4.13.2"
 test-androidx-junit = "1.2.1"
 test-androidx-espresso = "3.6.1"
 
-navigation = "2.9.0"
+navigation = "2.9.2"
 
 kotlin-inject = "0.8.0"
 zac-anvil = "0.4.1"
