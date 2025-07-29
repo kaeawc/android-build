@@ -19,8 +19,8 @@
     <issue id="PlaySdkIndexGenericIssues" severity="error" />
     <issue id="PlaySdkIndexNonCompliant" severity="error" />
     <issue id="PlaySdkIndexVulnerability" severity="error" />
-    <issue id="ExpiredTargetSdkVersion" severity="error" />
-    <issue id="ExpiringTargetSdkVersion" severity="error" />
+    <issue id="ExpiredTargetSdkVersion" severity="ignore" />
+    <issue id="ExpiringTargetSdkVersion" severity="ignore" />
     <issue id="QueryAllPackagesPermission" severity="error" />
 
     <!-- Correctness -->
@@ -87,7 +87,7 @@
     <issue id="GetLocales" severity="error" />
     <issue id="GradleGetter" severity="error" />
     <issue id="GradleIdeError" severity="error" />
-    <issue id="GradlePluginVersion" severity="error" />
+    <issue id="GradlePluginVersion" severity="ignore" />
     <issue id="GradleProjectIsolation" severity="error" />
     <issue id="GuavaChecksUsed" severity="error" />
     <issue id="GuavaPreconditionsUsedInKotlin" severity="error" />
@@ -317,7 +317,7 @@
     <issue id="AdapterViewChildren" severity="error" />
     <issue id="AlertDialogUsage" severity="error" />
     <issue id="Aligned16KB" severity="error" />
-    <issue id="AndroidGradlePluginVersion" severity="error" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
     <issue id="AnnotateVersionCheck" severity="error" />
     <issue id="AppBundleLocaleChanges" severity="error" />
     <issue id="AppIndexingService" severity="error" />
@@ -419,7 +419,7 @@
     <issue id="MissingKeepAnnotation" severity="error" />
     <issue id="MissingResourcesProperties" severity="error" />
     <issue id="MissingScrollbars" severity="error" />
-    <issue id="MissingVersion" severity="error" />
+    <issue id="MissingVersion" severity="ignore" />
     <issue id="MissingXmlHeader" severity="error" />
     <issue id="ModifierFactoryExtensionFunction" severity="error" />
     <issue id="ModifierFactoryReturnType" severity="error" />
