@@ -34,9 +34,9 @@ import dagger.multibindings.IntoSet
 import dagger.multibindings.Multibinds
 import javax.inject.Qualifier
 import kotlin.annotation.AnnotationRetention.BINARY
-import kotlinx.coroutines.Dispatchers
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.Dispatchers
 
 @ContributesTo(AppScope::class)
 @Module
