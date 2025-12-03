@@ -155,7 +155,7 @@ runs:
       path: |
         /usr/local/lib/android/sdk/platform-tools
         /home/runner/.config/.android/cache
-      key: v2-${{ runner.os }}-android-platform-tools
+      key: v3-${{ runner.os }}-android-platform-tools
 
   - name: Setup Android SDK
     if: steps.cache-android-platform-tools.outputs.cache-hit != 'true'
@@ -168,7 +168,7 @@ runs:
       path: |
         /usr/local/lib/android/sdk/platform-tools
         /home/runner/.config/.android/cache
-      key: v2-${{ runner.os }}-android-platform-tools
+      key: v3-${{ runner.os }}-android-platform-tools
 
   - name: "Run Tasks via Gradle"
     shell: ${{ inputs.shell }}
