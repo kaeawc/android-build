@@ -35,7 +35,8 @@ import dagger.multibindings.Multibinds
 import javax.inject.Qualifier
 import kotlin.annotation.AnnotationRetention.BINARY
 import kotlinx.coroutines.Dispatchers
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 @ContributesTo(AppScope::class)
 @Module
@@ -78,6 +79,9 @@ abstract class ApplicationModule {
             Dispatchers.Main
         }
 
-        @Provides @SingleIn(AppScope::class) fun provideClock(): Clock = Clock.System
+        @OptIn(ExperimentalTime::class)
+        @Provides
+        @SingleIn(AppScope::class)
+        fun provideClock(): Clock = Clock.System
     }
 }
