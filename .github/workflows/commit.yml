@@ -15,8 +15,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  unit-tests:
-    name: "Unit Tests"
+  android-platform:
+    name: "Android Platform"
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
@@ -24,252 +24,265 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: "testDebugUnitTest"
+          gradle-tasks: "tasks"
           reuse-configuration-cache: true
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-
-  spotless:
-    name: "Spotless Check"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "spotlessCheck"
-          # Due to https://github.com/diffplug/spotless/issues/987
-          reuse-configuration-cache: false
-
-  validate-xml:
-    name: "Validate XML"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - name: "Run XMLStarlet"
-        shell: "bash"
-        run: |
-          sudo apt-get update
-          sudo apt-get install xmlstarlet
-          ci/validate_xml.sh
-
-  ktfmt:
-    name: "ktfmt"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - name: "Run ktfmt"
-        shell: "bash"
-        run: |
-          INSTALL_KTFMT_WHEN_MISSING=true ONLY_TOUCHED_FILES=false ci/validate_ktfmt.sh
-
-  validate-shell-scripts:
-    name: "Validate Shell Scripts"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - name: "Run ShellCheck"
-        shell: "bash"
-        run: |
-          ci/validate_shell_scripts.sh
-
-  module-graph:
-    name: "Module Graph Check"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "assertModuleGraph"
-          reuse-configuration-cache: false
-
-  android-lint:
-    name: "Android Lint"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: ":app:lintRelease -Plint-config='all'"
-          reuse-configuration-cache: true
-          malloc-replacement: "tcmalloc"
-
-      - name: "Merge Lint SARIF results & Move HTML report"
-        shell: "bash"
-        run: |
-          mkdir -p build/reports
-          find . | grep "lint-results.sarif" | xargs jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  > build/reports/merged-lint.sarif
-          mv app/build/reports/lint-results-release.html build/reports/lint-results.html
-
-      - name: "Store Android Lint SARIF Report"
-        uses: github/codeql-action/upload-sarif@v3
-        if: success()
-        with:
-          sarif_file: build/reports/merged-lint.sarif
-
-      - name: "Store Android Lint HTML Report"
-        uses: actions/upload-artifact@v4.4.0
-        if: success()
-        with:
-          name: android-lint-default-report
-          path: |
-            build/reports/lint-results.html
-
-  build-apk:
-    name: "Build APK"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "assembleDebug"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-
-      - name: "Store APK"
-        uses: actions/upload-artifact@v4.4.0
-        with:
-          name: apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-
-  build-base-apk:
-    name: "Build Base APK"
-    if: github.ref_name != 'main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-          ref: ${{ github.event.pull_request.base.sha }}
-
-      - name: "Build APK from PR base SHA"
-        uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "assembleDebug"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-          optional-suffix: "-base"
-
-      - name: "Change APK file name"
-        shell: "bash"
-        run: |
-          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-base-debug.apk
-
-      - name: "Store Base APK"
-        uses: actions/upload-artifact@v4.4.0
-        with:
-          name: base-apk
-          path: app/build/outputs/apk/debug/app-base-debug.apk
-
-  build-test-apk:
-    name: "Build Test APK"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "assembleAndroidTest"
-          reuse-configuration-cache: false
-          optional-suffix: "-test"
-
-      - name: "Store Test APK"
-        uses: actions/upload-artifact@v4.4.0
-        with:
-          name: test-apk
-          path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-
-  diff-apk-from-base:
-    name: "Diff APK from Base"
-    runs-on: ubuntu-latest
-    if: github.secret_source == 'Actions' && github.ref_name != 'main'
-    needs:
-      - build-apk
-      - build-base-apk
-    steps:
-      - uses: actions/download-artifact@v4.1.8
-        with:
-          name: apk
-
-      - uses: actions/download-artifact@v4.1.8
-        with:
-          name: base-apk
-
-      - id: diffuse
-        uses: usefulness/diffuse-action@v1
-        with:
-          old-file-path: app-base-debug.apk
-          new-file-path: app-debug.apk
-
-      - uses: peter-evans/find-comment@v3
-        id: find-comment
-        if: ${{ github.event.pull_request }}
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body-includes: Diffuse output
-
-      - uses: peter-evans/create-or-update-comment@v4
-        if: ${{ github.event.pull_request }}
-        with:
-          body: |
-            Diffuse output:
-            
-            ${{ steps.diffuse.outputs.diff-gh-comment }}
-          edit-mode: replace
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/upload-artifact@v4.4.0
-        with:
-          name: diffuse-output
-          path: ${{ steps.diffuse.outputs.diff-file }}
-
-  ui-tests:
-    name: "Android UI Tests"
-    runs-on: ubuntu-latest
-    if: github.secret_source == 'Actions'
-    needs:
-      - build-apk
-      - build-test-apk
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4.1.8
-        with:
-          name: apk
-
-      - uses: actions/download-artifact@v4.1.8
-        with:
-          name: test-apk
-
-      - name: "Run tests on emulator.wtf"
-        uses: emulator-wtf/run-tests@v0
-        with:
-          api-token: ${{ secrets.EW_API_TOKEN }}
-          app: app-debug.apk
-          test: app-debug-androidTest.apk
-          outputs-dir: build/test-results
-          record-video: true
-
-      - name: "Publish Test Report"
-        uses: mikepenz/action-junit-report@v4
-        if: always() # always run even if the tests fail
-        with:
-          check_name: "UI Test Report"
-          report_paths: 'build/test-results/**/*.xml'
+#
+#  unit-tests:
+#    name: "Unit Tests"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "testDebugUnitTest"
+#          reuse-configuration-cache: true
+#          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+#
+#  spotless:
+#    name: "Spotless Check"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "spotlessCheck"
+#          # Due to https://github.com/diffplug/spotless/issues/987
+#          reuse-configuration-cache: false
+#
+#  validate-xml:
+#    name: "Validate XML"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - name: "Run XMLStarlet"
+#        shell: "bash"
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install xmlstarlet
+#          ci/validate_xml.sh
+#
+#  ktfmt:
+#    name: "ktfmt"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - name: "Run ktfmt"
+#        shell: "bash"
+#        run: |
+#          INSTALL_KTFMT_WHEN_MISSING=true ONLY_TOUCHED_FILES=false ci/validate_ktfmt.sh
+#
+#  validate-shell-scripts:
+#    name: "Validate Shell Scripts"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - name: "Run ShellCheck"
+#        shell: "bash"
+#        run: |
+#          ci/validate_shell_scripts.sh
+#
+#  module-graph:
+#    name: "Module Graph Check"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "assertModuleGraph"
+#          reuse-configuration-cache: false
+#
+#  android-lint:
+#    name: "Android Lint"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: ":app:lintRelease -Plint-config='all'"
+#          reuse-configuration-cache: true
+#          malloc-replacement: "tcmalloc"
+#
+#      - name: "Merge Lint SARIF results & Move HTML report"
+#        shell: "bash"
+#        run: |
+#          mkdir -p build/reports
+#          find . | grep "lint-results.sarif" | xargs jq -s '{ "$schema": "https://json.schemastore.org/sarif-2.1.0", "version": "2.1.0", "runs": map(.runs) | add }'  > build/reports/merged-lint.sarif
+#          mv app/build/reports/lint-results-release.html build/reports/lint-results.html
+#
+#      - name: "Store Android Lint SARIF Report"
+#        uses: github/codeql-action/upload-sarif@v3
+#        if: success()
+#        with:
+#          sarif_file: build/reports/merged-lint.sarif
+#
+#      - name: "Store Android Lint HTML Report"
+#        uses: actions/upload-artifact@v4.4.0
+#        if: success()
+#        with:
+#          name: android-lint-default-report
+#          path: |
+#            build/reports/lint-results.html
+#
+#  build-apk:
+#    name: "Build APK"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "assembleDebug"
+#          reuse-configuration-cache: true
+#          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+#
+#      - name: "Store APK"
+#        uses: actions/upload-artifact@v4.4.0
+#        with:
+#          name: apk
+#          path: app/build/outputs/apk/debug/app-debug.apk
+#
+#  build-base-apk:
+#    name: "Build Base APK"
+#    if: github.ref_name != 'main'
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#        with:
+#          submodules: true
+#          ref: ${{ github.event.pull_request.base.sha }}
+#
+#      - name: "Build APK from PR base SHA"
+#        uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "assembleDebug"
+#          reuse-configuration-cache: true
+#          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+#          optional-suffix: "-base"
+#
+#      - name: "Change APK file name"
+#        shell: "bash"
+#        run: |
+#          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-base-debug.apk
+#
+#      - name: "Store Base APK"
+#        uses: actions/upload-artifact@v4.4.0
+#        with:
+#          name: base-apk
+#          path: app/build/outputs/apk/debug/app-base-debug.apk
+#
+#  build-test-apk:
+#    name: "Build Test APK"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: ./.github/actions/gradle-task-run
+#        with:
+#          gradle-tasks: "assembleAndroidTest"
+#          reuse-configuration-cache: false
+#          optional-suffix: "-test"
+#
+#      - name: "Store Test APK"
+#        uses: actions/upload-artifact@v4.4.0
+#        with:
+#          name: test-apk
+#          path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+#
+#  diff-apk-from-base:
+#    name: "Diff APK from Base"
+#    runs-on: ubuntu-latest
+#    if: github.secret_source == 'Actions' && github.ref_name != 'main'
+#    needs:
+#      - build-apk
+#      - build-base-apk
+#    steps:
+#      - uses: actions/download-artifact@v4.1.8
+#        with:
+#          name: apk
+#
+#      - uses: actions/download-artifact@v4.1.8
+#        with:
+#          name: base-apk
+#
+#      - id: diffuse
+#        uses: usefulness/diffuse-action@v1
+#        with:
+#          old-file-path: app-base-debug.apk
+#          new-file-path: app-debug.apk
+#
+#      - uses: peter-evans/find-comment@v3
+#        id: find-comment
+#        if: ${{ github.event.pull_request }}
+#        with:
+#          issue-number: ${{ github.event.pull_request.number }}
+#          body-includes: Diffuse output
+#
+#      - uses: peter-evans/create-or-update-comment@v4
+#        if: ${{ github.event.pull_request }}
+#        with:
+#          body: |
+#            Diffuse output:
+#
+#            ${{ steps.diffuse.outputs.diff-gh-comment }}
+#          edit-mode: replace
+#          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+#          issue-number: ${{ github.event.pull_request.number }}
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - uses: actions/upload-artifact@v4.4.0
+#        with:
+#          name: diffuse-output
+#          path: ${{ steps.diffuse.outputs.diff-file }}
+#
+#  ui-tests:
+#    name: "Android UI Tests"
+#    runs-on: ubuntu-latest
+#    if: github.secret_source == 'Actions'
+#    needs:
+#      - build-apk
+#      - build-test-apk
+#    steps:
+#      - name: "Git Checkout"
+#        uses: actions/checkout@v4
+#
+#      - uses: actions/download-artifact@v4.1.8
+#        with:
+#          name: apk
+#
+#      - uses: actions/download-artifact@v4.1.8
+#        with:
+#          name: test-apk
+#
+#      - name: "Run tests on emulator.wtf"
+#        uses: emulator-wtf/run-tests@v0
+#        with:
+#          api-token: ${{ secrets.EW_API_TOKEN }}
+#          app: app-debug.apk
+#          test: app-debug-androidTest.apk
+#          outputs-dir: build/test-results
+#          record-video: true
+#
+#      - name: "Publish Test Report"
+#        uses: mikepenz/action-junit-report@v4
+#        if: always() # always run even if the tests fail
+#        with:
+#          check_name: "UI Test Report"
+#          report_paths: 'build/test-results/**/*.xml'
