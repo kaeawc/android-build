@@ -154,6 +154,7 @@ runs:
     with:
       path: |
         ~/.android
+        ~/.config
       key: v4-${{ runner.os }}-android-sdk
 
   - name: Setup Android SDK
@@ -166,6 +167,7 @@ runs:
     with:
       path: |
         ~/.android
+        ~/.config
       key: v4-${{ runner.os }}-android-sdk
 
   - name: "Run Tasks via Gradle"
