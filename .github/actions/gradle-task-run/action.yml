@@ -148,27 +148,25 @@ runs:
       build-scan-terms-of-use-agree: 'yes'
       validate-wrappers: true
 
-  - name: "Restore Android SDK Platform Tools"
-    id: cache-android-platform-tools
+  - name: "Restore Android SDK Cache"
+    id: cache-android-sdk
     uses: actions/cache/restore@v4
     with:
       path: |
-        /usr/local/lib/android/sdk/platform-tools
-        /home/runner/.config/.android/cache
-      key: v3-${{ runner.os }}-android-platform-tools
+        ~/.android
+      key: v4-${{ runner.os }}-android-sdk
 
   - name: Setup Android SDK
-    if: steps.cache-android-platform-tools.outputs.cache-hit != 'true'
+    if: steps.cache-android-sdk.outputs.cache-hit != 'true'
     uses: android-actions/setup-android@v3.2.2
 
-  - name: "Save Android SDK Platform Tools"
+  - name: "Save Android SDK Cache"
     uses: actions/cache/save@v4
-    if: steps.cache-android-platform-tools.outputs.cache-hit != 'true'
+    if: steps.cache-android-sdk.outputs.cache-hit != 'true'
     with:
       path: |
-        /usr/local/lib/android/sdk/platform-tools
-        /home/runner/.config/.android/cache
-      key: v3-${{ runner.os }}-android-platform-tools
+        ~/.android
+      key: v4-${{ runner.os }}-android-sdk
 
   - name: "Run Tasks via Gradle"
     shell: ${{ inputs.shell }}
