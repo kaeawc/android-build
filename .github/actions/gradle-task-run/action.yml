@@ -201,3 +201,11 @@ runs:
       else
         touch build/reports/config-cache-report.html
       fi
+
+  - name: "Store Config Cache Report"
+    uses: actions/upload-artifact@v4.4.0
+    if: success()
+    with:
+      name: android-config-cache-report
+      path: |
+        build/reports/config-cache-report.html
