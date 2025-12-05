@@ -26,8 +26,8 @@ package dev.jasonpearson.android
 import android.app.Application
 
 /**
- * Test application that doesn't require DI initialization.
- * This is used for simple instrumented tests that don't need the full app graph.
+ * Test application that doesn't require DI initialization. This is used for simple instrumented
+ * tests that don't need the full app graph.
  */
 class TestApp : Application() {
     override fun onCreate() {

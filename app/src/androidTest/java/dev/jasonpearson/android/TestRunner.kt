@@ -27,14 +27,12 @@ import android.app.Application
 import android.content.Context
 import androidx.test.runner.AndroidJUnitRunner
 
-/**
- * Custom test runner that uses TestApp instead of the production App class.
- */
+/** Custom test runner that uses TestApp instead of the production App class. */
 class TestRunner : AndroidJUnitRunner() {
     override fun newApplication(
         cl: ClassLoader?,
         className: String?,
-        context: Context?
+        context: Context?,
     ): Application {
         return super.newApplication(cl, TestApp::class.java.name, context)
     }
