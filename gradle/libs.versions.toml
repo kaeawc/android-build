@@ -3,9 +3,9 @@ build-android-buildTools = "35.0.0"
 build-android-compileSdk = "36"
 build-android-minSdk = "27"
 build-android-targetSdk = "36"
-build-android-agp = "9.0.0-beta03"
+build-android-agp = "8.13.1"
 # Uncomment to use r8 dev versions needed for kotlin metadata
-# build-android-r8 = "8.13.17"
+build-android-r8 = "8.13.19"
 build-android-desugar = "2.1.5"
 build-kotlin = "2.3.0-RC2"
 build-kotlin-language = "2.2"
@@ -53,7 +53,7 @@ metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "build-kotlin" }
 agp = { module = "com.android.tools.build:gradle", version.ref = "build-android-agp" }
 # Only necessary to override R8 version
-# r8 = { module = "com.android.tools:r8", version.ref = "build-android-r8" }
+r8 = { module = "com.android.tools:r8", version.ref = "build-android-r8" }
 
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "build-kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "build-kotlin-coroutines" }
