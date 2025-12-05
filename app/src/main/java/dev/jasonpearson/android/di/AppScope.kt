@@ -23,4 +23,15 @@
  */
 package dev.jasonpearson.android.di
 
+/**
+ * Marker class representing the application scope in the Metro DI graph.
+ *
+ * Use this with:
+ * - `@ContributesTo(AppScope::class)` to contribute modules to the app graph
+ * - `@ContributesBinding(AppScope::class)` to contribute interface implementations
+ * - `@SingleIn(AppScope::class)` to scope dependencies to the application lifetime
+ *
+ * This class is abstract with a private constructor to prevent instantiation
+ * while serving as a type-safe scope marker.
+ */
 abstract class AppScope private constructor()

@@ -25,4 +25,18 @@ package dev.jasonpearson.android.di
 
 import javax.inject.Qualifier
 
+/**
+ * Qualifier annotation for the Application Context.
+ *
+ * Use this when you specifically need the Application context rather than
+ * a generic context. This ensures you don't accidentally receive an Activity
+ * or Service context where you need the application-level context.
+ *
+ * Usage:
+ * ```
+ * class MyClass @Inject constructor(
+ *     @ApplicationContext private val context: Context
+ * )
+ * ```
+ */
 @Qualifier annotation class ApplicationContext

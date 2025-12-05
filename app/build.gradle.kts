@@ -129,31 +129,30 @@ android {
 }
 
 dependencies {
-    coreLibraryDesugaring(libs.desugar)
+ // Needed for reading Java 19+ class files due to JVM target higher than 11
+ implementation(platform(libs.asm.bom))
+ implementation(platform(libs.compose.bom))
+ implementation(libs.androidx.core)
+ implementation(libs.androidx.lifecycle.runtime)
+ implementation(libs.bundles.compose.ui)
+ implementation(libs.bundles.kotlin)
+ implementation(libs.compose.foundation)
+ implementation(libs.compose.material.icons)
+ implementation(libs.dagger.runtime)
+ // Dagger interop for gradual migration
+ implementation(libs.metro.interop.dagger)
+ implementation(libs.metro.runtime)
+ implementation(libs.navigation.compose)
 
-    // Needed for reading Java 19+ class files due to JVM target higher than 11
-    implementation(platform(libs.asm.bom))
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.material.icons)
-    implementation(libs.androidx.core)
-    implementation(libs.androidx.lifecycle.runtime)
-    implementation(libs.bundles.compose.ui)
-    implementation(libs.bundles.kotlin)
+ debugImplementation(libs.bundles.compose.ui.debug)
 
-    implementation(libs.metro.runtime)
-    ksp(libs.metro.compiler)
+ testImplementation(libs.bundles.unit.test)
 
-    // Dagger interop for gradual migration
-    implementation(libs.metro.interop.dagger)
-    implementation(libs.dagger.runtime)
-    ksp(libs.dagger.compiler)
+ androidTestImplementation(platform(libs.compose.bom))
+ androidTestImplementation(libs.bundles.compose.ui.espresso.test)
 
-    debugImplementation(libs.bundles.compose.ui.debug)
+ coreLibraryDesugaring(libs.desugar)
 
-    testImplementation(libs.bundles.unit.test)
-
-    androidTestImplementation(platform(libs.compose.bom))
-    androidTestImplementation(libs.bundles.compose.ui.espresso.test)
-    implementation(libs.navigation.compose)
+ ksp(libs.dagger.compiler)
+ ksp(libs.metro.compiler)
 }

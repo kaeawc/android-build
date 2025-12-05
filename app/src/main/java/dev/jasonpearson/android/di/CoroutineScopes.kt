@@ -29,9 +29,27 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.SupervisorJob
 
+/**
+ * Application-scoped CoroutineScope tied to the Main dispatcher.
+ *
+ * Use this for coroutines that need to run on the main thread throughout
+ * the app lifecycle. This scope is automatically cancelled when the app
+ * process is terminated.
+ *
+ * Useful for UI-related operations that span beyond a single screen.
+ */
 @SingleIn(AppScope::class)
 class MainAppCoroutineScope @Inject constructor() : CoroutineScope by MainScope()
 
+/**
+ * Application-scoped CoroutineScope for background work.
+ *
+ * Use this for long-running background operations throughout the app lifecycle.
+ * Uses Dispatchers.Default for CPU-intensive work and includes a SupervisorJob
+ * to prevent failures in one coroutine from cancelling others.
+ *
+ * This scope is automatically cancelled when the app process is terminated.
+ */
 @SingleIn(AppScope::class)
 class BackgroundAppCoroutineScope @Inject constructor() :
     CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default)

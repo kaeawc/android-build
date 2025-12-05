@@ -23,23 +23,41 @@
  */
 package dev.jasonpearson.android.di
 
-import android.app.Activity
 import android.app.Application
-import dagger.BindsInstance
 import dev.jasonpearson.android.App
 import dev.zacsweers.metro.DependencyGraph
-import javax.inject.Provider
+import dev.zacsweers.metro.Provides
 
+/**
+ * Application-level dependency graph using Metro DI.
+ *
+ * This graph is the root of the dependency tree and lives for the entire app lifecycle.
+ * All dependencies contributed with `@ContributesTo(AppScope::class)` will be included here.
+ *
+ * Access the graph from any Context using:
+ * ```
+ * context.appGraph
+ * ```
+ */
 @DependencyGraph(scope = AppScope::class)
 @SingleIn(AppScope::class)
-interface ApplicationComponent {
+interface AppGraph {
 
-    val activityProviders: Map<Class<out Activity>, Provider<Activity>>
-
+    /**
+     * Injects dependencies into the Application class.
+     * Called during app initialization.
+     */
     fun inject(application: App)
 
+    /**
+     * Factory for creating the AppGraph.
+     * Metro generates the implementation of this interface.
+     */
     @DependencyGraph.Factory
     fun interface Factory {
-        fun create(@BindsInstance application: Application): ApplicationComponent
+        fun create(@Provides application: Application): AppGraph
     }
+
+    // Exposed dependencies for convenient access
+    // Note: In a larger app, consider using subcomponents instead of exposing everything
 }
