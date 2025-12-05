@@ -206,6 +206,6 @@ runs:
     uses: actions/upload-artifact@v4.4.0
     if: success()
     with:
-      name: android-config-cache-report
+      name: config-cache-report-${{ inputs.gradle-tasks }}
       path: |
         build/reports/config-cache-report.html
