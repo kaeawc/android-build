@@ -24,13 +24,13 @@
 package dev.jasonpearson.android.di
 
 import android.app.Activity
-import com.squareup.anvil.annotations.ContributesTo
 import dagger.Module
 import dagger.multibindings.Multibinds
+import dev.zacsweers.metro.ContributesTo
 
 @ContributesTo(AppScope::class)
 @Module
 interface ActivityModule {
 
-    @Multibinds fun activityProviders(): Map<Class<out Activity>, @JvmSuppressWildcards Activity>
+    @Multibinds fun activityProviders(): Map<Class<out Activity>, Activity>
 }

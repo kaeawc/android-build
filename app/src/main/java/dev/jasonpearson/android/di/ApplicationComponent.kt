@@ -25,20 +25,20 @@ package dev.jasonpearson.android.di
 
 import android.app.Activity
 import android.app.Application
-import com.squareup.anvil.annotations.MergeComponent
 import dagger.BindsInstance
 import dev.jasonpearson.android.App
+import dev.zacsweers.metro.DependencyGraph
 import javax.inject.Provider
 
-@MergeComponent(AppScope::class)
+@DependencyGraph(scope = AppScope::class)
 @SingleIn(AppScope::class)
 interface ApplicationComponent {
 
-    val activityProviders: Map<Class<out Activity>, @JvmSuppressWildcards Provider<Activity>>
+    val activityProviders: Map<Class<out Activity>, Provider<Activity>>
 
     fun inject(application: App)
 
-    @MergeComponent.Factory
+    @DependencyGraph.Factory
     fun interface Factory {
         fun create(@BindsInstance application: Application): ApplicationComponent
     }

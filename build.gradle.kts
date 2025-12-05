@@ -46,8 +46,8 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.zacAnvil) apply false
     alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.metro) apply false
 }
 
 val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }

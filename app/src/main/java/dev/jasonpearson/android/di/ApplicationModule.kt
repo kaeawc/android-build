@@ -26,12 +26,12 @@ package dev.jasonpearson.android.di
 import android.app.Application
 import android.content.Context
 import android.content.ContextWrapper
-import com.squareup.anvil.annotations.ContributesTo
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoSet
 import dagger.multibindings.Multibinds
+import dev.zacsweers.metro.ContributesTo
 import javax.inject.Qualifier
 import kotlin.annotation.AnnotationRetention.BINARY
 import kotlin.time.Clock

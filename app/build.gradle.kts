@@ -31,7 +31,7 @@ plugins {
     alias(libs.plugins.sortDependencies)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.zacAnvil)
+    alias(libs.plugins.metro)
 }
 
 moduleGraphAssert {
@@ -128,8 +128,6 @@ android {
     }
 }
 
-anvil { useKsp(contributesAndFactoryGeneration = true, componentMerging = true) }
-
 dependencies {
     coreLibraryDesugaring(libs.desugar)
 
@@ -143,14 +141,13 @@ dependencies {
     implementation(libs.bundles.compose.ui)
     implementation(libs.bundles.kotlin)
 
+    implementation(libs.metro.runtime)
+    ksp(libs.metro.compiler)
+
+    // Dagger interop for gradual migration
+    implementation(libs.metro.interop.dagger)
     implementation(libs.dagger.runtime)
     ksp(libs.dagger.compiler)
-
-    implementation(libs.zacAnvil.annotations)
-    implementation(libs.zacAnvil.annotationsOptional)
-    ksp(libs.zacAnvil.compiler)
-
-    kspAndroidTest(libs.zacAnvil.compiler)
 
     debugImplementation(libs.bundles.compose.ui.debug)
 

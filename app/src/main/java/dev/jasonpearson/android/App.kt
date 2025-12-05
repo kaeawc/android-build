@@ -32,13 +32,11 @@ import android.util.Log
 import dev.jasonpearson.android.di.ApplicationComponent
 import dev.jasonpearson.android.di.ApplicationModule
 import dev.jasonpearson.android.di.BackgroundAppCoroutineScope
-import dev.jasonpearson.android.di.DaggerApplicationComponent
-import dev.jasonpearson.android.di.DaggerSet
 import java.util.concurrent.Executors
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 
-private typealias InitializerFunction = () -> @JvmSuppressWildcards Unit
+private typealias InitializerFunction = () -> Unit
 
 class App : Application() {
 
@@ -51,7 +49,7 @@ class App : Application() {
     @Inject
     fun asyncInits(
         scope: BackgroundAppCoroutineScope,
-        @ApplicationModule.AsyncInitializers asyncInitializers: DaggerSet<InitializerFunction>,
+        @ApplicationModule.AsyncInitializers asyncInitializers: Set<InitializerFunction>,
     ) {
         scope.launch {
             // TODO - run these in parallel?
@@ -60,14 +58,16 @@ class App : Application() {
     }
 
     @Inject
-    fun inits(@ApplicationModule.Initializers initializers: DaggerSet<InitializerFunction>) {
+    fun inits(@ApplicationModule.Initializers initializers: Set<InitializerFunction>) {
         initializers.forEach { it() }
     }
 
     override fun onCreate() {
         super.onCreate()
 
-        appComponent = DaggerApplicationComponent.factory().create(this).apply { inject(this@App) }
+        appComponent = dev.zacsweers.metro.createGraphFactory<ApplicationComponent.Factory>()
+            .create(this)
+            .apply { inject(this@App) }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             StrictMode.setVmPolicy(
