@@ -115,7 +115,7 @@ allprojects {
                     "-opt-in=kotlin.time.ExperimentalTime",
                     "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
                     "-opt-in=kotlinx.coroutines.FlowPreview",
-                    "-Xcontext-receivers",
+                    "-Xcontext-parameters",
                 )
             )
         }
