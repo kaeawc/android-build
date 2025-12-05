@@ -46,17 +46,14 @@ object WidgetRepositoryImpl : WidgetRepository {
 
     private val widgets = mutableListOf<Widget>()
 
-    @Synchronized
     override fun add(widget: Widget) {
         widgets.add(widget)
     }
 
-    @Synchronized
     override fun getByName(name: String): Widget? {
         return widgets.firstOrNull { it.name == name }
     }
 
-    @Synchronized
     override fun getAll(): List<Widget> {
         return widgets.toList()
     }
