@@ -38,8 +38,8 @@ interface WidgetRepository {
 /**
  * Thread-safe implementation of [WidgetRepository].
  *
- * Uses an object singleton which is appropriate for application-scoped state.
- * All methods are synchronized to ensure thread-safety when accessing the mutable list.
+ * Uses an object singleton which is appropriate for application-scoped state. All methods are
+ * synchronized to ensure thread-safety when accessing the mutable list.
  */
 @ContributesBinding(AppScope::class)
 object WidgetRepositoryImpl : WidgetRepository {

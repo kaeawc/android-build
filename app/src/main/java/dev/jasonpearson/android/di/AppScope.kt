@@ -31,7 +31,7 @@ package dev.jasonpearson.android.di
  * - `@ContributesBinding(AppScope::class)` to contribute interface implementations
  * - `@SingleIn(AppScope::class)` to scope dependencies to the application lifetime
  *
- * This class is abstract with a private constructor to prevent instantiation
- * while serving as a type-safe scope marker.
+ * This class is abstract with a private constructor to prevent instantiation while serving as a
+ * type-safe scope marker.
  */
 abstract class AppScope private constructor()

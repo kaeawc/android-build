@@ -28,9 +28,9 @@ import javax.inject.Qualifier
 /**
  * Qualifier annotation for the Application Context.
  *
- * Use this when you specifically need the Application context rather than
- * a generic context. This ensures you don't accidentally receive an Activity
- * or Service context where you need the application-level context.
+ * Use this when you specifically need the Application context rather than a generic context. This
+ * ensures you don't accidentally receive an Activity or Service context where you need the
+ * application-level context.
  *
  * Usage:
  * ```

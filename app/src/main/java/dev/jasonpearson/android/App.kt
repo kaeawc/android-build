@@ -48,33 +48,27 @@ class App : Application() {
     lateinit var appComponent: AppGraph
         private set
 
-    @Inject
-    @ApplicationModule.Initializers
-    lateinit var initializers: Set<InitializerFunction>
+    @Inject @ApplicationModule.Initializers lateinit var initializers: Set<InitializerFunction>
 
     @Inject
     @ApplicationModule.AsyncInitializers
     lateinit var asyncInitializers: Set<InitializerFunction>
 
-    @Inject
-    lateinit var backgroundScope: BackgroundAppCoroutineScope
+    @Inject lateinit var backgroundScope: BackgroundAppCoroutineScope
 
     override fun onCreate() {
         super.onCreate()
 
         // Initialize DI graph
-        appComponent = createGraphFactory<AppGraph.Factory>()
-            .create(this)
-            .apply { inject(this@App) }
+        appComponent =
+            createGraphFactory<AppGraph.Factory>().create(this).apply { inject(this@App) }
 
         // Run synchronous initializers
         initializers.forEach { it() }
 
         // Run async initializers in parallel
         backgroundScope.launch {
-            asyncInitializers.forEach { initializer ->
-                launch { initializer() }
-            }
+            asyncInitializers.forEach { initializer -> launch { initializer() } }
         }
 
         // Setup StrictMode for debug builds
@@ -102,7 +96,7 @@ class App : Application() {
                             }
                         }
                     }
-                    .build(),
+                    .build()
             )
         }
     }

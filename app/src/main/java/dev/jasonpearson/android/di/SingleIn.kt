@@ -30,9 +30,8 @@ import kotlin.reflect.KClass
 /**
  * Custom scope annotation that provides type-safe scoping for dependencies.
  *
- * Unlike `@Singleton`, this annotation requires you to specify which scope
- * the dependency is singleton within, making it explicit and preventing
- * accidental scope leaks.
+ * Unlike `@Singleton`, this annotation requires you to specify which scope the dependency is
+ * singleton within, making it explicit and preventing accidental scope leaks.
  *
  * Usage:
  * ```

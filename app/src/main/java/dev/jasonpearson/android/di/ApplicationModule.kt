@@ -39,17 +39,11 @@ import kotlinx.coroutines.Dispatchers
 @Module
 interface ApplicationModule {
 
-    @Qualifier
-    @Retention(BINARY)
-    annotation class Initializers
+    @Qualifier @Retention(BINARY) annotation class Initializers
 
-    @Qualifier
-    @Retention(BINARY)
-    annotation class AsyncInitializers
+    @Qualifier @Retention(BINARY) annotation class AsyncInitializers
 
-    @Qualifier
-    @Retention(BINARY)
-    annotation class LazyDelegate
+    @Qualifier @Retention(BINARY) annotation class LazyDelegate
 
     companion object {
 
@@ -68,15 +62,13 @@ interface ApplicationModule {
         internal fun provideGeneralUseContext(@ApplicationContext appContext: Context): Context =
             ContextWrapper(appContext)
 
-        @Provides
-        @SingleIn(AppScope::class)
-        fun provideClock(): Clock = Clock.System
+        @Provides @SingleIn(AppScope::class) fun provideClock(): Clock = Clock.System
     }
 }
 
 /**
- * Module for app initialization hooks.
- * Provides sets of initializer functions that run at app startup.
+ * Module for app initialization hooks. Provides sets of initializer functions that run at app
+ * startup.
  */
 @ContributesTo(AppScope::class)
 @Module

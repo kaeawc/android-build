@@ -31,8 +31,8 @@ import dev.zacsweers.metro.Provides
 /**
  * Application-level dependency graph using Metro DI.
  *
- * This graph is the root of the dependency tree and lives for the entire app lifecycle.
- * All dependencies contributed with `@ContributesTo(AppScope::class)` will be included here.
+ * This graph is the root of the dependency tree and lives for the entire app lifecycle. All
+ * dependencies contributed with `@ContributesTo(AppScope::class)` will be included here.
  *
  * Access the graph from any Context using:
  * ```
@@ -43,16 +43,10 @@ import dev.zacsweers.metro.Provides
 @SingleIn(AppScope::class)
 interface AppGraph {
 
-    /**
-     * Injects dependencies into the Application class.
-     * Called during app initialization.
-     */
+    /** Injects dependencies into the Application class. Called during app initialization. */
     fun inject(application: App)
 
-    /**
-     * Factory for creating the AppGraph.
-     * Metro generates the implementation of this interface.
-     */
+    /** Factory for creating the AppGraph. Metro generates the implementation of this interface. */
     @DependencyGraph.Factory
     fun interface Factory {
         fun create(@Provides application: Application): AppGraph
