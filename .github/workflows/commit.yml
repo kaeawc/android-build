@@ -171,10 +171,9 @@ jobs:
       - name: "Build APK from PR base SHA"
         uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: "assembleDebug"
+          gradle-tasks: "assembleDebug -Dbase.apk=true"
           reuse-configuration-cache: true
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-          optional-suffix: "-base"
 
       - name: "Change APK file name"
         shell: "bash"

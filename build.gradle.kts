@@ -32,7 +32,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 buildscript {
     dependencies {
         // Necessary if we are to override R8
-        // classpath(libs.r8)
+        classpath(libs.r8)
         classpath(libs.agp)
         classpath(libs.kgp)
     }
@@ -46,8 +46,8 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.zacAnvil) apply false
     alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.metro) apply false
 }
 
 val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }

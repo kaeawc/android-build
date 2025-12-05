@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Jason Pearson
+ * Copyright (c) 2023 Jason Pearson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.di
+package dev.jasonpearson.android
 
-/** Sugar over multibindings that helps with Kotlin wildcards. */
-typealias DaggerSet<T> = @JvmSuppressWildcards Set<T>
+import android.app.Application
+import android.content.Context
+import androidx.test.runner.AndroidJUnitRunner
 
-typealias DaggerMap<K, V> = @JvmSuppressWildcards Map<K, V>
-
-typealias DaggerLazy<T> = @JvmSuppressWildcards dagger.Lazy<T>
+/** Custom test runner that uses TestApp instead of the production App class. */
+class TestRunner : AndroidJUnitRunner() {
+    override fun newApplication(
+        cl: ClassLoader?,
+        className: String?,
+        context: Context?,
+    ): Application {
+        return super.newApplication(cl, TestApp::class.java.name, context)
+    }
+}

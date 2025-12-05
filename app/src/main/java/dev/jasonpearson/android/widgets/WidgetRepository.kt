@@ -23,6 +23,9 @@
  */
 package dev.jasonpearson.android.widgets
 
+import dev.jasonpearson.android.di.AppScope
+import dev.zacsweers.metro.ContributesBinding
+
 interface WidgetRepository {
 
     fun add(widget: Widget)
@@ -32,7 +35,14 @@ interface WidgetRepository {
     fun getAll(): List<Widget>
 }
 
-internal class WidgetRepositoryImpl : WidgetRepository {
+/**
+ * Thread-safe implementation of [WidgetRepository].
+ *
+ * Uses an object singleton which is appropriate for application-scoped state. All methods are
+ * synchronized to ensure thread-safety when accessing the mutable list.
+ */
+@ContributesBinding(AppScope::class)
+object WidgetRepositoryImpl : WidgetRepository {
 
     private val widgets = mutableListOf<Widget>()
 
@@ -45,6 +55,6 @@ internal class WidgetRepositoryImpl : WidgetRepository {
     }
 
     override fun getAll(): List<Widget> {
-        return widgets
+        return widgets.toList()
     }
 }

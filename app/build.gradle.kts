@@ -31,7 +31,7 @@ plugins {
     alias(libs.plugins.sortDependencies)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.zacAnvil)
+    alias(libs.plugins.metro)
 }
 
 moduleGraphAssert {
@@ -71,7 +71,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "dev.jasonpearson.android.TestRunner"
         vectorDrawables { useSupportLibrary = true }
     }
 
@@ -128,29 +128,21 @@ android {
     }
 }
 
-anvil { useKsp(contributesAndFactoryGeneration = true, componentMerging = true) }
-
 dependencies {
-    coreLibraryDesugaring(libs.desugar)
-
     // Needed for reading Java 19+ class files due to JVM target higher than 11
     implementation(platform(libs.asm.bom))
     implementation(platform(libs.compose.bom))
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.material.icons)
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.bundles.compose.ui)
     implementation(libs.bundles.kotlin)
-
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material.icons)
     implementation(libs.dagger.runtime)
-    ksp(libs.dagger.compiler)
-
-    implementation(libs.zacAnvil.annotations)
-    implementation(libs.zacAnvil.annotationsOptional)
-    ksp(libs.zacAnvil.compiler)
-
-    kspAndroidTest(libs.zacAnvil.compiler)
+    // Dagger interop for gradual migration
+    implementation(libs.metro.interop.dagger)
+    implementation(libs.metro.runtime)
+    implementation(libs.navigation.compose)
 
     debugImplementation(libs.bundles.compose.ui.debug)
 
@@ -158,5 +150,9 @@ dependencies {
 
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.bundles.compose.ui.espresso.test)
-    implementation(libs.navigation.compose)
+
+    coreLibraryDesugaring(libs.desugar)
+
+    ksp(libs.dagger.compiler)
+    ksp(libs.metro.compiler)
 }

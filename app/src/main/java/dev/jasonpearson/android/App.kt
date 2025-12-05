@@ -29,16 +29,15 @@ import android.os.StrictMode
 import android.os.strictmode.DiskReadViolation
 import android.os.strictmode.UntaggedSocketViolation
 import android.util.Log
-import dev.jasonpearson.android.di.ApplicationComponent
+import dev.jasonpearson.android.di.AppGraph
 import dev.jasonpearson.android.di.ApplicationModule
 import dev.jasonpearson.android.di.BackgroundAppCoroutineScope
-import dev.jasonpearson.android.di.DaggerApplicationComponent
-import dev.jasonpearson.android.di.DaggerSet
+import dev.zacsweers.metro.createGraphFactory
 import java.util.concurrent.Executors
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 
-private typealias InitializerFunction = () -> @JvmSuppressWildcards Unit
+private typealias InitializerFunction = () -> Unit
 
 class App : Application() {
 
@@ -46,43 +45,55 @@ class App : Application() {
         internal val TAG = App::class.simpleName!!
     }
 
-    lateinit var appComponent: ApplicationComponent
+    lateinit var appComponent: AppGraph
+        private set
+
+    @Inject @ApplicationModule.Initializers lateinit var initializers: Set<InitializerFunction>
 
     @Inject
-    fun asyncInits(
-        scope: BackgroundAppCoroutineScope,
-        @ApplicationModule.AsyncInitializers asyncInitializers: DaggerSet<InitializerFunction>,
-    ) {
-        scope.launch {
-            // TODO - run these in parallel?
-            asyncInitializers.forEach { it() }
-        }
-    }
+    @ApplicationModule.AsyncInitializers
+    lateinit var asyncInitializers: Set<InitializerFunction>
 
-    @Inject
-    fun inits(@ApplicationModule.Initializers initializers: DaggerSet<InitializerFunction>) {
-        initializers.forEach { it() }
-    }
+    @Inject lateinit var backgroundScope: BackgroundAppCoroutineScope
 
     override fun onCreate() {
         super.onCreate()
 
-        appComponent = DaggerApplicationComponent.factory().create(this).apply { inject(this@App) }
+        // Initialize DI graph
+        appComponent =
+            createGraphFactory<AppGraph.Factory>().create(this).apply { inject(this@App) }
 
+        // Run synchronous initializers
+        initializers.forEach { it() }
+
+        // Run async initializers in parallel
+        backgroundScope.launch {
+            asyncInitializers.forEach { initializer -> launch { initializer() } }
+        }
+
+        // Setup StrictMode for debug builds
+        setupStrictMode()
+    }
+
+    private fun setupStrictMode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             StrictMode.setVmPolicy(
                 StrictMode.VmPolicy.Builder()
                     .detectAll()
                     .penaltyListener(Executors.newSingleThreadExecutor()) { violation ->
-                        if (violation is UntaggedSocketViolation) {
-                            // This is a known issue with Flipper
-                        } else if (
+                        when {
+                            violation is UntaggedSocketViolation -> {
+                                // Known issue with Flipper - ignore
+                            }
+
                             violation is DiskReadViolation &&
-                                violation.stackTraceToString().contains("CustomTabsConnection")
-                        ) {
-                            // This is a known issue with Chrome Custom Tabs
-                        } else {
-                            Log.e(TAG, violation.toString())
+                                violation.stackTraceToString().contains("CustomTabsConnection") -> {
+                                // Known issue with Chrome Custom Tabs - ignore
+                            }
+
+                            else -> {
+                                Log.e(TAG, "StrictMode violation detected", violation)
+                            }
                         }
                     }
                     .build()

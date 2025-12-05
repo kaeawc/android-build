@@ -23,14 +23,16 @@
  */
 package dev.jasonpearson.android.di
 
-import android.app.Activity
-import com.squareup.anvil.annotations.ContributesTo
-import dagger.Module
-import dagger.multibindings.Multibinds
+import android.content.Context
+import dev.jasonpearson.android.App
 
-@ContributesTo(AppScope::class)
-@Module
-interface ActivityModule {
-
-    @Multibinds fun activityProviders(): Map<Class<out Activity>, @JvmSuppressWildcards Activity>
-}
+/**
+ * Extension property to access the application's dependency graph from any Context.
+ *
+ * Usage in Activity/Fragment:
+ * ```
+ * val myDependency = context.appGraph.myDependency()
+ * ```
+ */
+val Context.appGraph: AppGraph
+    get() = (applicationContext as App).appComponent

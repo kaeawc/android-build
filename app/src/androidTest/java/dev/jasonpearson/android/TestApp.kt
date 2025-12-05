@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Jason Pearson
+ * Copyright (c) 2023 Jason Pearson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,25 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.di
+package dev.jasonpearson.android
 
-import android.app.Activity
 import android.app.Application
-import com.squareup.anvil.annotations.MergeComponent
-import dagger.BindsInstance
-import dev.jasonpearson.android.App
-import javax.inject.Provider
 
-@MergeComponent(AppScope::class)
-@SingleIn(AppScope::class)
-interface ApplicationComponent {
-
-    val activityProviders: Map<Class<out Activity>, @JvmSuppressWildcards Provider<Activity>>
-
-    fun inject(application: App)
-
-    @MergeComponent.Factory
-    fun interface Factory {
-        fun create(@BindsInstance application: Application): ApplicationComponent
+/**
+ * Test application that doesn't require DI initialization. This is used for simple instrumented
+ * tests that don't need the full app graph.
+ */
+class TestApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        // No DI initialization needed for simple tests
     }
 }

@@ -26,21 +26,18 @@ package dev.jasonpearson.android.di
 import android.app.Application
 import android.content.Context
 import android.content.ContextWrapper
-import com.squareup.anvil.annotations.ContributesTo
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoSet
-import dagger.multibindings.Multibinds
+import dev.zacsweers.metro.ContributesTo
 import javax.inject.Qualifier
 import kotlin.annotation.AnnotationRetention.BINARY
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.Dispatchers
 
 @ContributesTo(AppScope::class)
 @Module
-abstract class ApplicationModule {
+interface ApplicationModule {
 
     @Qualifier @Retention(BINARY) annotation class Initializers
 
@@ -48,18 +45,12 @@ abstract class ApplicationModule {
 
     @Qualifier @Retention(BINARY) annotation class LazyDelegate
 
-    /** Provides initializers for app startup. */
-    @Initializers @Multibinds abstract fun initializers(): Set<() -> Unit>
-
-    /** Provides initializers for app startup that can be initialized async. */
-    @AsyncInitializers @Multibinds abstract fun asyncInitializers(): Set<() -> Unit>
-
-    @Binds
-    @ApplicationContext
-    @SingleIn(AppScope::class)
-    abstract fun provideApplicationContext(real: Application): Context
-
     companion object {
+
+        @Provides
+        @ApplicationContext
+        @SingleIn(AppScope::class)
+        fun provideApplicationContext(application: Application): Context = application
 
         /**
          * This Context is only available for things that don't care what type of Context they need.
@@ -71,17 +62,29 @@ abstract class ApplicationModule {
         internal fun provideGeneralUseContext(@ApplicationContext appContext: Context): Context =
             ContextWrapper(appContext)
 
-        @AsyncInitializers
+        @Provides @SingleIn(AppScope::class) fun provideClock(): Clock = Clock.System
+    }
+}
+
+/**
+ * Module for app initialization hooks. Provides sets of initializer functions that run at app
+ * startup.
+ */
+@ContributesTo(AppScope::class)
+@Module
+interface InitializersModule {
+
+    companion object {
+        /**
+         * Pre-initializes Dispatchers.Main off the main thread to avoid disk I/O on first access.
+         * This is contributed to the async initializers set.
+         */
+        @ApplicationModule.AsyncInitializers
         @IntoSet
         @Provides
         fun mainDispatcherInit(): () -> Unit = {
             // This makes a call to disk, so initialize it off the main thread first... ironically
             Dispatchers.Main
         }
-
-        @OptIn(ExperimentalTime::class)
-        @Provides
-        @SingleIn(AppScope::class)
-        fun provideClock(): Clock = Clock.System
     }
 }

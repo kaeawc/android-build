@@ -21,13 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.di
 
-import com.squareup.anvil.annotations.ContributesBinding
-import dev.jasonpearson.android.di.AppScope
-import dev.jasonpearson.android.di.SingleIn
-import javax.inject.Inject
+import android.app.Application
+import dev.jasonpearson.android.App
+import dev.zacsweers.metro.DependencyGraph
+import dev.zacsweers.metro.Provides
 
-@ContributesBinding(AppScope::class)
+/**
+ * Application-level dependency graph using Metro DI.
+ *
+ * This graph is the root of the dependency tree and lives for the entire app lifecycle. All
+ * dependencies contributed with `@ContributesTo(AppScope::class)` will be included here.
+ *
+ * Access the graph from any Context using:
+ * ```
+ * context.appGraph
+ * ```
+ */
+@DependencyGraph(scope = AppScope::class)
 @SingleIn(AppScope::class)
-class WidgetRepositoryBinding @Inject constructor() : WidgetRepository by WidgetRepositoryImpl()
+interface AppGraph {
+
+    /** Injects dependencies into the Application class. Called during app initialization. */
+    fun inject(application: App)
+
+    /** Factory for creating the AppGraph. Metro generates the implementation of this interface. */
+    @DependencyGraph.Factory
+    fun interface Factory {
+        fun create(@Provides application: Application): AppGraph
+    }
+
+    // Exposed dependencies for convenient access
+    // Note: In a larger app, consider using subcomponents instead of exposing everything
+}
