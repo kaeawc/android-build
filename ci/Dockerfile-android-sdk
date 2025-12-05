@@ -1,4 +1,4 @@
-ARG ZULU_VERSION=23.0.2
+ARG ZULU_VERSION=21.0.2
 
 FROM azul/zulu-openjdk-alpine:${ZULU_VERSION}
 
