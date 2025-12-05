@@ -3,7 +3,7 @@ build-android-buildTools = "35.0.0"
 build-android-compileSdk = "36"
 build-android-minSdk = "27"
 build-android-targetSdk = "36"
-build-android-agp = "8.13.1"
+build-android-agp = "9.0.0-beta03"
 # Uncomment to use r8 dev versions needed for kotlin metadata
 # build-android-r8 = "8.13.17"
 build-android-desugar = "2.1.5"
