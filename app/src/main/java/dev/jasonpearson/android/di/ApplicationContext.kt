@@ -23,7 +23,7 @@
  */
 package dev.jasonpearson.android.di
 
-import javax.inject.Qualifier
+import dev.zacsweers.metro.Qualifier
 
 /**
  * Qualifier annotation for the Application Context.

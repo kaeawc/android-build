@@ -25,18 +25,15 @@ package dev.jasonpearson.android.di
 
 import android.app.Application
 import android.content.Context
-import android.content.ContextWrapper
-import dagger.Module
-import dagger.Provides
-import dagger.multibindings.IntoSet
 import dev.zacsweers.metro.ContributesTo
-import javax.inject.Qualifier
+import dev.zacsweers.metro.IntoSet
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.Qualifier
 import kotlin.annotation.AnnotationRetention.BINARY
 import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
 
 @ContributesTo(AppScope::class)
-@Module
 interface ApplicationModule {
 
     @Qualifier @Retention(BINARY) annotation class Initializers
@@ -52,16 +49,6 @@ interface ApplicationModule {
         @SingleIn(AppScope::class)
         fun provideApplicationContext(application: Application): Context = application
 
-        /**
-         * This Context is only available for things that don't care what type of Context they need.
-         *
-         * Wrapped so no one can try to cast it as an Application.
-         */
-        @Provides
-        @SingleIn(AppScope::class)
-        internal fun provideGeneralUseContext(@ApplicationContext appContext: Context): Context =
-            ContextWrapper(appContext)
-
         @Provides @SingleIn(AppScope::class) fun provideClock(): Clock = Clock.System
     }
 }
@@ -71,10 +58,17 @@ interface ApplicationModule {
  * startup.
  */
 @ContributesTo(AppScope::class)
-@Module
 interface InitializersModule {
 
     companion object {
+        /**
+         * Placeholder for synchronous initializers. In a real app, you would contribute actual
+         * initializers here using @IntoSet with @Initializers qualifier.
+         */
+        @ApplicationModule.Initializers
+        @Provides
+        fun provideInitializers(): Set<() -> Unit> = emptySet()
+
         /**
          * Pre-initializes Dispatchers.Main off the main thread to avoid disk I/O on first access.
          * This is contributed to the async initializers set.

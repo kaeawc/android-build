@@ -34,5 +34,5 @@ import dev.jasonpearson.android.App
  * val myDependency = context.appGraph.myDependency()
  * ```
  */
-val Context.appGraph: AppGraph
+internal val Context.appGraph: AppGraph
     get() = (applicationContext as App).appComponent

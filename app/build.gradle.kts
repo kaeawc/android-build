@@ -30,7 +30,6 @@ plugins {
     alias(libs.plugins.publish)
     alias(libs.plugins.sortDependencies)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.metro)
 }
 
@@ -138,9 +137,6 @@ dependencies {
     implementation(libs.bundles.kotlin)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material.icons)
-    implementation(libs.dagger.runtime)
-    // Dagger interop for gradual migration
-    implementation(libs.metro.interop.dagger)
     implementation(libs.metro.runtime)
     implementation(libs.navigation.compose)
 
@@ -152,7 +148,4 @@ dependencies {
     androidTestImplementation(libs.bundles.compose.ui.espresso.test)
 
     coreLibraryDesugaring(libs.desugar)
-
-    ksp(libs.dagger.compiler)
-    ksp(libs.metro.compiler)
 }

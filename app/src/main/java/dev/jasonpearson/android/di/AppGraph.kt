@@ -41,7 +41,7 @@ import dev.zacsweers.metro.Provides
  */
 @DependencyGraph(scope = AppScope::class)
 @SingleIn(AppScope::class)
-interface AppGraph {
+internal interface AppGraph {
 
     /** Injects dependencies into the Application class. Called during app initialization. */
     fun inject(application: App)
