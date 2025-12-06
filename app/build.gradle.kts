@@ -137,8 +137,6 @@ dependencies {
     implementation(libs.bundles.kotlin)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material.icons)
-    // JSR-330 annotations used by Metro
-    // implementation(libs.javax.inject)
     implementation(libs.metro.runtime)
     implementation(libs.navigation.compose)
 

@@ -32,7 +32,6 @@ navigation = "2.9.6"
 
 kotlin-inject = "0.8.0"
 metro = "0.8.2"
-javax-inject = "1"
 
 [plugins]
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "build-gradle-dependencyAnalysis" }
@@ -61,9 +60,6 @@ navigation-compose = { module = "androidx.navigation:navigation-compose", versio
 
 metro-runtime = { module = "dev.zacsweers.metro:runtime", version.ref = "metro" }
 metro-compiler = { module = "dev.zacsweers.metro:compiler", version.ref = "metro" }
-
-# JSR-330 annotations required by Metro
-javax-inject = { module = "javax.inject:javax.inject", version.ref = "javax-inject" }
 
 asm-bom = { module = "org.ow2.asm:asm-bom", version.ref = "build-java-asm" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "build-android-desugar" }
