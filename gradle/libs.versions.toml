@@ -9,7 +9,6 @@ build-android-r8 = "8.13.19"
 build-android-desugar = "2.1.5"
 build-kotlin = "2.3.0-RC2"
 build-kotlin-language = "2.2"
-build-kotlin-ksp = "2.3.2"
 build-kotlin-coroutines = "1.10.2"
 build-kotlin-datetime = "0.7.1"
 build-java-asm = "9.9"
@@ -32,8 +31,8 @@ test-androidx-espresso = "3.7.0"
 navigation = "2.9.6"
 
 kotlin-inject = "0.8.0"
-dagger = "2.57.2"
 metro = "0.8.2"
+javax-inject = "1"
 
 [plugins]
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "build-gradle-dependencyAnalysis" }
@@ -46,7 +45,6 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "build-kotlin" }
 android-library = { id = "com.android.library", version.ref = "build-android-agp" }
 android-application = { id = "com.android.application", version.ref = "build-android-agp" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "build-kotlin-ksp" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 
 [libraries]
@@ -61,13 +59,11 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
 
-dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
-dagger-runtime = { module = "com.google.dagger:dagger", version.ref = "dagger" }
-
-# Metro DI framework - modern replacement for Dagger/Anvil with K2 support
 metro-runtime = { module = "dev.zacsweers.metro:runtime", version.ref = "metro" }
 metro-compiler = { module = "dev.zacsweers.metro:compiler", version.ref = "metro" }
-metro-interop-dagger = { module = "dev.zacsweers.metro:interop-dagger", version.ref = "metro" }
+
+# JSR-330 annotations required by Metro
+javax-inject = { module = "javax.inject:javax.inject", version.ref = "javax-inject" }
 
 asm-bom = { module = "org.ow2.asm:asm-bom", version.ref = "build-java-asm" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "build-android-desugar" }

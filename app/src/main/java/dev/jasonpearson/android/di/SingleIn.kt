@@ -23,7 +23,7 @@
  */
 package dev.jasonpearson.android.di
 
-import javax.inject.Scope
+import dev.zacsweers.metro.Scope
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.reflect.KClass
 

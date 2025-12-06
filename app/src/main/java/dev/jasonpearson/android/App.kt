@@ -32,9 +32,9 @@ import android.util.Log
 import dev.jasonpearson.android.di.AppGraph
 import dev.jasonpearson.android.di.ApplicationModule
 import dev.jasonpearson.android.di.BackgroundAppCoroutineScope
+import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.createGraphFactory
 import java.util.concurrent.Executors
-import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 private typealias InitializerFunction = () -> Unit
@@ -45,10 +45,11 @@ class App : Application() {
         internal val TAG = App::class.simpleName!!
     }
 
-    lateinit var appComponent: AppGraph
-        private set
+    internal lateinit var appComponent: AppGraph
 
-    @Inject @ApplicationModule.Initializers lateinit var initializers: Set<InitializerFunction>
+    @Inject
+    @ApplicationModule.Initializers
+    lateinit var initializers: Set<InitializerFunction>
 
     @Inject
     @ApplicationModule.AsyncInitializers
@@ -59,9 +60,10 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Initialize DI graph
         appComponent =
-            createGraphFactory<AppGraph.Factory>().create(this).apply { inject(this@App) }
+            createGraphFactory<AppGraph.Factory>().create(this).apply {
+                inject(this@App)
+            }
 
         // Run synchronous initializers
         initializers.forEach { it() }
@@ -96,7 +98,7 @@ class App : Application() {
                             }
                         }
                     }
-                    .build()
+                    .build(),
             )
         }
     }
