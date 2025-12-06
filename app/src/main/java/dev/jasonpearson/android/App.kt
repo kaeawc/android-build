@@ -47,9 +47,7 @@ class App : Application() {
 
     internal lateinit var appComponent: AppGraph
 
-    @Inject
-    @ApplicationModule.Initializers
-    lateinit var initializers: Set<InitializerFunction>
+    @Inject @ApplicationModule.Initializers lateinit var initializers: Set<InitializerFunction>
 
     @Inject
     @ApplicationModule.AsyncInitializers
@@ -61,9 +59,7 @@ class App : Application() {
         super.onCreate()
 
         appComponent =
-            createGraphFactory<AppGraph.Factory>().create(this).apply {
-                inject(this@App)
-            }
+            createGraphFactory<AppGraph.Factory>().create(this).apply { inject(this@App) }
 
         // Run synchronous initializers
         initializers.forEach { it() }
@@ -98,7 +94,7 @@ class App : Application() {
                             }
                         }
                     }
-                    .build(),
+                    .build()
             )
         }
     }

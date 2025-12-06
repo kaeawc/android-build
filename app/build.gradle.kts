@@ -128,26 +128,26 @@ android {
 }
 
 dependencies {
- // Needed for reading Java 19+ class files due to JVM target higher than 11
- implementation(platform(libs.asm.bom))
- implementation(platform(libs.compose.bom))
- implementation(libs.androidx.core)
- implementation(libs.androidx.lifecycle.runtime)
- implementation(libs.bundles.compose.ui)
- implementation(libs.bundles.kotlin)
- implementation(libs.compose.foundation)
- implementation(libs.compose.material.icons)
- // JSR-330 annotations used by Metro
-// implementation(libs.javax.inject)
- implementation(libs.metro.runtime)
- implementation(libs.navigation.compose)
+    // Needed for reading Java 19+ class files due to JVM target higher than 11
+    implementation(platform(libs.asm.bom))
+    implementation(platform(libs.compose.bom))
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.bundles.compose.ui)
+    implementation(libs.bundles.kotlin)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material.icons)
+    // JSR-330 annotations used by Metro
+    // implementation(libs.javax.inject)
+    implementation(libs.metro.runtime)
+    implementation(libs.navigation.compose)
 
- debugImplementation(libs.bundles.compose.ui.debug)
+    debugImplementation(libs.bundles.compose.ui.debug)
 
- testImplementation(libs.bundles.unit.test)
+    testImplementation(libs.bundles.unit.test)
 
- androidTestImplementation(platform(libs.compose.bom))
- androidTestImplementation(libs.bundles.compose.ui.espresso.test)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.bundles.compose.ui.espresso.test)
 
- coreLibraryDesugaring(libs.desugar)
+    coreLibraryDesugaring(libs.desugar)
 }
