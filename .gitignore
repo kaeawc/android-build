@@ -37,3 +37,6 @@ google-services.json
 *.hprof
 
 *.sarif
+
+# Spotlight IDE Projects
+gradle/ide-projects.txt
