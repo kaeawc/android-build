@@ -21,13 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
 pluginManagement {
     repositories {
         google()
@@ -43,6 +36,15 @@ pluginManagement {
         }
     }
 }
+
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+plugins { id("com.fueledbycaffeine.spotlight") version "1.4.1" }
 
 rootProject.name = "Android Build"
 
