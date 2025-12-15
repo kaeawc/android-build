@@ -16,65 +16,70 @@ import kotlinx.coroutines.flow.asStateFlow
 class SettingsViewModel(
     private val experimentRepository: ExperimentRepository,
     private val userRepository: UserRepository,
-    private val analyticsRepository: AnalyticsRepository
+    private val analyticsRepository: AnalyticsRepository,
 ) : ViewModel() {
 
-  private val _experiments = MutableStateFlow<List<Experiment<*>>>(emptyList())
-  val experiments: StateFlow<List<Experiment<*>>> = _experiments.asStateFlow()
+    private val _experiments = MutableStateFlow<List<Experiment<*>>>(emptyList())
+    val experiments: StateFlow<List<Experiment<*>>> = _experiments.asStateFlow()
 
-  val userStats: StateFlow<UserStats> = analyticsRepository.userStats
+    val userStats: StateFlow<UserStats> = analyticsRepository.userStats
 
-  private val _trackingEnabled = MutableStateFlow(false)
-  val trackingEnabled: StateFlow<Boolean> = _trackingEnabled.asStateFlow()
+    private val _trackingEnabled = MutableStateFlow(false)
+    val trackingEnabled: StateFlow<Boolean> = _trackingEnabled.asStateFlow()
 
-  private val _shouldNavigateToLogin = MutableStateFlow(false)
-  val shouldNavigateToLogin: StateFlow<Boolean> = _shouldNavigateToLogin.asStateFlow()
+    private val _shouldNavigateToLogin = MutableStateFlow(false)
+    val shouldNavigateToLogin: StateFlow<Boolean> = _shouldNavigateToLogin.asStateFlow()
 
-  init {
-    setupGuestModeCallback()
-    loadExperiments()
-    loadAnalyticsData()
-  }
+    init {
+        setupGuestModeCallback()
+        loadExperiments()
+        loadAnalyticsData()
+    }
 
-  private fun setupGuestModeCallback() {
-    userRepository.onGuestModeProfileModificationAttempt = { _shouldNavigateToLogin.value = true }
-  }
+    private fun setupGuestModeCallback() {
+        userRepository.onGuestModeProfileModificationAttempt = {
+            _shouldNavigateToLogin.value = true
+        }
+    }
 
-  fun onNavigatedToLogin() {
-    _shouldNavigateToLogin.value = false
-  }
+    fun onNavigatedToLogin() {
+        _shouldNavigateToLogin.value = false
+    }
 
-  private fun loadExperiments() {
-    _experiments.value = experimentRepository.getExperiments()
-  }
+    private fun loadExperiments() {
+        _experiments.value = experimentRepository.getExperiments()
+    }
 
-  private fun loadAnalyticsData() {
-    _trackingEnabled.value = analyticsRepository.isTrackingEnabled
-  }
+    private fun loadAnalyticsData() {
+        _trackingEnabled.value = analyticsRepository.isTrackingEnabled
+    }
 
-  fun <T : Treatment> updateExperimentTreatment(experiment: Experiment<T>, treatment: Treatment) {
-    experimentRepository.updateExperimentTreatment(experiment, treatment)
-    loadExperiments() // Refresh the state
-  }
+    fun <T : Treatment> updateExperimentTreatment(experiment: Experiment<T>, treatment: Treatment) {
+        experimentRepository.updateExperimentTreatment(experiment, treatment)
+        loadExperiments() // Refresh the state
+    }
 
-  fun updateTrackingEnabled(enabled: Boolean) {
-    analyticsRepository.isTrackingEnabled = enabled
-    _trackingEnabled.value = enabled
-  }
+    fun updateTrackingEnabled(enabled: Boolean) {
+        analyticsRepository.isTrackingEnabled = enabled
+        _trackingEnabled.value = enabled
+    }
 
-  fun resetStats() {
-    analyticsRepository.resetStats()
-  }
+    fun resetStats() {
+        analyticsRepository.resetStats()
+    }
 }
 
 class SettingsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-  override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
-      @Suppress("UNCHECKED_CAST")
-      return SettingsViewModel(
-          ExperimentRepository(context), UserRepository(context), AnalyticsRepository(context))
-          as T
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return SettingsViewModel(
+                ExperimentRepository(context),
+                UserRepository(context),
+                AnalyticsRepository(context),
+            )
+                as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
-    throw IllegalArgumentException("Unknown ViewModel class")
-  }
 }

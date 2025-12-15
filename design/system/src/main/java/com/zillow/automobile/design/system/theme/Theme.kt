@@ -21,8 +21,8 @@ val LocalExperiments = staticCompositionLocalOf<List<Experiment<*>>> { emptyList
 /** Helper function to get a specific experiment by name from the current context */
 @Composable
 inline fun <reified T : Experiment<*>> getExperiment(experimentName: String): T? {
-  val experiments = LocalExperiments.current
-  return experiments.find { it.name == experimentName } as? T
+    val experiments = LocalExperiments.current
+    return experiments.find { it.name == experimentName } as? T
 }
 
 // JP Light Color Scheme
@@ -62,7 +62,8 @@ private val JPLightColorScheme =
         surfaceContainerLow = JPEggshell,
         surfaceContainer = JPEggshell,
         surfaceContainerHigh = JPEggshell,
-        surfaceContainerHighest = JPEggshell)
+        surfaceContainerHighest = JPEggshell,
+    )
 
 // JP Dark Color Scheme
 private val JPDarkColorScheme =
@@ -101,36 +102,35 @@ private val JPDarkColorScheme =
         surfaceContainerLow = JPLalala,
         surfaceContainer = JPLalala,
         surfaceContainerHigh = JPLalala,
-        surfaceContainerHighest = JPBlack)
+        surfaceContainerHighest = JPBlack,
+    )
 
 @Composable
 fun JPTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false, // Disabled by default to use design system colors
     experimentRepository: ExperimentRepository? = null,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
-  val context = LocalContext.current
-  val experiments = experimentRepository?.getExperiments() ?: emptyList()
+    val context = LocalContext.current
+    val experiments = experimentRepository?.getExperiments() ?: emptyList()
 
-  val colorScheme =
-      when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-          if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val colorScheme =
+        when {
+            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            }
+
+            darkTheme -> JPDarkColorScheme
+            else -> JPLightColorScheme
         }
 
-        darkTheme -> JPDarkColorScheme
-        else -> JPLightColorScheme
-      }
-
-  CompositionLocalProvider(
-      LocalExperiments provides experiments,
-  ) {
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = JPTypography,
-        shapes = JPShapes,
-        content = content,
-    )
-  }
+    CompositionLocalProvider(LocalExperiments provides experiments) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = JPTypography,
+            shapes = JPShapes,
+            content = content,
+        )
+    }
 }

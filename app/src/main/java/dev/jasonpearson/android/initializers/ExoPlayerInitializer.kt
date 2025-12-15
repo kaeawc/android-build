@@ -10,14 +10,14 @@ import androidx.startup.Initializer
  */
 class ExoPlayerInitializer : Initializer<Unit> {
 
-  override fun create(context: Context) {
-    // ExoPlayer typically doesn't need global initialization
-    // This could be used for setting up global configurations in the future
-    // such as default audio attributes, network timeouts, etc.
-  }
+    override fun create(context: Context) {
+        // ExoPlayer typically doesn't need global initialization
+        // This could be used for setting up global configurations in the future
+        // such as default audio attributes, network timeouts, etc.
+    }
 
-  override fun dependencies(): List<Class<out Initializer<*>>> {
-    // No dependencies on other libraries
-    return emptyList()
-  }
+    override fun dependencies(): List<Class<out Initializer<*>>> {
+        // No dependencies on other libraries
+        return emptyList()
+    }
 }

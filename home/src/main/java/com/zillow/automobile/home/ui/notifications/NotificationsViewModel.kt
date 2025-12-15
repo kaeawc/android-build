@@ -7,6 +7,6 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class NotificationsViewModel : ViewModel() {
 
-  private val _text = MutableStateFlow("This is notifications Fragment")
-  val text: StateFlow<String> = _text.asStateFlow()
+    private val _text = MutableStateFlow("This is notifications Fragment")
+    val text: StateFlow<String> = _text.asStateFlow()
 }

@@ -15,26 +15,29 @@ import dev.jasonpearson.design.system.theme.JPTheme
 /** Header section of the login screen containing logo and title. */
 @Composable
 internal fun LoginHeader() {
-  Column(
-      horizontalAlignment = Alignment.CenterHorizontally,
-  ) {
-    JPHeadline(text = "Jason Pearson")
-  }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        JPHeadline(text = "Jason Pearson")
+    }
 }
 
 @Preview(name = "Login Header", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(
-    name = "Login Header - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+    name = "Login Header - Dark",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
 @Composable
 fun LoginHeaderPreview() {
-  // Explicitly check if we're in dark mode based on the configuration
-  val isDarkMode =
-      when (LocalConfiguration.current.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-        Configuration.UI_MODE_NIGHT_YES -> true
-        else -> false
-      }
+    // Explicitly check if we're in dark mode based on the configuration
+    val isDarkMode =
+        when (LocalConfiguration.current.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_YES -> true
+            else -> false
+        }
 
-  JPTheme(darkTheme = isDarkMode) {
-    Column(modifier = Modifier.background(MaterialTheme.colorScheme.background)) { LoginHeader() }
-  }
+    JPTheme(darkTheme = isDarkMode) {
+        Column(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
+            LoginHeader()
+        }
+    }
 }

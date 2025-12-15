@@ -11,11 +11,11 @@ import dev.jasonpearson.login.data.LoginRepository
 class LoginViewModelFactory(private val loginRepository: LoginRepository) :
     ViewModelProvider.Factory {
 
-  @Suppress("UNCHECKED_CAST")
-  override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
-      return LoginViewModel(loginRepository) as T
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
+            return LoginViewModel(loginRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
-    throw IllegalArgumentException("Unknown ViewModel class")
-  }
 }

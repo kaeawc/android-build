@@ -26,18 +26,19 @@ fun JPText(
     overflow: TextOverflow = TextOverflow.Clip,
     softWrap: Boolean = true,
     maxLines: Int = Int.MAX_VALUE,
-    minLines: Int = 1
+    minLines: Int = 1,
 ) {
-  Text(
-      text = text,
-      modifier = modifier,
-      color = color,
-      style = style,
-      textAlign = textAlign,
-      overflow = overflow,
-      softWrap = softWrap,
-      maxLines = maxLines,
-      minLines = minLines)
+    Text(
+        text = text,
+        modifier = modifier,
+        color = color,
+        style = style,
+        textAlign = textAlign,
+        overflow = overflow,
+        softWrap = softWrap,
+        maxLines = maxLines,
+        minLines = minLines,
+    )
 }
 
 @Composable
@@ -46,16 +47,17 @@ fun JPHeadline(
     modifier: Modifier = Modifier,
     textAlign: TextAlign? = null,
     overflow: TextOverflow = TextOverflow.Ellipsis,
-    maxLines: Int = 2
+    maxLines: Int = 2,
 ) {
-  JPText(
-      text = text,
-      modifier = modifier,
-      color = MaterialTheme.colorScheme.onSurface,
-      style = MaterialTheme.typography.headlineMedium,
-      textAlign = textAlign,
-      overflow = overflow,
-      maxLines = maxLines)
+    JPText(
+        text = text,
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.onSurface,
+        style = MaterialTheme.typography.headlineMedium,
+        textAlign = textAlign,
+        overflow = overflow,
+        maxLines = maxLines,
+    )
 }
 
 @Composable
@@ -64,16 +66,17 @@ fun JPTitle(
     modifier: Modifier = Modifier,
     textAlign: TextAlign? = null,
     overflow: TextOverflow = TextOverflow.Ellipsis,
-    maxLines: Int = 1
+    maxLines: Int = 1,
 ) {
-  JPText(
-      text = text,
-      modifier = modifier,
-      style = MaterialTheme.typography.titleLarge,
-      color = MaterialTheme.colorScheme.onSurface,
-      textAlign = textAlign,
-      overflow = overflow,
-      maxLines = maxLines)
+    JPText(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+        textAlign = textAlign,
+        overflow = overflow,
+        maxLines = maxLines,
+    )
 }
 
 @Composable
@@ -82,16 +85,17 @@ fun JPBodyText(
     modifier: Modifier = Modifier,
     textAlign: TextAlign? = null,
     overflow: TextOverflow = TextOverflow.Clip,
-    maxLines: Int = Int.MAX_VALUE
+    maxLines: Int = Int.MAX_VALUE,
 ) {
-  JPText(
-      text = text,
-      modifier = modifier,
-      style = MaterialTheme.typography.bodyMedium,
-      color = MaterialTheme.colorScheme.onSurface,
-      textAlign = textAlign,
-      overflow = overflow,
-      maxLines = maxLines)
+    JPText(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        textAlign = textAlign,
+        overflow = overflow,
+        maxLines = maxLines,
+    )
 }
 
 @Composable
@@ -100,34 +104,35 @@ fun JPLabel(
     modifier: Modifier = Modifier,
     textAlign: TextAlign? = null,
     overflow: TextOverflow = TextOverflow.Ellipsis,
-    maxLines: Int = 1
+    maxLines: Int = 1,
 ) {
-  JPText(
-      text = text,
-      modifier = modifier,
-      style = MaterialTheme.typography.labelMedium,
-      color = MaterialTheme.colorScheme.onSurface,
-      textAlign = textAlign,
-      overflow = overflow,
-      maxLines = maxLines)
+    JPText(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        textAlign = textAlign,
+        overflow = overflow,
+        maxLines = maxLines,
+    )
 }
 
 @Preview(name = "Text", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(name = "Text - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun JPTextPreview() {
-  val isDarkMode =
-      when (LocalConfiguration.current.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-        Configuration.UI_MODE_NIGHT_YES -> true
-        else -> false
-      }
+    val isDarkMode =
+        when (LocalConfiguration.current.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_YES -> true
+            else -> false
+        }
 
-  JPTheme(darkTheme = isDarkMode) {
-    Column(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
-      JPHeadline("Headline")
-      JPTitle("Title Text")
-      JPBodyText("Body text for longer content")
-      JPLabel("Label Text")
+    JPTheme(darkTheme = isDarkMode) {
+        Column(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
+            JPHeadline("Headline")
+            JPTitle("Title Text")
+            JPBodyText("Body text for longer content")
+            JPLabel("Label Text")
+        }
     }
-  }
 }

@@ -1,73 +1,76 @@
 plugins {
-  alias(libs.plugins.android.library)
-  alias(libs.plugins.kotlin.android)
-  alias(libs.plugins.compose.compiler)
-//  alias(libs.plugins.mavenPublish)
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
+    //  alias(libs.plugins.mavenPublish)
 }
 
 android {
-  namespace = "dev.jasonpearson.onboarding"
-  compileSdk = libs.versions.build.android.compileSdk.get().toInt()
-  buildToolsVersion = libs.versions.build.android.buildTools.get()
+    namespace = "dev.jasonpearson.onboarding"
+    compileSdk = libs.versions.build.android.compileSdk.get().toInt()
+    buildToolsVersion = libs.versions.build.android.buildTools.get()
 
-  defaultConfig {
-    minSdk = libs.versions.build.android.minSdk.get().toInt()
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    consumerProguardFiles("consumer-rules.pro")
-  }
-
-  buildTypes {
-    release {
-      isMinifyEnabled = false
-      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+    defaultConfig {
+        minSdk = libs.versions.build.android.minSdk.get().toInt()
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
-  }
-  compileOptions {
-    sourceCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
-    targetCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
-  }
-//  kotlinOptions {
-//    jvmTarget = libs.versions.build.java.target.get()
-//    languageVersion = libs.versions.build.kotlin.language.get()
-//  }
-  buildFeatures { compose = true }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
+        targetCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
+    }
+    //  kotlinOptions {
+    //    jvmTarget = libs.versions.build.java.target.get()
+    //    languageVersion = libs.versions.build.kotlin.language.get()
+    //  }
+    buildFeatures { compose = true }
 }
 
 dependencies {
-  implementation(libs.androidx.core)
-  implementation(libs.androidx.appcompat)
-  implementation(libs.material)
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
 
-  // Image loading
-  implementation(libs.coil.compose)
-  implementation(libs.coil.network.okhttp)
+    // Image loading
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
-  // Storage module
-  implementation(projects.storage)
-  implementation(projects.experimentation)
+    // Storage module
+    implementation(projects.storage)
+    implementation(projects.experimentation)
 
-  // Design system module
-  implementation(projects.design.assets)
-  implementation(projects.design.system)
+    // Design system module
+    implementation(projects.design.assets)
+    implementation(projects.design.system)
 
-  // Compose dependencies
-  implementation(platform(libs.compose.bom))
-  implementation(libs.bundles.compose.ui)
-  implementation(libs.androidx.lifecycle.viewmodel.ktx)
-  implementation(libs.androidx.lifecycle.runtime)
+    // Compose dependencies
+    implementation(platform(libs.compose.bom))
+    implementation(libs.bundles.compose.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.runtime)
 
-  // Lifecycle compose integration
-  implementation(libs.androidx.lifecycle.viewmodel.compose)
+    // Lifecycle compose integration
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
-  // Kotlin coroutines
-  implementation(libs.kotlinx.coroutines)
+    // Kotlin coroutines
+    implementation(libs.kotlinx.coroutines)
 
-  testImplementation(libs.junit)
+    testImplementation(libs.junit)
 }
 
-//version = "0.0.1-SNAPSHOT"
-//group = "dev.jasonpearson.playground"
+// version = "0.0.1-SNAPSHOT"
+// group = "dev.jasonpearson.playground"
 //
-//mavenPublishing {
+// mavenPublishing {
 //  coordinates(group.toString(), "onboarding", version.toString())
-//}
+// }

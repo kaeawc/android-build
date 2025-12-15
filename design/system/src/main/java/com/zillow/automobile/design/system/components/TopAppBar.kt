@@ -28,14 +28,16 @@ fun JPTopAppBar(
             containerColor = MaterialTheme.colorScheme.surface,
             titleContentColor = MaterialTheme.colorScheme.onSurface,
             navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-            actionIconContentColor = MaterialTheme.colorScheme.onSurface)
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface,
+        ),
 ) {
-  TopAppBar(
-      title = title,
-      modifier = modifier,
-      navigationIcon = navigationIcon,
-      actions = actions,
-      colors = colors)
+    TopAppBar(
+        title = title,
+        modifier = modifier,
+        navigationIcon = navigationIcon,
+        actions = actions,
+        colors = colors,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,14 +52,16 @@ fun JPCenterAlignedTopAppBar(
             containerColor = MaterialTheme.colorScheme.surface,
             titleContentColor = MaterialTheme.colorScheme.onSurface,
             navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-            actionIconContentColor = MaterialTheme.colorScheme.onSurface)
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface,
+        ),
 ) {
-  CenterAlignedTopAppBar(
-      title = title,
-      modifier = modifier,
-      navigationIcon = navigationIcon,
-      actions = actions,
-      colors = colors)
+    CenterAlignedTopAppBar(
+        title = title,
+        modifier = modifier,
+        navigationIcon = navigationIcon,
+        actions = actions,
+        colors = colors,
+    )
 }
 
 @Composable
@@ -65,23 +69,25 @@ fun JPBackButton(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
-    contentDescription: String? = "Navigate back"
+    contentDescription: String? = "Navigate back",
 ) {
-  IconButton(onClick = onBackClick, modifier = modifier) {
-    Icon(
-        imageVector = icon,
-        contentDescription = contentDescription,
-        tint = MaterialTheme.colorScheme.onSurface)
-  }
+    IconButton(onClick = onBackClick, modifier = modifier) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun JPTopAppBarPreview() {
-  dev.jasonpearson.design.system.theme.JPTheme {
-    JPTopAppBar(
-        title = { JPTitle("App Title") },
-        navigationIcon = { JPBackButton(onBackClick = {}) })
-  }
+    dev.jasonpearson.design.system.theme.JPTheme {
+        JPTopAppBar(
+            title = { JPTitle("App Title") },
+            navigationIcon = { JPBackButton(onBackClick = {}) },
+        )
+    }
 }

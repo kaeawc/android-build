@@ -35,71 +35,81 @@ internal fun LoginForm(
     usernameBlurred: Boolean,
     passwordBlurred: Boolean,
     onPasswordDone: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-  Column(modifier = modifier) {
-    OutlinedTextField(
-        value = username,
-        onValueChange = onUsernameChange,
-        label = { Text(stringResource(R.string.prompt_email)) },
-        keyboardOptions =
-            KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-        isError =
-            (usernameHadContent && username.length < 5) ||
-                (usernameBlurred && loginFormState.usernameError != null),
-        supportingText = {
-          if ((usernameHadContent && username.length < 5) ||
-              (usernameBlurred && loginFormState.usernameError != null)) {
-            loginFormState.usernameError?.let {
-              Text(text = stringResource(it), color = MaterialTheme.colorScheme.error)
-            }
-          }
-        },
-        modifier = Modifier.fillMaxWidth())
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            value = username,
+            onValueChange = onUsernameChange,
+            label = { Text(stringResource(R.string.prompt_email)) },
+            keyboardOptions =
+                KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+            isError =
+                (usernameHadContent && username.length < 5) ||
+                    (usernameBlurred && loginFormState.usernameError != null),
+            supportingText = {
+                if (
+                    (usernameHadContent && username.length < 5) ||
+                        (usernameBlurred && loginFormState.usernameError != null)
+                ) {
+                    loginFormState.usernameError?.let {
+                        Text(text = stringResource(it), color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
 
-    Spacer(modifier = Modifier.height(JPDimensions.spacing4))
+        Spacer(modifier = Modifier.height(JPDimensions.spacing4))
 
-    OutlinedTextField(
-        value = password,
-        onValueChange = onPasswordChange,
-        label = { Text(stringResource(R.string.prompt_password)) },
-        visualTransformation = PasswordVisualTransformation(),
-        keyboardOptions =
-            KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(onDone = { onPasswordDone() }),
-        isError =
-            (passwordHadContent && password.length < 5) ||
-                (passwordBlurred && loginFormState.passwordError != null),
-        supportingText = {
-          if ((passwordHadContent && password.length < 5) ||
-              (passwordBlurred && loginFormState.passwordError != null)) {
-            loginFormState.passwordError?.let {
-              Text(text = stringResource(it), color = MaterialTheme.colorScheme.error)
-            }
-          }
-        },
-        modifier = Modifier.fillMaxWidth())
-  }
+        OutlinedTextField(
+            value = password,
+            onValueChange = onPasswordChange,
+            label = { Text(stringResource(R.string.prompt_password)) },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions =
+                KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { onPasswordDone() }),
+            isError =
+                (passwordHadContent && password.length < 5) ||
+                    (passwordBlurred && loginFormState.passwordError != null),
+            supportingText = {
+                if (
+                    (passwordHadContent && password.length < 5) ||
+                        (passwordBlurred && loginFormState.passwordError != null)
+                ) {
+                    loginFormState.passwordError?.let {
+                        Text(text = stringResource(it), color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 @Preview(name = "Login Form", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(
-    name = "Login Form - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+    name = "Login Form - Dark",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
 @Composable
 fun LoginFormPreview() {
-  JPTheme {
-    Column(Modifier.background(MaterialTheme.colorScheme.background)) {
-      LoginForm(
-          username = "user@example.com",
-          password = "password123",
-          onUsernameChange = {},
-          onPasswordChange = {},
-          loginFormState = LoginFormState(isDataValid = true),
-          usernameHadContent = true,
-          passwordHadContent = true,
-          usernameBlurred = false,
-          passwordBlurred = false,
-          onPasswordDone = {})
+    JPTheme {
+        Column(Modifier.background(MaterialTheme.colorScheme.background)) {
+            LoginForm(
+                username = "user@example.com",
+                password = "password123",
+                onUsernameChange = {},
+                onPasswordChange = {},
+                loginFormState = LoginFormState(isDataValid = true),
+                usernameHadContent = true,
+                passwordHadContent = true,
+                usernameBlurred = false,
+                passwordBlurred = false,
+                onPasswordDone = {},
+            )
+        }
     }
-  }
 }

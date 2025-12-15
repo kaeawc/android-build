@@ -16,9 +16,9 @@ val JPShapes =
 
 // Additional custom shapes for specific use cases
 object JPCustomShapes {
-  val button = RoundedCornerShape(8.dp)
-  val card = RoundedCornerShape(12.dp)
-  val bottomSheet = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-  val dialog = RoundedCornerShape(16.dp)
-  val textField = RoundedCornerShape(8.dp)
+    val button = RoundedCornerShape(8.dp)
+    val card = RoundedCornerShape(12.dp)
+    val bottomSheet = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+    val dialog = RoundedCornerShape(16.dp)
+    val textField = RoundedCornerShape(8.dp)
 }

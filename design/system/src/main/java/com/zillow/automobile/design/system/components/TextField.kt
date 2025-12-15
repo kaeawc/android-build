@@ -39,36 +39,38 @@ fun JPTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
-    minLines: Int = 1
+    minLines: Int = 1,
 ) {
-  TextField(
-      value = value,
-      onValueChange = onValueChange,
-      modifier = modifier,
-      enabled = enabled,
-      readOnly = readOnly,
-      textStyle = textStyle,
-      label = label,
-      placeholder = placeholder,
-      leadingIcon = leadingIcon,
-      trailingIcon = trailingIcon,
-      prefix = prefix,
-      suffix = suffix,
-      supportingText = supportingText,
-      isError = isError,
-      visualTransformation = visualTransformation,
-      keyboardOptions = keyboardOptions,
-      keyboardActions = keyboardActions,
-      singleLine = singleLine,
-      maxLines = maxLines,
-      minLines = minLines,
-      colors =
-          TextFieldDefaults.colors(
-              focusedContainerColor = MaterialTheme.colorScheme.surface,
-              unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-              focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-              unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
-              errorIndicatorColor = MaterialTheme.colorScheme.error))
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        enabled = enabled,
+        readOnly = readOnly,
+        textStyle = textStyle,
+        label = label,
+        placeholder = placeholder,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        prefix = prefix,
+        suffix = suffix,
+        supportingText = supportingText,
+        isError = isError,
+        visualTransformation = visualTransformation,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        singleLine = singleLine,
+        maxLines = maxLines,
+        minLines = minLines,
+        colors =
+            TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+                errorIndicatorColor = MaterialTheme.colorScheme.error,
+            ),
+    )
 }
 
 @Composable
@@ -92,57 +94,62 @@ fun JPOutlinedTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
-    minLines: Int = 1
+    minLines: Int = 1,
 ) {
-  OutlinedTextField(
-      value = value,
-      onValueChange = onValueChange,
-      modifier = modifier,
-      enabled = enabled,
-      readOnly = readOnly,
-      textStyle = textStyle,
-      label = label,
-      placeholder = placeholder,
-      leadingIcon = leadingIcon,
-      trailingIcon = trailingIcon,
-      prefix = prefix,
-      suffix = suffix,
-      supportingText = supportingText,
-      isError = isError,
-      visualTransformation = visualTransformation,
-      keyboardOptions = keyboardOptions,
-      keyboardActions = keyboardActions,
-      singleLine = singleLine,
-      maxLines = maxLines,
-      minLines = minLines,
-      colors =
-          OutlinedTextFieldDefaults.colors(
-              focusedBorderColor = MaterialTheme.colorScheme.primary,
-              unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-              errorBorderColor = MaterialTheme.colorScheme.error,
-              focusedLabelColor = MaterialTheme.colorScheme.primary,
-              unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        enabled = enabled,
+        readOnly = readOnly,
+        textStyle = textStyle,
+        label = label,
+        placeholder = placeholder,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        prefix = prefix,
+        suffix = suffix,
+        supportingText = supportingText,
+        isError = isError,
+        visualTransformation = visualTransformation,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        singleLine = singleLine,
+        maxLines = maxLines,
+        minLines = minLines,
+        colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun JPTextFieldPreview() {
-  JPTheme {
-    androidx.compose.foundation.layout.Column(modifier = Modifier.fillMaxWidth()) {
-      JPTextField(
-          value = "Sample Text",
-          onValueChange = {},
-          label = { Text("Label") },
-          modifier = Modifier.fillMaxWidth())
+    JPTheme {
+        androidx.compose.foundation.layout.Column(modifier = Modifier.fillMaxWidth()) {
+            JPTextField(
+                value = "Sample Text",
+                onValueChange = {},
+                label = { Text("Label") },
+                modifier = Modifier.fillMaxWidth(),
+            )
 
-      androidx.compose.foundation.layout.Spacer(
-          modifier = Modifier.height(JPDimensions.spacing4))
+            androidx.compose.foundation.layout.Spacer(
+                modifier = Modifier.height(JPDimensions.spacing4)
+            )
 
-      JPOutlinedTextField(
-          value = "Sample Outlined Text",
-          onValueChange = {},
-          label = { Text("Outlined Label") },
-          modifier = Modifier.fillMaxWidth())
+            JPOutlinedTextField(
+                value = "Sample Outlined Text",
+                onValueChange = {},
+                label = { Text("Outlined Label") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
-  }
 }

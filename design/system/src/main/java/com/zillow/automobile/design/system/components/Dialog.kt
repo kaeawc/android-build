@@ -31,22 +31,23 @@ fun JPAlertDialog(
     modifier: Modifier = Modifier,
     dismissButtonText: String? = null,
     onDismissClick: (() -> Unit)? = null,
-    properties: DialogProperties = DialogProperties()
+    properties: DialogProperties = DialogProperties(),
 ) {
-  AlertDialog(
-      onDismissRequest = onDismissRequest,
-      title = { JPTitle(title) },
-      text = { JPBodyText(text) },
-      confirmButton = { JPButton(text = confirmButtonText, onClick = onConfirmClick) },
-      dismissButton =
-          if (dismissButtonText != null && onDismissClick != null) {
-            { JPTextButton(text = dismissButtonText, onClick = onDismissClick) }
-          } else null,
-      modifier = modifier,
-      containerColor = MaterialTheme.colorScheme.surface,
-      titleContentColor = MaterialTheme.colorScheme.onSurface,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      properties = properties)
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { JPTitle(title) },
+        text = { JPBodyText(text) },
+        confirmButton = { JPButton(text = confirmButtonText, onClick = onConfirmClick) },
+        dismissButton =
+            if (dismissButtonText != null && onDismissClick != null) {
+                { JPTextButton(text = dismissButtonText, onClick = onDismissClick) }
+            } else null,
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        properties = properties,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,21 +56,24 @@ fun JPCustomDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     properties: DialogProperties = DialogProperties(),
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
-  BasicAlertDialog(
-      onDismissRequest = onDismissRequest, modifier = modifier, properties = properties) {
+    BasicAlertDialog(
+        onDismissRequest = onDismissRequest,
+        modifier = modifier,
+        properties = properties,
+    ) {
         Card(
             colors =
                 CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface),
-            elevation =
-                CardDefaults.cardElevation(
-                    defaultElevation = JPDimensions.elevationLarge)) {
-              Column(modifier = Modifier.padding(JPDimensions.spacing6)) { content() }
-            }
-      }
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = JPDimensions.elevationLarge),
+        ) {
+            Column(modifier = Modifier.padding(JPDimensions.spacing6)) { content() }
+        }
+    }
 }
 
 @Composable
@@ -81,35 +85,36 @@ fun JPConfirmationDialog(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
     confirmText: String = "Confirm",
-    cancelText: String = "Cancel"
+    cancelText: String = "Cancel",
 ) {
-  JPAlertDialog(
-      onDismissRequest = onDismissRequest,
-      title = title,
-      text = text,
-      confirmButtonText = confirmText,
-      onConfirmClick = onConfirm,
-      dismissButtonText = cancelText,
-      onDismissClick = onCancel,
-      modifier = modifier)
+    JPAlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = title,
+        text = text,
+        confirmButtonText = confirmText,
+        onConfirmClick = onConfirm,
+        dismissButtonText = cancelText,
+        onDismissClick = onCancel,
+        modifier = modifier,
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun JPDialogPreview() {
-  JPTheme {
-    Column(verticalArrangement = Arrangement.spacedBy(JPDimensions.spacing4)) {
-      JPCustomDialog(onDismissRequest = {}) {
-        JPHeadline("Custom Dialog")
-        Spacer(modifier = Modifier.height(JPDimensions.spacing2))
-        JPBodyText("This is a custom dialog with any content.")
-        Spacer(modifier = Modifier.height(JPDimensions.spacing4))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-          JPTextButton(text = "Cancel", onClick = {})
-          Spacer(modifier = Modifier.width(JPDimensions.spacing2))
-          JPButton(text = "OK", onClick = {})
+    JPTheme {
+        Column(verticalArrangement = Arrangement.spacedBy(JPDimensions.spacing4)) {
+            JPCustomDialog(onDismissRequest = {}) {
+                JPHeadline("Custom Dialog")
+                Spacer(modifier = Modifier.height(JPDimensions.spacing2))
+                JPBodyText("This is a custom dialog with any content.")
+                Spacer(modifier = Modifier.height(JPDimensions.spacing4))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    JPTextButton(text = "Cancel", onClick = {})
+                    Spacer(modifier = Modifier.width(JPDimensions.spacing2))
+                    JPButton(text = "OK", onClick = {})
+                }
+            }
         }
-      }
     }
-  }
 }

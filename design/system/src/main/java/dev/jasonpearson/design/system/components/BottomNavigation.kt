@@ -25,7 +25,7 @@ data class BottomNavItem(
     val label: String,
     val icon: ImageVector,
     val selectedIcon: ImageVector = icon,
-    val contentDescription: String? = label
+    val contentDescription: String? = label,
 )
 
 @Composable
@@ -33,52 +33,59 @@ fun JPBottomNavigation(
     items: List<BottomNavItem>,
     selectedItemIndex: Int,
     onItemSelected: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-  NavigationBar(
-      modifier = modifier.height(JPDimensions.bottomNavHeight),
-      containerColor = MaterialTheme.colorScheme.surface,
-      contentColor = MaterialTheme.colorScheme.onSurface,
-      tonalElevation = JPDimensions.elevationSmall,
-      windowInsets = NavigationBarDefaults.windowInsets) {
+    NavigationBar(
+        modifier = modifier.height(JPDimensions.bottomNavHeight),
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        tonalElevation = JPDimensions.elevationSmall,
+        windowInsets = NavigationBarDefaults.windowInsets,
+    ) {
         items.forEachIndexed { index, item ->
-          NavigationBarItem(
-              selected = selectedItemIndex == index,
-              onClick = { onItemSelected(index) },
-              icon = {
-                Icon(
-                    imageVector = if (selectedItemIndex == index) item.selectedIcon else item.icon,
-                    contentDescription = item.contentDescription)
-              },
-              label = {
-                Text(
-                    text = item.label,
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis)
-              },
-              colors =
-                  NavigationBarItemDefaults.colors(
-                      selectedIconColor = MaterialTheme.colorScheme.primary,
-                      selectedTextColor = MaterialTheme.colorScheme.primary,
-                      unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                      unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                      indicatorColor = MaterialTheme.colorScheme.primaryContainer))
+            NavigationBarItem(
+                selected = selectedItemIndex == index,
+                onClick = { onItemSelected(index) },
+                icon = {
+                    Icon(
+                        imageVector =
+                            if (selectedItemIndex == index) item.selectedIcon else item.icon,
+                        contentDescription = item.contentDescription,
+                    )
+                },
+                label = {
+                    Text(
+                        text = item.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                colors =
+                    NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
+            )
         }
-      }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun JPBottomNavigationPreview() {
-  JPTheme {
-    val items =
-        listOf(
-            BottomNavItem("Home", Icons.Default.Home),
-            BottomNavItem("Search", Icons.Default.Search),
-            BottomNavItem("Profile", Icons.Default.Person),
-            BottomNavItem("Settings", Icons.Default.Settings))
+    JPTheme {
+        val items =
+            listOf(
+                BottomNavItem("Home", Icons.Default.Home),
+                BottomNavItem("Search", Icons.Default.Search),
+                BottomNavItem("Profile", Icons.Default.Person),
+                BottomNavItem("Settings", Icons.Default.Settings),
+            )
 
-    JPBottomNavigation(items = items, selectedItemIndex = 0, onItemSelected = {})
-  }
+        JPBottomNavigation(items = items, selectedItemIndex = 0, onItemSelected = {})
+    }
 }

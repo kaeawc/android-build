@@ -27,36 +27,50 @@ internal fun LoginActions(
     isLoading: Boolean,
     onSignInClick: () -> Unit,
     onGuestModeClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-  Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-    AnimatedVisibility(visible = isFormValid && !isLoading, enter = fadeIn(), exit = fadeOut()) {
-      JPButton(
-          text = stringResource(R.string.action_sign_in),
-          onClick = onSignInClick,
-          modifier = Modifier.wrapContentWidth())
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        AnimatedVisibility(
+            visible = isFormValid && !isLoading,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            JPButton(
+                text = stringResource(R.string.action_sign_in),
+                onClick = onSignInClick,
+                modifier = Modifier.wrapContentWidth(),
+            )
+        }
+
+        if (isLoading) {
+            Spacer(modifier = Modifier.height(JPDimensions.spacing4))
+            CircularProgressIndicator()
+        }
+
+        Spacer(modifier = Modifier.height(JPDimensions.spacing4))
+
+        JPOutlinedButton(
+            text = "Continue as Guest",
+            onClick = onGuestModeClick,
+            modifier = Modifier.wrapContentWidth(),
+        )
     }
-
-    if (isLoading) {
-      Spacer(modifier = Modifier.height(JPDimensions.spacing4))
-      CircularProgressIndicator()
-    }
-
-    Spacer(modifier = Modifier.height(JPDimensions.spacing4))
-
-    JPOutlinedButton(
-        text = "Continue as Guest",
-        onClick = onGuestModeClick,
-        modifier = Modifier.wrapContentWidth())
-  }
 }
 
 @Preview(name = "Login Actions", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(
-    name = "Login Actions - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+    name = "Login Actions - Dark",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
 @Composable
 fun LoginActionsPreview() {
-  JPTheme {
-    LoginActions(isFormValid = true, isLoading = false, onSignInClick = {}, onGuestModeClick = {})
-  }
+    JPTheme {
+        LoginActions(
+            isFormValid = true,
+            isLoading = false,
+            onSignInClick = {},
+            onGuestModeClick = {},
+        )
+    }
 }

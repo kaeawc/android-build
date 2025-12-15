@@ -1,8 +1,8 @@
 package dev.jasonpearson.experimentation
 
 interface Treatment {
-  val id: String
-  val label: String
+    val id: String
+    val label: String
 
-  fun getControl(): Treatment
+    fun getControl(): Treatment
 }

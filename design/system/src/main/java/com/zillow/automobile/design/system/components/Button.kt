@@ -22,21 +22,23 @@ fun JPButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
 ) {
-  Button(
-      onClick = onClick,
-      modifier = modifier.height(JPDimensions.buttonHeight),
-      enabled = enabled,
-      colors =
-          ButtonDefaults.buttonColors(
-              containerColor = MaterialTheme.colorScheme.primary,
-              contentColor = MaterialTheme.colorScheme.onPrimary,
-              disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-              disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)),
-      contentPadding = contentPadding) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(JPDimensions.buttonHeight),
+        enabled = enabled,
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            ),
+        contentPadding = contentPadding,
+    ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
-      }
+    }
 }
 
 @Composable
@@ -45,19 +47,21 @@ fun JPSecondaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
 ) {
-  FilledTonalButton(
-      onClick = onClick,
-      modifier = modifier.height(JPDimensions.buttonHeight),
-      enabled = enabled,
-      colors =
-          ButtonDefaults.filledTonalButtonColors(
-              containerColor = MaterialTheme.colorScheme.secondary,
-              contentColor = MaterialTheme.colorScheme.onSecondary),
-      contentPadding = contentPadding) {
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = modifier.height(JPDimensions.buttonHeight),
+        enabled = enabled,
+        colors =
+            ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary,
+            ),
+        contentPadding = contentPadding,
+    ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
-      }
+    }
 }
 
 @Composable
@@ -66,17 +70,18 @@ fun JPOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
 ) {
-  OutlinedButton(
-      onClick = onClick,
-      modifier = modifier.height(JPDimensions.buttonHeight),
-      enabled = enabled,
-      colors =
-          ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-      contentPadding = contentPadding) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.height(JPDimensions.buttonHeight),
+        enabled = enabled,
+        colors =
+            ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+        contentPadding = contentPadding,
+    ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
-      }
+    }
 }
 
 @Composable
@@ -85,20 +90,21 @@ fun JPTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    contentPadding: PaddingValues = ButtonDefaults.TextButtonContentPadding
+    contentPadding: PaddingValues = ButtonDefaults.TextButtonContentPadding,
 ) {
-  TextButton(
-      onClick = onClick,
-      modifier = modifier,
-      enabled = enabled,
-      colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-      contentPadding = contentPadding) {
+    TextButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+        contentPadding = contentPadding,
+    ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
-      }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun JPButtonPreview() {
-  JPTheme { JPButton(text = "Primary Button", onClick = {}) }
+    JPTheme { JPButton(text = "Primary Button", onClick = {}) }
 }

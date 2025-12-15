@@ -10,14 +10,14 @@ import androidx.startup.Initializer
  */
 class CoilInitializer : Initializer<Unit> {
 
-  override fun create(context: Context) {
-    // Coil 3.x handles initialization automatically
-    // This initializer serves as a placeholder for any future
-    // custom Coil configuration that might be needed
-  }
+    override fun create(context: Context) {
+        // Coil 3.x handles initialization automatically
+        // This initializer serves as a placeholder for any future
+        // custom Coil configuration that might be needed
+    }
 
-  override fun dependencies(): List<Class<out Initializer<*>>> {
-    // No dependencies on other libraries
-    return emptyList()
-  }
+    override fun dependencies(): List<Class<out Initializer<*>>> {
+        // No dependencies on other libraries
+        return emptyList()
+    }
 }
