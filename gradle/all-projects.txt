@@ -1,0 +1,11 @@
+:app
+:analytics
+:design:assets
+:design:system
+:experimentation
+:home
+:login
+:mediaplayer
+:onboarding
+:settings
+:storage

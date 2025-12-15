@@ -40,3 +40,5 @@ google-services.json
 
 # Spotlight IDE Projects
 gradle/ide-projects.txt
+
+artifact-sync-hash-output

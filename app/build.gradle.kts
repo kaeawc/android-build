@@ -30,6 +30,7 @@ plugins {
     alias(libs.plugins.publish)
     alias(libs.plugins.sortDependencies)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.metro)
 }
 
@@ -130,22 +131,49 @@ android {
 dependencies {
     // Needed for reading Java 19+ class files due to JVM target higher than 11
     implementation(platform(libs.asm.bom))
-    implementation(platform(libs.compose.bom))
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.startup)
+    implementation(platform(libs.compose.bom))
     implementation(libs.bundles.compose.ui)
-    implementation(libs.bundles.kotlin)
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.material.icons)
-    implementation(libs.metro.runtime)
-    implementation(libs.navigation.compose)
 
-    debugImplementation(libs.bundles.compose.ui.debug)
+    // Lifecycle compose integration
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
+    // Kotlin coroutines
+    implementation(libs.kotlinx.coroutines)
+
+    // Navigation 3
+    implementation(libs.navigation3.runtime)
+    implementation(libs.navigation3.ui)
+
+    // Kotlinx Serialization for navigation
+    implementation(libs.kotlinx.serialization)
+
+    // Media libraries for initializers
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
+    // Splash Screen API support for Android 12+ backported to API 23+
+    implementation(libs.androidx.core.splashscreen)
+
+    // Playground module dependencies
+    implementation(projects.design.system)
+    implementation(projects.login)
+    implementation(projects.home)
+    implementation(projects.settings)
+    implementation(projects.mediaplayer)
+    implementation(projects.onboarding)
+    implementation(projects.storage)
+    implementation(projects.experimentation)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3.android)
+
+    // Test dependencies
     testImplementation(libs.bundles.unit.test)
+    testImplementation(libs.robolectric)
 
-    androidTestImplementation(platform(libs.compose.bom))
-    androidTestImplementation(libs.bundles.compose.ui.espresso.test)
+    // Debug dependencies
+    debugImplementation(libs.bundles.compose.ui.debug)
 
     coreLibraryDesugaring(libs.desugar)
 }

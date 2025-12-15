@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Onboarding Screen -->
+  <string name="onboarding_skip">Skip</string>
+  <string name="onboarding_back">Back</string>
+  <string name="onboarding_next">Next</string>
+  <string name="onboarding_get_started">Get Started</string>
+
+  <!-- Onboarding Pages -->
+  <string name="onboarding_welcome_title">Hi!</string>
+  <string name="onboarding_welcome_description">My name is Jason Pearson and this is my showcase app. I experiment with new ideas in this codebase.</string>
+  <string name="onboarding_welcome_emoji">✋</string>
+
+  <string name="onboarding_product_engineering_title">Product Engineering</string>
+  <string name="onboarding_product_engineering_description">Navigation, animation, media, immersion, and all the latest Material design patterns in Compose.</string>
+  <string name="onboarding_product_engineering_emoji">✋</string>
+
+  <string name="onboarding_platform_engineering_title">Platform Engineering</string>
+  <string name="onboarding_platform_engineering_description">JVM optimizations, automations, infra, architecture, and other tooling.</string>
+  <string name="onboarding_platform_engineering_emoji">🤖</string>
+
+  <string name="onboarding_opensource_title">Open Source</string>
+  <string name="onboarding_opensource_description">Hosted on GitHub</string>
+  <string name="onboarding_opensource_description_part1">Hosted on </string>
+  <string name="onboarding_opensource_description_part2">GitHub</string>
+  <string name="onboarding_opensource_emoji">❤️</string>
+
+  <!-- GitHub URL -->
+  <string name="github_url">https://github.com/kaeawc/android-build</string>
+</resources>

@@ -27,6 +27,7 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
 
+
         // R8 repo for R8/D8 releases
         exclusiveContent {
             forRepository {
@@ -34,7 +35,11 @@ pluginManagement {
             }
             filter { includeModule("com.android.tools", "r8") }
         }
+
+
     }
+
+    includeBuild("../../github/artifact-swap")
 }
 
 dependencyResolutionManagement {
@@ -44,8 +49,21 @@ dependencyResolutionManagement {
     }
 }
 
-plugins { id("com.fueledbycaffeine.spotlight") version "1.4.1" }
+//plugins { id("com.fueledbycaffeine.spotlight") version "1.4.1" }
+plugins { id("xyz.block.artifactswap.settings") version "0.1.4-SNAPSHOT" }
 
-rootProject.name = "Android Build"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+rootProject.name = "android-build"
 
 include(":app")
+include(":analytics")
+include(":design:assets")
+include(":design:system")
+include(":experimentation")
+include(":home")
+include(":login")
+include(":mediaplayer")
+include(":onboarding")
+include(":settings")
+include(":storage")
