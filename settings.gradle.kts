@@ -44,7 +44,7 @@ dependencyResolutionManagement {
     }
 }
 
-plugins { id("com.fueledbycaffeine.spotlight") version "1.5.0" }
+plugins { id("com.fueledbycaffeine.spotlight") version "1.5.1" }
 
 rootProject.name = "Android Build"
 
