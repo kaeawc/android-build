@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-//import com.diffplug.gradle.spotless.KotlinExtension
-//import com.diffplug.gradle.spotless.SpotlessExtension
-//import com.diffplug.gradle.spotless.SpotlessExtensionPredeclare
-//import com.diffplug.spotless.LineEnding
+// import com.diffplug.gradle.spotless.KotlinExtension
+// import com.diffplug.gradle.spotless.SpotlessExtension
+// import com.diffplug.gradle.spotless.SpotlessExtensionPredeclare
+// import com.diffplug.spotless.LineEnding
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -34,14 +34,14 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `version-catalog`
-//    alias(libs.plugins.spotless)
+    //    alias(libs.plugins.spotless)
     //    alias(libs.plugins.doctor)
     alias(libs.plugins.dependencyAnalysis)
     // Kotlin/Android plugins are already loaded in buildscript classpath in settings.gradle.kts
     // for artifact-swap plugin compatibility, so we can't redeclare them here
-//    alias(libs.plugins.kotlin.android) apply false
-//    alias(libs.plugins.android.library) apply false
-//    alias(libs.plugins.android.application) apply false
+    //    alias(libs.plugins.kotlin.android) apply false
+    //    alias(libs.plugins.android.library) apply false
+    //    alias(libs.plugins.android.application) apply false
     alias(libs.plugins.metro) apply false
 }
 
@@ -49,48 +49,49 @@ val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
 val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.testWorker.jvmargs").get()
 
 allprojects {
-//    apply(plugin = "com.diffplug.spotless")
-//    val spotlessFormatters: SpotlessExtension.() -> Unit = {
-//        lineEndings = LineEnding.PLATFORM_NATIVE
-//
-//        format("misc") {
-//            target("*.md", ".gitignore")
-//            trimTrailingWhitespace()
-//            endWithNewline()
-//        }
-//        kotlin {
-//            target("src/**/*.kt")
-//            targetExclude(externalFiles)
-//            trimTrailingWhitespace()
-//            endWithNewline()
-//            licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
-//            targetExclude("**/copyright.kt", *externalFiles.toTypedArray())
-//        }
-//        format("kotlinExternal", KotlinExtension::class.java) {
-//            target(externalFiles)
-//            trimTrailingWhitespace()
-//            endWithNewline()
-//            targetExclude("**/copyright.kt")
-//        }
-//        kotlinGradle {
-//            target("*.kts")
-//            trimTrailingWhitespace()
-//            endWithNewline()
-//            licenseHeaderFile(
-//                rootProject.file("spotless/copyright.kt"),
-//                "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
-//            )
-//        }
-//    }
-//    configure<SpotlessExtension> {
-//        spotlessFormatters()
-//        if (project.rootProject == project) {
-//            predeclareDeps()
-//        }
-//    }
-//    if (project.rootProject == project) {
-//        configure<SpotlessExtensionPredeclare> { spotlessFormatters() }
-//    }
+    //    apply(plugin = "com.diffplug.spotless")
+    //    val spotlessFormatters: SpotlessExtension.() -> Unit = {
+    //        lineEndings = LineEnding.PLATFORM_NATIVE
+    //
+    //        format("misc") {
+    //            target("*.md", ".gitignore")
+    //            trimTrailingWhitespace()
+    //            endWithNewline()
+    //        }
+    //        kotlin {
+    //            target("src/**/*.kt")
+    //            targetExclude(externalFiles)
+    //            trimTrailingWhitespace()
+    //            endWithNewline()
+    //            licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
+    //            targetExclude("**/copyright.kt", *externalFiles.toTypedArray())
+    //        }
+    //        format("kotlinExternal", KotlinExtension::class.java) {
+    //            target(externalFiles)
+    //            trimTrailingWhitespace()
+    //            endWithNewline()
+    //            targetExclude("**/copyright.kt")
+    //        }
+    //        kotlinGradle {
+    //            target("*.kts")
+    //            trimTrailingWhitespace()
+    //            endWithNewline()
+    //            licenseHeaderFile(
+    //                rootProject.file("spotless/copyright.kt"),
+    //
+    // "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
+    //            )
+    //        }
+    //    }
+    //    configure<SpotlessExtension> {
+    //        spotlessFormatters()
+    //        if (project.rootProject == project) {
+    //            predeclareDeps()
+    //        }
+    //    }
+    //    if (project.rootProject == project) {
+    //        configure<SpotlessExtensionPredeclare> { spotlessFormatters() }
+    //    }
 
     tasks.withType<Test>().configureEach { jvmArgs(gradleWorkerJvmArgs) }
 
