@@ -1,6 +1,7 @@
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
+    // AGP and KGP are loaded via settings buildscript
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
     //  alias(libs.plugins.mavenPublish)
 }
 

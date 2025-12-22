@@ -26,17 +26,24 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-
-        // R8 repo for R8/D8 releases
-        exclusiveContent {
-            forRepository {
-                maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
-            }
-            filter { includeModule("com.android.tools", "r8") }
-        }
+        maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
     }
 
     includeBuild("../../github/artifact-swap")
+}
+
+// Load AGP, KGP, and R8 in settings classpath so the artifact-swap plugin can detect/use them
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.13.2")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0")
+        classpath("com.android.tools:r8:8.13.19")
+    }
 }
 
 dependencyResolutionManagement {
