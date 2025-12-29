@@ -53,7 +53,6 @@ dependencyResolutionManagement {
     }
 }
 
-// plugins { id("com.fueledbycaffeine.spotlight") version "1.4.1" }
 plugins { id("xyz.block.artifactswap.settings") version "0.1.4-SNAPSHOT" }
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
