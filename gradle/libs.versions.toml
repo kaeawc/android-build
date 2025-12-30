@@ -11,7 +11,7 @@ build-kotlin = "2.3.0"
 build-kotlin-language = "2.2"
 build-kotlin-coroutines = "1.10.2"
 build-kotlin-datetime = "0.7.1"
-build-java-asm = "9.9"
+build-java-asm = "9.9.1"
 build-java-target = "21"
 build-gradle-dependencyAnalysis = "3.5.1"
 build-gradle-graphAssertion = "2.9.0"
@@ -48,7 +48,8 @@ coil = "3.3.0"
 kotlinx-coroutines-test = "1.10.2"
 media3 = "1.8.0"
 
-metro = "0.8.2"
+kotlin-inject = "0.8.0"
+metro = "0.9.1"
 
 # Publishing
 mavenpublish = "0.35.0"

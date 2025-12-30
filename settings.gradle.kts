@@ -53,7 +53,10 @@ dependencyResolutionManagement {
     }
 }
 
-plugins { id("xyz.block.artifactswap.settings") version "0.1.4-SNAPSHOT" }
+plugins {
+    id("xyz.block.artifactswap.settings") version "0.1.4-SNAPSHOT"
+    id("com.fueledbycaffeine.spotlight") version "1.5.0"
+}
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
