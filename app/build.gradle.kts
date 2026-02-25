@@ -25,7 +25,6 @@ import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.graphAssertion)
     alias(libs.plugins.publish)
     alias(libs.plugins.sortDependencies)

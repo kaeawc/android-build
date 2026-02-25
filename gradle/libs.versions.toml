@@ -40,7 +40,6 @@ doctor = { id = "com.osacky.doctor", version.ref = "build-gradle-doctor" }
 graphAssertion = { id = "com.jraska.module.graph.assertion", version.ref = "build-gradle-graphAssertion" }
 publish = { id = "com.github.triplet.play", version.ref = "build-gradle-triplet-play" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "build-kotlin" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "build-kotlin" }
 android-library = { id = "com.android.library", version.ref = "build-android-agp" }
 android-application = { id = "com.android.application", version.ref = "build-android-agp" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
