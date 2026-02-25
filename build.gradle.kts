@@ -21,18 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import com.diffplug.gradle.spotless.KotlinExtension
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.diffplug.gradle.spotless.SpotlessExtensionPredeclare
 import com.diffplug.spotless.LineEnding
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
     dependencies {
-        // Necessary if we are to override R8
-        classpath(libs.r8)
+        // Uncomment to pin R8 version
+        // classpath(libs.r8)
         classpath(libs.agp)
         classpath(libs.kgp)
     }
@@ -48,75 +44,41 @@ plugins {
     alias(libs.plugins.metro) apply false
 }
 
-val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
-val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.testWorker.jvmargs").get()
+configure<SpotlessExtension> {
+    predeclareDeps()
+    lineEndings = LineEnding.PLATFORM_NATIVE
 
-allprojects {
-    apply(plugin = "com.diffplug.spotless")
-    val spotlessFormatters: SpotlessExtension.() -> Unit = {
-        lineEndings = LineEnding.PLATFORM_NATIVE
-
-        format("misc") {
-            target("*.md", ".gitignore")
-            trimTrailingWhitespace()
-            endWithNewline()
-        }
-        kotlin {
-            target("src/**/*.kt")
-            targetExclude(externalFiles)
-            trimTrailingWhitespace()
-            endWithNewline()
-            licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
-            targetExclude("**/copyright.kt", *externalFiles.toTypedArray())
-        }
-        format("kotlinExternal", KotlinExtension::class.java) {
-            target(externalFiles)
-            trimTrailingWhitespace()
-            endWithNewline()
-            targetExclude("**/copyright.kt")
-        }
-        kotlinGradle {
-            target("*.kts")
-            trimTrailingWhitespace()
-            endWithNewline()
-            licenseHeaderFile(
-                rootProject.file("spotless/copyright.kt"),
-                "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
-            )
-        }
+    format("misc") {
+        target("*.md", ".gitignore")
+        trimTrailingWhitespace()
+        endWithNewline()
     }
-    configure<SpotlessExtension> {
-        spotlessFormatters()
-        if (project.rootProject == project) {
-            predeclareDeps()
-        }
+    kotlinGradle {
+        target("*.kts")
+        trimTrailingWhitespace()
+        endWithNewline()
+        licenseHeaderFile(
+            file("spotless/copyright.kt"),
+            "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
+        )
     }
-    if (project.rootProject == project) {
-        configure<SpotlessExtensionPredeclare> { spotlessFormatters() }
+}
+
+configure<SpotlessExtensionPredeclare> {
+    lineEndings = LineEnding.PLATFORM_NATIVE
+    format("misc") {
+        target("*.md", ".gitignore")
+        trimTrailingWhitespace()
+        endWithNewline()
     }
-
-    tasks.withType<Test>().configureEach { jvmArgs(gradleWorkerJvmArgs) }
-
-    tasks.withType<KotlinCompile>().configureEach {
-        compilerOptions {
-            languageVersion.set(
-                KotlinVersion.valueOf(
-                    "KOTLIN_${libs.versions.build.kotlin.language.get().replace(".", "_")}"
-                )
-            )
-            jvmTarget.set(JvmTarget.valueOf("JVM_${libs.versions.build.java.target.get()}"))
-            freeCompilerArgs.addAll(
-                listOf(
-                    "-opt-in=kotlin.time.ExperimentalTime,kotlin.RequiresOptIn",
-                    "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                    "-opt-in=kotlin.ExperimentalUnsignedTypes",
-                    "-opt-in=kotlin.time.ExperimentalTime",
-                    "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                    "-opt-in=kotlinx.coroutines.FlowPreview",
-                    "-Xcontext-parameters",
-                )
-            )
-        }
+    kotlinGradle {
+        target("*.kts")
+        trimTrailingWhitespace()
+        endWithNewline()
+        licenseHeaderFile(
+            file("spotless/copyright.kt"),
+            "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
+        )
     }
 }
 
