@@ -27,13 +27,13 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
 
-        // R8 repo for R8/D8 releases
-        exclusiveContent {
-            forRepository {
-                maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
-            }
-            filter { includeModule("com.android.tools", "r8") }
-        }
+        // Uncomment to pin R8 version from the R8 releases repo
+        // exclusiveContent {
+        //     forRepository {
+        //         maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
+        //     }
+        //     filter { includeModule("com.android.tools", "r8") }
+        // }
     }
 }
 
@@ -47,7 +47,7 @@ dependencyResolutionManagement {
 plugins {
     // Applied here (not via CI init script injection) to avoid classloader conflicts between
     // the Develocity agent and AGP 9.0 when the configuration cache is cold.
-    id("com.gradle.develocity") version "3.19"
+    id("com.gradle.develocity") version "4.3.2"
     id("com.fueledbycaffeine.spotlight") version "1.6.7"
 }
 

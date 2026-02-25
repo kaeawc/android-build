@@ -3,12 +3,12 @@ build-android-buildTools = "36.0.0"
 build-android-compileSdk = "36"
 build-android-minSdk = "27"
 build-android-targetSdk = "36"
-build-android-agp = "9.0.1"
-# Uncomment to use r8 dev versions needed for kotlin metadata
-build-android-r8 = "9.0.32"
+build-android-agp = "9.2.0-alpha01"
+# Uncomment to pin R8 version (e.g. for dev versions needed for kotlin metadata)
+# build-android-r8 = "9.0.32"
 build-android-desugar = "2.1.5"
 build-kotlin = "2.3.10"
-build-kotlin-language = "2.2"
+build-kotlin-language = "2.3"
 build-kotlin-coroutines = "1.10.2"
 build-kotlin-datetime = "0.7.1"
 build-java-asm = "9.9.1"
@@ -17,10 +17,10 @@ build-gradle-dependencyAnalysis = "3.5.1"
 build-gradle-graphAssertion = "2.9.0"
 build-gradle-doctor = "0.12.1"
 build-gradle-sortDependencies = "0.16"
-build-gradle-spotless = "8.1.0"
+build-gradle-spotless = "8.2.1"
 build-gradle-triplet-play = "4.0.0"
 androidx-core = "1.17.0"
-androidx-activity-compose = "1.12.2"
+androidx-activity-compose = "1.12.4"
 androidx-compose-bom = "2026.02.00"
 androidx-lifecycle = "2.10.0"
 
@@ -47,9 +47,8 @@ metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 [libraries]
 kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "build-kotlin" }
 agp = { module = "com.android.tools.build:gradle", version.ref = "build-android-agp" }
-# Only necessary to override R8 version
-r8 = { module = "com.android.tools:r8", version.ref = "build-android-r8" }
-
+# Uncomment to pin R8 version
+# r8 = { module = "com.android.tools:r8", version.ref = "build-android-r8" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "build-kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "build-kotlin-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "build-kotlin-datetime" }
