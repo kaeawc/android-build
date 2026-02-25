@@ -63,6 +63,7 @@ configure<SpotlessExtension> {
         )
     }
 }
+
 configure<SpotlessExtensionPredeclare> {
     lineEndings = LineEnding.PLATFORM_NATIVE
     format("misc") {
