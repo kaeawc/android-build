@@ -1,9 +1,9 @@
 [versions]
-build-android-buildTools = "35.0.0"
+build-android-buildTools = "36.0.0"
 build-android-compileSdk = "36"
 build-android-minSdk = "27"
 build-android-targetSdk = "36"
-build-android-agp = "8.13.2"
+build-android-agp = "9.0.1"
 # Uncomment to use r8 dev versions needed for kotlin metadata
 build-android-r8 = "9.0.32"
 build-android-desugar = "2.1.5"
@@ -18,7 +18,7 @@ build-gradle-graphAssertion = "2.9.0"
 build-gradle-doctor = "0.12.1"
 build-gradle-sortDependencies = "0.16"
 build-gradle-spotless = "8.1.0"
-build-gradle-triplet-play = "3.13.0"
+build-gradle-triplet-play = "4.0.0"
 androidx-core = "1.17.0"
 androidx-activity-compose = "1.12.2"
 androidx-compose-bom = "2026.02.00"
@@ -30,7 +30,6 @@ test-androidx-espresso = "3.7.0"
 
 navigation = "2.9.7"
 
-kotlin-inject = "0.8.0"
 metro = "0.11.0"
 
 [plugins]
@@ -41,7 +40,6 @@ doctor = { id = "com.osacky.doctor", version.ref = "build-gradle-doctor" }
 graphAssertion = { id = "com.jraska.module.graph.assertion", version.ref = "build-gradle-graphAssertion" }
 publish = { id = "com.github.triplet.play", version.ref = "build-gradle-triplet-play" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "build-kotlin" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "build-kotlin" }
 android-library = { id = "com.android.library", version.ref = "build-android-agp" }
 android-application = { id = "com.android.application", version.ref = "build-android-agp" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }

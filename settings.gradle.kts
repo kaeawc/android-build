@@ -44,7 +44,19 @@ dependencyResolutionManagement {
     }
 }
 
-plugins { id("com.fueledbycaffeine.spotlight") version "1.5.1" }
+plugins {
+    // Applied here (not via CI init script injection) to avoid classloader conflicts between
+    // the Develocity agent and AGP 9.0 when the configuration cache is cold.
+    id("com.gradle.develocity") version "3.19"
+    id("com.fueledbycaffeine.spotlight") version "1.6.7"
+}
+
+develocity {
+    buildScan {
+        termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
+        termsOfUseAgree = "yes"
+    }
+}
 
 rootProject.name = "Android Build"
 
