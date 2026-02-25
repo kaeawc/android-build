@@ -84,9 +84,18 @@ android {
     }
 
     buildTypes {
-        release {
+        debug {
+            // Debug builds skip R8 for faster iteration
             isMinifyEnabled = false
+            isShrinkResources = false
+        }
+        release {
+            // Enable R8 code shrinking, obfuscation, and optimization
+            isMinifyEnabled = true
+            // Enable resource shrinking (removes unused resources)
+            isShrinkResources = true
             proguardFiles(
+                // Use optimized Android defaults (includes optimization passes)
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
@@ -103,7 +112,11 @@ android {
         sourceCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
         targetCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
     }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        // Explicitly disable viewBinding since we're using Compose only
+        viewBinding = false
+    }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 
     lint {
