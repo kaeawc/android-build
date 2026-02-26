@@ -30,7 +30,7 @@ test-androidx-espresso = "3.7.0"
 
 navigation = "2.9.7"
 
-metro = "0.11.0"
+metro = "0.11.1"
 
 [plugins]
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "build-gradle-dependencyAnalysis" }
