@@ -23,14 +23,13 @@
  */
 package dev.jasonpearson.android.di
 
-import android.app.Application
-import android.content.Context
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Qualifier
 import kotlin.annotation.AnnotationRetention.BINARY
 import kotlin.time.Clock
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 @ContributesTo(AppScope::class)
@@ -42,14 +41,17 @@ interface ApplicationModule {
 
     @Qualifier @Retention(BINARY) annotation class LazyDelegate
 
+    @Qualifier @Retention(BINARY) annotation class PresenterScope
+
     companion object {
 
-        @Provides
-        @ApplicationContext
-        @SingleIn(AppScope::class)
-        fun provideApplicationContext(application: Application): Context = application
-
         @Provides @SingleIn(AppScope::class) fun provideClock(): Clock = Clock.System
+
+        @PresenterScope
+        @Provides
+        @SingleIn(AppScope::class)
+        fun providePresenterScope(backgroundScope: BackgroundAppCoroutineScope): CoroutineScope =
+            backgroundScope
     }
 }
 

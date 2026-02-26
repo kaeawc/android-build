@@ -21,8 +21,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.clock
 
+import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Instant
 
-data class Widget(val name: String, val createdAt: Instant)
+/**
+ * Test double for [Clock] that returns a fixed, manually-advanceable instant.
+ *
+ * Starts at [initialNow] (defaults to [Instant.fromEpochMilliseconds](0) for reproducibility). Call
+ * [advance] to move time forward.
+ *
+ * Example:
+ * ```
+ * val clock = FakeClock()
+ * val repo = MyRepository(clock)
+ *
+ * val item = repo.create("hello")
+ * assertEquals(Instant.fromEpochMilliseconds(0), item.createdAt)
+ *
+ * clock.advance(5.minutes)
+ * val item2 = repo.create("world")
+ * assertEquals(5.minutes.inWholeMilliseconds, item2.createdAt.toEpochMilliseconds())
+ * ```
+ */
+class FakeClock(initialNow: Instant = Instant.fromEpochMilliseconds(0)) : Clock {
+
+    private var currentNow: Instant = initialNow
+
+    override fun now(): Instant = currentNow
+
+    /** Advances the clock by [duration]. All subsequent [now] calls return the new time. */
+    fun advance(duration: Duration) {
+        currentNow += duration
+    }
+}

@@ -21,8 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.timer
 
-import kotlin.time.Instant
+import dev.jasonpearson.android.di.AppScope
+import dev.jasonpearson.android.di.SingleIn
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 
-data class Widget(val name: String, val createdAt: Instant)
+/**
+ * Production implementation of [TimerProvider] that delegates to [kotlinx.coroutines.delay].
+ *
+ * Bound in the DI graph via [@ContributesBinding]. Use [FakeTimer] in tests.
+ */
+@ContributesBinding(AppScope::class)
+@SingleIn(AppScope::class)
+@Inject
+class RealTimerProvider() : TimerProvider {
+    override suspend fun delay(millis: Long) = kotlinx.coroutines.delay(millis)
+}

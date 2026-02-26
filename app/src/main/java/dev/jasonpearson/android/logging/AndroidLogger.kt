@@ -21,52 +21,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.logging
 
+import android.util.Log
 import dev.jasonpearson.android.di.AppScope
 import dev.jasonpearson.android.di.SingleIn
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
-import kotlin.time.Clock
-
-interface WidgetRepository {
-
-    /** Creates and stores a widget with [name], returning it with its [Widget.createdAt] set. */
-    fun add(name: String): Widget
-
-    fun getByName(name: String): Widget?
-
-    fun getAll(): List<Widget>
-}
 
 /**
- * Thread-safe implementation of [WidgetRepository].
+ * Production implementation of [Logger] that delegates to [android.util.Log].
  *
- * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety. Scoped to the
- * application lifetime via [@SingleIn][SingleIn]. Uses [Clock] to stamp each widget with the
- * current time at creation.
+ * Bound in the DI graph via [@ContributesBinding]. Use [FakeLogger] in tests.
  */
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 @Inject
-internal class WidgetRepositoryImpl(private val clock: Clock) : WidgetRepository {
-
-    private val widgets = mutableListOf<Widget>()
-
-    @Synchronized
-    override fun add(name: String): Widget {
-        val widget = Widget(name = name, createdAt = clock.now())
-        widgets.add(widget)
-        return widget
-    }
-
-    @Synchronized
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
-
-    @Synchronized
-    override fun getAll(): List<Widget> {
-        return widgets.toList()
+class AndroidLogger : Logger {
+    override fun log(
+        priority: Logger.Priority,
+        tag: String,
+        message: String,
+        throwable: Throwable?,
+    ) {
+        when (priority) {
+            Logger.Priority.VERBOSE ->
+                if (throwable != null) Log.v(tag, message, throwable) else Log.v(tag, message)
+            Logger.Priority.DEBUG ->
+                if (throwable != null) Log.d(tag, message, throwable) else Log.d(tag, message)
+            Logger.Priority.INFO ->
+                if (throwable != null) Log.i(tag, message, throwable) else Log.i(tag, message)
+            Logger.Priority.WARN ->
+                if (throwable != null) Log.w(tag, message, throwable) else Log.w(tag, message)
+            Logger.Priority.ERROR ->
+                if (throwable != null) Log.e(tag, message, throwable) else Log.e(tag, message)
+        }
     }
 }

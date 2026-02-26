@@ -24,17 +24,11 @@
 package dev.jasonpearson.android
 
 import android.app.Application
-import android.os.Build
-import android.os.StrictMode
-import android.os.strictmode.DiskReadViolation
-import android.os.strictmode.UntaggedSocketViolation
-import android.util.Log
 import dev.jasonpearson.android.di.AppGraph
 import dev.jasonpearson.android.di.ApplicationModule
 import dev.jasonpearson.android.di.BackgroundAppCoroutineScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.createGraphFactory
-import java.util.concurrent.Executors
 import kotlinx.coroutines.launch
 
 private typealias InitializerFunction = () -> Unit
@@ -67,35 +61,6 @@ class App : Application() {
         // Run async initializers in parallel
         backgroundScope.launch {
             asyncInitializers.forEach { initializer -> launch { initializer() } }
-        }
-
-        // Setup StrictMode for debug builds
-        setupStrictMode()
-    }
-
-    private fun setupStrictMode() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            StrictMode.setVmPolicy(
-                StrictMode.VmPolicy.Builder()
-                    .detectAll()
-                    .penaltyListener(Executors.newSingleThreadExecutor()) { violation ->
-                        when {
-                            violation is UntaggedSocketViolation -> {
-                                // Known issue with Flipper - ignore
-                            }
-
-                            violation is DiskReadViolation &&
-                                violation.stackTraceToString().contains("CustomTabsConnection") -> {
-                                // Known issue with Chrome Custom Tabs - ignore
-                            }
-
-                            else -> {
-                                Log.e(TAG, "StrictMode violation detected", violation)
-                            }
-                        }
-                    }
-                    .build()
-            )
         }
     }
 }

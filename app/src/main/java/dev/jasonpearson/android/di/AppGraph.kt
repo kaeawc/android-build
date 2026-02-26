@@ -25,6 +25,7 @@ package dev.jasonpearson.android.di
 
 import android.app.Application
 import dev.jasonpearson.android.App
+import dev.jasonpearson.android.resume.ResumePresenter
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 
@@ -54,4 +55,6 @@ internal interface AppGraph {
 
     // Exposed dependencies for convenient access
     // Note: In a larger app, consider using subcomponents instead of exposing everything
+    val application: Application
+    val resumePresenter: ResumePresenter
 }

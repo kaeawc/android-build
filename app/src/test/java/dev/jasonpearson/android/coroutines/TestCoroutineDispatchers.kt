@@ -21,8 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.coroutines
 
-import kotlin.time.Instant
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
-data class Widget(val name: String, val createdAt: Instant)
+/**
+ * Test double for [CoroutineDispatchers] that routes all dispatchers through a single
+ * [CoroutineDispatcher] (defaults to [UnconfinedTestDispatcher]).
+ *
+ * This makes coroutines in tests run eagerly without needing
+ * [kotlinx.coroutines.test.advanceUntilIdle].
+ *
+ * Example:
+ * ```
+ * val dispatchers = TestCoroutineDispatchers()
+ * val scope = BackgroundAppCoroutineScope(dispatchers)
+ * // coroutines launched in scope run immediately
+ * ```
+ */
+class TestCoroutineDispatchers(dispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()) :
+    CoroutineDispatchers {
+    override val main: CoroutineDispatcher = dispatcher
+    override val io: CoroutineDispatcher = dispatcher
+    override val default: CoroutineDispatcher = dispatcher
+    override val unconfined: CoroutineDispatcher = dispatcher
+}

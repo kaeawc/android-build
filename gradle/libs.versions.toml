@@ -51,6 +51,7 @@ agp = { module = "com.android.tools.build:gradle", version.ref = "build-android-
 # r8 = { module = "com.android.tools:r8", version.ref = "build-android-r8" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "build-kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "build-kotlin-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "build-kotlin-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "build-kotlin-datetime" }
 
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
@@ -107,5 +108,6 @@ compose-ui-debug = [
     "compose-ui-test-manifest"
 ]
 unit-test = [
-    "junit"
+    "junit",
+    "kotlinx-coroutines-test"
 ]

@@ -21,8 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.timer
 
-import kotlin.time.Instant
-
-data class Widget(val name: String, val createdAt: Instant)
+/**
+ * Abstraction over coroutine time delays, enabling deterministic testing without real waits.
+ *
+ * Production code uses [RealTimerProvider]. Tests use [FakeTimer].
+ */
+interface TimerProvider {
+    /** Suspends the current coroutine for [millis] milliseconds. */
+    suspend fun delay(millis: Long)
+}

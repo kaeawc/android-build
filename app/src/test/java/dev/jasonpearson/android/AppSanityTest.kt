@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Jason Pearson
+ * Copyright (c) 2023 Jason Pearson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android
 
-import kotlin.time.Instant
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Test
 
-data class Widget(val name: String, val createdAt: Instant)
+/** Sanity checks for the application package. */
+class AppSanityTest {
+
+    @Test
+    fun `App tag is non-empty`() {
+        assertNotNull(App.TAG)
+        assertEquals("App", App.TAG)
+    }
+}

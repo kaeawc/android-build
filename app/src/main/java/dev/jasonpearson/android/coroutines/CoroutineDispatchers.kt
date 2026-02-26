@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023 Jason Pearson
+ * Copyright (c) 2024 Jason Pearson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android
+package dev.jasonpearson.android.coroutines
 
-import org.junit.Assert.*
-import org.junit.Test
+import kotlinx.coroutines.CoroutineDispatcher
 
 /**
- * Example local unit test, which will execute on the development machine (host).
+ * Provides [CoroutineDispatcher] instances for the application.
  *
- * See [testing documentation](http://d.android.com/tools/testing).
+ * Inject this interface instead of using [kotlinx.coroutines.Dispatchers] directly so that tests
+ * can substitute [TestCoroutineDispatchers] to run coroutines eagerly.
+ *
+ * Production code uses [DefaultCoroutineDispatchers]. Tests use [TestCoroutineDispatchers].
  */
-class ExampleUnitTest {
-    @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
-    }
+interface CoroutineDispatchers {
+    /** Main/UI thread dispatcher. Use for Composable state updates. */
+    val main: CoroutineDispatcher
+
+    /** Optimized for disk and network I/O. */
+    val io: CoroutineDispatcher
+
+    /** Optimized for CPU-intensive work. */
+    val default: CoroutineDispatcher
+
+    /** Runs the coroutine immediately in the current thread. Useful for testing. */
+    val unconfined: CoroutineDispatcher
 }

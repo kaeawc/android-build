@@ -21,8 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.resume
 
-import kotlin.time.Instant
+// Data models for the resume
+sealed class ResumeItem {
+    data class Profile(val description: String) : ResumeItem()
 
-data class Widget(val name: String, val createdAt: Instant)
+    data class Experience(
+        val title: String,
+        val company: String,
+        val location: String,
+        val period: String,
+        val responsibilities: List<String>,
+    ) : ResumeItem()
+
+    data class Skills(val skills: List<String>) : ResumeItem()
+
+    data class Education(val degree: String, val institution: String, val period: String) :
+        ResumeItem()
+
+    data class Talks(val talks: List<Talk>) : ResumeItem()
+
+    data class Talk(val title: String, val event: String, val date: String)
+}

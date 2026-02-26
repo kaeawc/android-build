@@ -21,8 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.timer
 
-import kotlin.time.Instant
+/**
+ * Test double for [TimerProvider] that records delay calls and returns immediately.
+ *
+ * Use this in unit tests to verify timing behavior without real wall-clock waits.
+ *
+ * Example:
+ * ```
+ * val fakeTimer = FakeTimer()
+ * myClass.doSomethingWithDelay(fakeTimer)
+ * assertEquals(listOf(200L), fakeTimer.delays)
+ * ```
+ */
+class FakeTimer : TimerProvider {
+    private val _delays = mutableListOf<Long>()
 
-data class Widget(val name: String, val createdAt: Instant)
+    /** All delay durations (in milliseconds) that were requested, in call order. */
+    val delays: List<Long>
+        get() = _delays.toList()
+
+    /** Returns immediately without suspending. Records [millis] in [delays]. */
+    override suspend fun delay(millis: Long) {
+        _delays.add(millis)
+    }
+}

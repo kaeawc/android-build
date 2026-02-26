@@ -23,6 +23,24 @@
  */
 package dev.jasonpearson.android.widgets
 
-import kotlin.time.Instant
+import kotlin.time.Clock
 
-data class Widget(val name: String, val createdAt: Instant)
+/**
+ * Test double for [WidgetRepository]. Simple in-memory implementation with no synchronization —
+ * unit tests are single-threaded.
+ *
+ * Pass a [FakeClock][dev.jasonpearson.android.clock.FakeClock] to control timestamps in tests.
+ */
+class FakeWidgetRepository(private val clock: Clock = Clock.System) : WidgetRepository {
+    private val widgets = mutableListOf<Widget>()
+
+    override fun add(name: String): Widget {
+        val widget = Widget(name = name, createdAt = clock.now())
+        widgets.add(widget)
+        return widget
+    }
+
+    override fun getByName(name: String): Widget? = widgets.firstOrNull { it.name == name }
+
+    override fun getAll(): List<Widget> = widgets.toList()
+}

@@ -21,8 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.coroutines
 
-import kotlin.time.Instant
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
-data class Widget(val name: String, val createdAt: Instant)
+class TestCoroutineDispatchersTest {
+
+    @Test
+    fun `default constructor uses UnconfinedTestDispatcher for all dispatchers`() {
+        val dispatchers = TestCoroutineDispatchers()
+        // All dispatchers should be the same instance (UnconfinedTestDispatcher)
+        assertEquals(dispatchers.main, dispatchers.io)
+        assertEquals(dispatchers.io, dispatchers.default)
+        assertEquals(dispatchers.default, dispatchers.unconfined)
+    }
+
+    @Test
+    fun `custom dispatcher is used for all dispatcher properties`() {
+        val dispatcher = UnconfinedTestDispatcher()
+        val dispatchers = TestCoroutineDispatchers(dispatcher)
+
+        assertEquals(dispatcher, dispatchers.main)
+        assertEquals(dispatcher, dispatchers.io)
+        assertEquals(dispatcher, dispatchers.default)
+        assertEquals(dispatcher, dispatchers.unconfined)
+    }
+}
