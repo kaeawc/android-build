@@ -27,9 +27,10 @@ import android.os.Build
 import android.os.StrictMode
 import android.os.strictmode.DiskReadViolation
 import android.os.strictmode.UntaggedSocketViolation
-import android.util.Log
 import dev.jasonpearson.android.di.AppScope
 import dev.jasonpearson.android.di.ApplicationModule
+import dev.jasonpearson.android.logging.Logger
+import dev.jasonpearson.android.logging.e
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
@@ -51,7 +52,7 @@ interface StrictModeModule {
         @ApplicationModule.AsyncInitializers
         @IntoSet
         @Provides
-        fun strictModeInit(): () -> Unit = {
+        fun strictModeInit(logger: Logger): () -> Unit = {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 StrictMode.setVmPolicy(
                     StrictMode.VmPolicy.Builder()
@@ -63,13 +64,14 @@ interface StrictModeModule {
                                 }
 
                                 violation is DiskReadViolation &&
-                                    violation.stackTraceToString()
+                                    violation
+                                        .stackTraceToString()
                                         .contains("CustomTabsConnection") -> {
                                     // Known issue with Chrome Custom Tabs - ignore
                                 }
 
                                 else -> {
-                                    Log.e(TAG, "StrictMode violation detected", violation)
+                                    logger.e(TAG, "StrictMode violation detected", violation)
                                 }
                             }
                         }

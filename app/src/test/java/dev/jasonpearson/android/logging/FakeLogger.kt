@@ -21,29 +21,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.coroutines
-
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+package dev.jasonpearson.android.logging
 
 /**
- * Test double for [CoroutineDispatchers] that routes all dispatchers through a single
- * [CoroutineDispatcher] (defaults to [UnconfinedTestDispatcher]).
- *
- * This makes coroutines in tests run eagerly without needing
- * [kotlinx.coroutines.test.advanceUntilIdle].
+ * Test double for [Logger] that records all log calls without writing to logcat.
  *
  * Example:
  * ```
- * val dispatchers = TestCoroutineDispatchers()
- * val scope = BackgroundAppCoroutineScope(dispatchers)
- * // coroutines launched in scope run immediately
+ * val logger = FakeLogger()
+ * myService.doWork(logger)
+ * assertEquals(1, logger.errors.size)
+ * assertEquals("Expected error message", logger.errors[0].message)
  * ```
  */
-class TestCoroutineDispatchers(dispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()) :
-    CoroutineDispatchers {
-    override val main: CoroutineDispatcher = dispatcher
-    override val io: CoroutineDispatcher = dispatcher
-    override val default: CoroutineDispatcher = dispatcher
-    override val unconfined: CoroutineDispatcher = dispatcher
+class FakeLogger : Logger {
+
+    /** A recorded log entry. */
+    data class Entry(
+        val priority: Logger.Priority,
+        val tag: String,
+        val message: String,
+        val throwable: Throwable?,
+    )
+
+    private val _entries = mutableListOf<Entry>()
+
+    /** All recorded log entries in call order. */
+    val entries: List<Entry> get() = _entries.toList()
+
+    /** Shorthand for entries with [Logger.Priority.ERROR]. */
+    val errors: List<Entry> get() = _entries.filter { it.priority == Logger.Priority.ERROR }
+
+    /** Shorthand for entries with [Logger.Priority.WARN]. */
+    val warnings: List<Entry> get() = _entries.filter { it.priority == Logger.Priority.WARN }
+
+    override fun log(priority: Logger.Priority, tag: String, message: String, throwable: Throwable?) {
+        _entries.add(Entry(priority, tag, message, throwable))
+    }
 }

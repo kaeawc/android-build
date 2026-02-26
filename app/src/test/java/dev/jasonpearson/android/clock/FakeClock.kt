@@ -21,29 +21,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.coroutines
+package dev.jasonpearson.android.clock
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 /**
- * Test double for [CoroutineDispatchers] that routes all dispatchers through a single
- * [CoroutineDispatcher] (defaults to [UnconfinedTestDispatcher]).
+ * Test double for [Clock] that returns a fixed, manually-advanceable instant.
  *
- * This makes coroutines in tests run eagerly without needing
- * [kotlinx.coroutines.test.advanceUntilIdle].
+ * Starts at [initialNow] (defaults to [Instant.fromEpochMilliseconds](0) for
+ * reproducibility). Call [advance] to move time forward.
  *
  * Example:
  * ```
- * val dispatchers = TestCoroutineDispatchers()
- * val scope = BackgroundAppCoroutineScope(dispatchers)
- * // coroutines launched in scope run immediately
+ * val clock = FakeClock()
+ * val repo = MyRepository(clock)
+ *
+ * val item = repo.create("hello")
+ * assertEquals(Instant.fromEpochMilliseconds(0), item.createdAt)
+ *
+ * clock.advance(5.minutes)
+ * val item2 = repo.create("world")
+ * assertEquals(5.minutes.inWholeMilliseconds, item2.createdAt.toEpochMilliseconds())
  * ```
  */
-class TestCoroutineDispatchers(dispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()) :
-    CoroutineDispatchers {
-    override val main: CoroutineDispatcher = dispatcher
-    override val io: CoroutineDispatcher = dispatcher
-    override val default: CoroutineDispatcher = dispatcher
-    override val unconfined: CoroutineDispatcher = dispatcher
+class FakeClock(initialNow: Instant = Instant.fromEpochMilliseconds(0)) : Clock {
+
+    private var currentNow: Instant = initialNow
+
+    override fun now(): Instant = currentNow
+
+    /**
+     * Advances the clock by [duration]. All subsequent [now] calls return the new time.
+     */
+    fun advance(duration: Duration) {
+        currentNow += duration
+    }
 }
