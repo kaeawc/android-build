@@ -21,47 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.coroutines
 
 import dev.jasonpearson.android.di.AppScope
 import dev.jasonpearson.android.di.SingleIn
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
-
-interface WidgetRepository {
-
-    fun add(widget: Widget)
-
-    fun getByName(name: String): Widget?
-
-    fun getAll(): List<Widget>
-}
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 
 /**
- * Thread-safe implementation of [WidgetRepository].
- *
- * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety. Scoped to the
- * application lifetime via [@SingleIn][SingleIn].
+ * Production implementation of [CoroutineDispatchers] backed by [kotlinx.coroutines.Dispatchers].
  */
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 @Inject
-internal class WidgetRepositoryImpl() : WidgetRepository {
-
-    private val widgets = mutableListOf<Widget>()
-
-    @Synchronized
-    override fun add(widget: Widget) {
-        widgets.add(widget)
-    }
-
-    @Synchronized
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
-
-    @Synchronized
-    override fun getAll(): List<Widget> {
-        return widgets.toList()
-    }
+class DefaultCoroutineDispatchers : CoroutineDispatchers {
+    override val main: CoroutineDispatcher = Dispatchers.Main
+    override val io: CoroutineDispatcher = Dispatchers.IO
+    override val default: CoroutineDispatcher = Dispatchers.Default
+    override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
 }

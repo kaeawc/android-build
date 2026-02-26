@@ -35,6 +35,7 @@ import dev.zacsweers.metro.Inject
  */
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
-class RealTimerProvider @Inject constructor() : TimerProvider {
+@Inject
+class RealTimerProvider() : TimerProvider {
     override suspend fun delay(millis: Long) = kotlinx.coroutines.delay(millis)
 }

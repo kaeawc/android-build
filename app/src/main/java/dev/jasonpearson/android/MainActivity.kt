@@ -49,10 +49,11 @@ fun ResumeNavigation(presenter: ResumePresenter) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "resume") {
         composable("resume") {
-            ResumeApp(presenter = presenter, onShareLinkedIn = { navController.navigate("linkedin_qr") })
+            ResumeApp(
+                presenter = presenter,
+                onShareLinkedIn = { navController.navigate("linkedin_qr") },
+            )
         }
-        composable("linkedin_qr") {
-            LinkedInQRScreen(onBack = { navController.popBackStack() })
-        }
+        composable("linkedin_qr") { LinkedInQRScreen(onBack = { navController.popBackStack() }) }
     }
 }

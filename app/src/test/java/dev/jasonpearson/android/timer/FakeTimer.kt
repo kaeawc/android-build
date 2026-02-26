@@ -39,7 +39,8 @@ class FakeTimer : TimerProvider {
     private val _delays = mutableListOf<Long>()
 
     /** All delay durations (in milliseconds) that were requested, in call order. */
-    val delays: List<Long> get() = _delays.toList()
+    val delays: List<Long>
+        get() = _delays.toList()
 
     /** Returns immediately without suspending. Records [millis] in [delays]. */
     override suspend fun delay(millis: Long) {

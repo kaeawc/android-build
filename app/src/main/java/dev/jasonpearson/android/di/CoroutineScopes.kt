@@ -23,10 +23,9 @@
  */
 package dev.jasonpearson.android.di
 
+import dev.jasonpearson.android.coroutines.CoroutineDispatchers
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.SupervisorJob
 
 /**
@@ -38,17 +37,20 @@ import kotlinx.coroutines.SupervisorJob
  * Useful for UI-related operations that span beyond a single screen.
  */
 @SingleIn(AppScope::class)
-class MainAppCoroutineScope @Inject constructor() : CoroutineScope by MainScope()
+@Inject
+class MainAppCoroutineScope(dispatchers: CoroutineDispatchers) :
+    CoroutineScope by CoroutineScope(SupervisorJob() + dispatchers.main)
 
 /**
  * Application-scoped CoroutineScope for background work.
  *
  * Use this for long-running background operations throughout the app lifecycle. Uses
- * Dispatchers.Default for CPU-intensive work and includes a SupervisorJob to prevent failures in
- * one coroutine from cancelling others.
+ * [CoroutineDispatchers.default] for CPU-intensive work and includes a SupervisorJob to prevent
+ * failures in one coroutine from cancelling others.
  *
  * This scope is automatically cancelled when the app process is terminated.
  */
 @SingleIn(AppScope::class)
-class BackgroundAppCoroutineScope @Inject constructor() :
-    CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default)
+@Inject
+class BackgroundAppCoroutineScope(dispatchers: CoroutineDispatchers) :
+    CoroutineScope by CoroutineScope(SupervisorJob() + dispatchers.default)

@@ -21,47 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.coroutines
 
-import dev.jasonpearson.android.di.AppScope
-import dev.jasonpearson.android.di.SingleIn
-import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.Inject
-
-interface WidgetRepository {
-
-    fun add(widget: Widget)
-
-    fun getByName(name: String): Widget?
-
-    fun getAll(): List<Widget>
-}
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 /**
- * Thread-safe implementation of [WidgetRepository].
+ * Test double for [CoroutineDispatchers] that routes all dispatchers through a single
+ * [CoroutineDispatcher] (defaults to [UnconfinedTestDispatcher]).
  *
- * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety. Scoped to the
- * application lifetime via [@SingleIn][SingleIn].
+ * This makes coroutines in tests run eagerly without needing [kotlinx.coroutines.test.advanceUntilIdle].
+ *
+ * Example:
+ * ```
+ * val dispatchers = TestCoroutineDispatchers()
+ * val scope = BackgroundAppCoroutineScope(dispatchers)
+ * // coroutines launched in scope run immediately
+ * ```
  */
-@ContributesBinding(AppScope::class)
-@SingleIn(AppScope::class)
-@Inject
-internal class WidgetRepositoryImpl() : WidgetRepository {
-
-    private val widgets = mutableListOf<Widget>()
-
-    @Synchronized
-    override fun add(widget: Widget) {
-        widgets.add(widget)
-    }
-
-    @Synchronized
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
-
-    @Synchronized
-    override fun getAll(): List<Widget> {
-        return widgets.toList()
-    }
+class TestCoroutineDispatchers(
+    dispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(),
+) : CoroutineDispatchers {
+    override val main: CoroutineDispatcher = dispatcher
+    override val io: CoroutineDispatcher = dispatcher
+    override val default: CoroutineDispatcher = dispatcher
+    override val unconfined: CoroutineDispatcher = dispatcher
 }

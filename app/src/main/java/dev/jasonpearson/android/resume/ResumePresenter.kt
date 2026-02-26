@@ -23,8 +23,8 @@
  */
 package dev.jasonpearson.android.resume
 
-import dev.jasonpearson.android.di.ApplicationModule
 import dev.jasonpearson.android.di.AppScope
+import dev.jasonpearson.android.di.ApplicationModule
 import dev.jasonpearson.android.di.SingleIn
 import dev.jasonpearson.android.timer.TimerProvider
 import dev.zacsweers.metro.Inject
@@ -35,15 +35,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Holds UI state for the resume screen. Scoped to the application lifetime so navigation
- * back to the resume screen sees the already-loaded items.
+ * Holds UI state for the resume screen. Scoped to the application lifetime so navigation back to
+ * the resume screen sees the already-loaded items.
  *
  * In tests, construct directly: `ResumePresenter(FakeTimer(), testScope)`.
  */
 @SingleIn(AppScope::class)
-class ResumePresenter @Inject constructor(
+@Inject
+class ResumePresenter(
     private val timerProvider: TimerProvider,
-    @ApplicationModule.PresenterScope private val scope: CoroutineScope,
+    @param:ApplicationModule.PresenterScope private val scope: CoroutineScope,
 ) {
     private val _items = MutableStateFlow<List<ResumeItem>>(emptyList())
 

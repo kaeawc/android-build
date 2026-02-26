@@ -50,10 +50,7 @@ import dev.jasonpearson.android.ui.theme.AndroidTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ResumeApp(
-    presenter: ResumePresenter,
-    onShareLinkedIn: () -> Unit,
-) {
+fun ResumeApp(presenter: ResumePresenter, onShareLinkedIn: () -> Unit) {
     val scrollState = rememberLazyListState()
     val items by presenter.items.collectAsState()
 
@@ -368,15 +365,11 @@ fun ResumeCard(content: @Composable () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun ResumeAppPreview() {
-    AndroidTheme {
-        Text("Preview: ResumeApp requires a ResumePresenter from the DI graph")
-    }
+    AndroidTheme { Text("Preview: ResumeApp requires a ResumePresenter from the DI graph") }
 }
 
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ResumeAppDarkPreview() {
-    AndroidTheme {
-        Text("Preview: ResumeApp requires a ResumePresenter from the DI graph")
-    }
+    AndroidTheme { Text("Preview: ResumeApp requires a ResumePresenter from the DI graph") }
 }

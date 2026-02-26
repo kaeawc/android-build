@@ -21,47 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.coroutines
 
-import dev.jasonpearson.android.di.AppScope
-import dev.jasonpearson.android.di.SingleIn
-import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.Inject
-
-interface WidgetRepository {
-
-    fun add(widget: Widget)
-
-    fun getByName(name: String): Widget?
-
-    fun getAll(): List<Widget>
-}
+import kotlinx.coroutines.CoroutineDispatcher
 
 /**
- * Thread-safe implementation of [WidgetRepository].
+ * Provides [CoroutineDispatcher] instances for the application.
  *
- * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety. Scoped to the
- * application lifetime via [@SingleIn][SingleIn].
+ * Inject this interface instead of using [kotlinx.coroutines.Dispatchers] directly so that tests
+ * can substitute [TestCoroutineDispatchers] to run coroutines eagerly.
+ *
+ * Production code uses [DefaultCoroutineDispatchers]. Tests use [TestCoroutineDispatchers].
  */
-@ContributesBinding(AppScope::class)
-@SingleIn(AppScope::class)
-@Inject
-internal class WidgetRepositoryImpl() : WidgetRepository {
+interface CoroutineDispatchers {
+    /** Main/UI thread dispatcher. Use for Composable state updates. */
+    val main: CoroutineDispatcher
 
-    private val widgets = mutableListOf<Widget>()
+    /** Optimized for disk and network I/O. */
+    val io: CoroutineDispatcher
 
-    @Synchronized
-    override fun add(widget: Widget) {
-        widgets.add(widget)
-    }
+    /** Optimized for CPU-intensive work. */
+    val default: CoroutineDispatcher
 
-    @Synchronized
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
-
-    @Synchronized
-    override fun getAll(): List<Widget> {
-        return widgets.toList()
-    }
+    /** Runs the coroutine immediately in the current thread. Useful for testing. */
+    val unconfined: CoroutineDispatcher
 }

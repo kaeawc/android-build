@@ -21,47 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.coroutines
 
-import dev.jasonpearson.android.di.AppScope
-import dev.jasonpearson.android.di.SingleIn
-import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
-interface WidgetRepository {
+class TestCoroutineDispatchersTest {
 
-    fun add(widget: Widget)
-
-    fun getByName(name: String): Widget?
-
-    fun getAll(): List<Widget>
-}
-
-/**
- * Thread-safe implementation of [WidgetRepository].
- *
- * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety. Scoped to the
- * application lifetime via [@SingleIn][SingleIn].
- */
-@ContributesBinding(AppScope::class)
-@SingleIn(AppScope::class)
-@Inject
-internal class WidgetRepositoryImpl() : WidgetRepository {
-
-    private val widgets = mutableListOf<Widget>()
-
-    @Synchronized
-    override fun add(widget: Widget) {
-        widgets.add(widget)
+    @Test
+    fun `default constructor uses UnconfinedTestDispatcher for all dispatchers`() {
+        val dispatchers = TestCoroutineDispatchers()
+        // All dispatchers should be the same instance (UnconfinedTestDispatcher)
+        assertEquals(dispatchers.main, dispatchers.io)
+        assertEquals(dispatchers.io, dispatchers.default)
+        assertEquals(dispatchers.default, dispatchers.unconfined)
     }
 
-    @Synchronized
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
+    @Test
+    fun `custom dispatcher is used for all dispatcher properties`() {
+        val dispatcher = UnconfinedTestDispatcher()
+        val dispatchers = TestCoroutineDispatchers(dispatcher)
 
-    @Synchronized
-    override fun getAll(): List<Widget> {
-        return widgets.toList()
+        assertEquals(dispatcher, dispatchers.main)
+        assertEquals(dispatcher, dispatchers.io)
+        assertEquals(dispatcher, dispatchers.default)
+        assertEquals(dispatcher, dispatchers.unconfined)
     }
 }

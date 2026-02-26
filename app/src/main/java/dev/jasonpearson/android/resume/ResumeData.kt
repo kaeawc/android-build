@@ -23,8 +23,6 @@
  */
 package dev.jasonpearson.android.resume
 
-import dev.jasonpearson.android.resume.ResumeItem
-
 // Resume data
 val resumeItems =
     listOf(
