@@ -55,5 +55,6 @@ internal interface AppGraph {
 
     // Exposed dependencies for convenient access
     // Note: In a larger app, consider using subcomponents instead of exposing everything
+    val application: Application
     val resumePresenter: ResumePresenter
 }

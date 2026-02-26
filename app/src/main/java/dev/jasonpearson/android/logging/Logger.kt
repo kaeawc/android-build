@@ -24,8 +24,8 @@
 package dev.jasonpearson.android.logging
 
 /**
- * Abstraction over Android's [android.util.Log], enabling deterministic testing without real
- * logcat output.
+ * Abstraction over Android's [android.util.Log], enabling deterministic testing without real logcat
+ * output.
  *
  * Production code uses [AndroidLogger]. Tests use [FakeLogger].
  *
@@ -34,7 +34,13 @@ package dev.jasonpearson.android.logging
 interface Logger {
 
     /** Log priorities matching [android.util.Log] constants. */
-    enum class Priority { VERBOSE, DEBUG, INFO, WARN, ERROR }
+    enum class Priority {
+        VERBOSE,
+        DEBUG,
+        INFO,
+        WARN,
+        ERROR,
+    }
 
     fun log(priority: Priority, tag: String, message: String, throwable: Throwable? = null)
 }

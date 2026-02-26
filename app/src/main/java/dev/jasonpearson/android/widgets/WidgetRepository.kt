@@ -27,10 +27,12 @@ import dev.jasonpearson.android.di.AppScope
 import dev.jasonpearson.android.di.SingleIn
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
+import kotlin.time.Clock
 
 interface WidgetRepository {
 
-    fun add(widget: Widget)
+    /** Creates and stores a widget with [name], returning it with its [Widget.createdAt] set. */
+    fun add(name: String): Widget
 
     fun getByName(name: String): Widget?
 
@@ -41,18 +43,21 @@ interface WidgetRepository {
  * Thread-safe implementation of [WidgetRepository].
  *
  * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety. Scoped to the
- * application lifetime via [@SingleIn][SingleIn].
+ * application lifetime via [@SingleIn][SingleIn]. Uses [Clock] to stamp each widget with the
+ * current time at creation.
  */
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 @Inject
-internal class WidgetRepositoryImpl() : WidgetRepository {
+internal class WidgetRepositoryImpl(private val clock: Clock) : WidgetRepository {
 
     private val widgets = mutableListOf<Widget>()
 
     @Synchronized
-    override fun add(widget: Widget) {
+    override fun add(name: String): Widget {
+        val widget = Widget(name = name, createdAt = clock.now())
         widgets.add(widget)
+        return widget
     }
 
     @Synchronized

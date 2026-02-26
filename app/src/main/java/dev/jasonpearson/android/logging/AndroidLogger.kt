@@ -38,13 +38,23 @@ import dev.zacsweers.metro.Inject
 @SingleIn(AppScope::class)
 @Inject
 class AndroidLogger : Logger {
-    override fun log(priority: Logger.Priority, tag: String, message: String, throwable: Throwable?) {
+    override fun log(
+        priority: Logger.Priority,
+        tag: String,
+        message: String,
+        throwable: Throwable?,
+    ) {
         when (priority) {
-            Logger.Priority.VERBOSE -> if (throwable != null) Log.v(tag, message, throwable) else Log.v(tag, message)
-            Logger.Priority.DEBUG -> if (throwable != null) Log.d(tag, message, throwable) else Log.d(tag, message)
-            Logger.Priority.INFO -> if (throwable != null) Log.i(tag, message, throwable) else Log.i(tag, message)
-            Logger.Priority.WARN -> if (throwable != null) Log.w(tag, message, throwable) else Log.w(tag, message)
-            Logger.Priority.ERROR -> if (throwable != null) Log.e(tag, message, throwable) else Log.e(tag, message)
+            Logger.Priority.VERBOSE ->
+                if (throwable != null) Log.v(tag, message, throwable) else Log.v(tag, message)
+            Logger.Priority.DEBUG ->
+                if (throwable != null) Log.d(tag, message, throwable) else Log.d(tag, message)
+            Logger.Priority.INFO ->
+                if (throwable != null) Log.i(tag, message, throwable) else Log.i(tag, message)
+            Logger.Priority.WARN ->
+                if (throwable != null) Log.w(tag, message, throwable) else Log.w(tag, message)
+            Logger.Priority.ERROR ->
+                if (throwable != null) Log.e(tag, message, throwable) else Log.e(tag, message)
         }
     }
 }

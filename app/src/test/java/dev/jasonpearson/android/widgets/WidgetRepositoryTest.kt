@@ -23,6 +23,9 @@
  */
 package dev.jasonpearson.android.widgets
 
+import dev.jasonpearson.android.clock.FakeClock
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -30,11 +33,12 @@ import org.junit.Test
 
 class WidgetRepositoryTest {
 
+    private val clock = FakeClock()
     private lateinit var repository: WidgetRepository
 
     @Before
     fun setUp() {
-        repository = WidgetRepositoryImpl()
+        repository = WidgetRepositoryImpl(clock)
     }
 
     @Test
@@ -44,36 +48,63 @@ class WidgetRepositoryTest {
 
     @Test
     fun `add then getAll returns all added widgets in order`() {
-        val widget1 = Widget("alpha")
-        val widget2 = Widget("beta")
+        repository.add("alpha")
+        repository.add("beta")
 
-        repository.add(widget1)
-        repository.add(widget2)
+        val all = repository.getAll()
+        assertEquals(2, all.size)
+        assertEquals("alpha", all[0].name)
+        assertEquals("beta", all[1].name)
+    }
 
-        assertEquals(listOf(widget1, widget2), repository.getAll())
+    @Test
+    fun `add returns the created widget`() {
+        val widget = repository.add("alpha")
+        assertEquals("alpha", widget.name)
+    }
+
+    @Test
+    fun `add stamps createdAt from the clock`() {
+        val widget = repository.add("alpha")
+        assertEquals(Instant.fromEpochMilliseconds(0), widget.createdAt)
+    }
+
+    @Test
+    fun `add stamps different createdAt when clock has advanced`() {
+        clock.advance(5.minutes)
+        val widget = repository.add("alpha")
+        assertEquals(Instant.fromEpochMilliseconds(5 * 60 * 1000), widget.createdAt)
+    }
+
+    @Test
+    fun `sequential adds receive different createdAt when clock advances between them`() {
+        val first = repository.add("alpha")
+        clock.advance(1.minutes)
+        val second = repository.add("beta")
+
+        assertEquals(Instant.fromEpochMilliseconds(0), first.createdAt)
+        assertEquals(Instant.fromEpochMilliseconds(60_000), second.createdAt)
     }
 
     @Test
     fun `getByName returns matching widget`() {
-        val widget = Widget("alpha")
-        repository.add(widget)
-
-        assertEquals(widget, repository.getByName("alpha"))
+        repository.add("alpha")
+        val found = repository.getByName("alpha")
+        assertEquals("alpha", found?.name)
     }
 
     @Test
     fun `getByName returns null when name does not match`() {
-        repository.add(Widget("alpha"))
-
+        repository.add("alpha")
         assertNull(repository.getByName("nonexistent"))
     }
 
     @Test
     fun `getAll returns a snapshot not a live view`() {
-        repository.add(Widget("alpha"))
+        repository.add("alpha")
         val snapshot = repository.getAll()
 
-        repository.add(Widget("beta"))
+        repository.add("beta")
 
         assertEquals(1, snapshot.size)
         assertEquals(2, repository.getAll().size)

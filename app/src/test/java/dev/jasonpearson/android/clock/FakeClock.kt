@@ -30,8 +30,8 @@ import kotlin.time.Instant
 /**
  * Test double for [Clock] that returns a fixed, manually-advanceable instant.
  *
- * Starts at [initialNow] (defaults to [Instant.fromEpochMilliseconds](0) for
- * reproducibility). Call [advance] to move time forward.
+ * Starts at [initialNow] (defaults to [Instant.fromEpochMilliseconds](0) for reproducibility). Call
+ * [advance] to move time forward.
  *
  * Example:
  * ```
@@ -52,9 +52,7 @@ class FakeClock(initialNow: Instant = Instant.fromEpochMilliseconds(0)) : Clock 
 
     override fun now(): Instant = currentNow
 
-    /**
-     * Advances the clock by [duration]. All subsequent [now] calls return the new time.
-     */
+    /** Advances the clock by [duration]. All subsequent [now] calls return the new time. */
     fun advance(duration: Duration) {
         currentNow += duration
     }

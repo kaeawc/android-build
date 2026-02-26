@@ -23,8 +23,6 @@
  */
 package dev.jasonpearson.android.di
 
-import android.app.Application
-import android.content.Context
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
@@ -46,11 +44,6 @@ interface ApplicationModule {
     @Qualifier @Retention(BINARY) annotation class PresenterScope
 
     companion object {
-
-        @Provides
-        @ApplicationContext
-        @SingleIn(AppScope::class)
-        fun provideApplicationContext(application: Application): Context = application
 
         @Provides @SingleIn(AppScope::class) fun provideClock(): Clock = Clock.System
 

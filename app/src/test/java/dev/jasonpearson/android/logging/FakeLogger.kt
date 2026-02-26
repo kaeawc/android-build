@@ -47,15 +47,23 @@ class FakeLogger : Logger {
     private val _entries = mutableListOf<Entry>()
 
     /** All recorded log entries in call order. */
-    val entries: List<Entry> get() = _entries.toList()
+    val entries: List<Entry>
+        get() = _entries.toList()
 
     /** Shorthand for entries with [Logger.Priority.ERROR]. */
-    val errors: List<Entry> get() = _entries.filter { it.priority == Logger.Priority.ERROR }
+    val errors: List<Entry>
+        get() = _entries.filter { it.priority == Logger.Priority.ERROR }
 
     /** Shorthand for entries with [Logger.Priority.WARN]. */
-    val warnings: List<Entry> get() = _entries.filter { it.priority == Logger.Priority.WARN }
+    val warnings: List<Entry>
+        get() = _entries.filter { it.priority == Logger.Priority.WARN }
 
-    override fun log(priority: Logger.Priority, tag: String, message: String, throwable: Throwable?) {
+    override fun log(
+        priority: Logger.Priority,
+        tag: String,
+        message: String,
+        throwable: Throwable?,
+    ) {
         _entries.add(Entry(priority, tag, message, throwable))
     }
 }

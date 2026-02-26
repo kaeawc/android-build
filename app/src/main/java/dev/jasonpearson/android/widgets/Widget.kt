@@ -23,4 +23,6 @@
  */
 package dev.jasonpearson.android.widgets
 
-data class Widget(val name: String)
+import kotlin.time.Instant
+
+data class Widget(val name: String, val createdAt: Instant)
