@@ -21,46 +21,44 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.resume
 
+import dev.jasonpearson.android.di.ApplicationModule
 import dev.jasonpearson.android.di.AppScope
 import dev.jasonpearson.android.di.SingleIn
-import dev.zacsweers.metro.ContributesBinding
+import dev.jasonpearson.android.timer.TimerProvider
 import dev.zacsweers.metro.Inject
-
-interface WidgetRepository {
-
-    fun add(widget: Widget)
-
-    fun getByName(name: String): Widget?
-
-    fun getAll(): List<Widget>
-}
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 /**
- * Thread-safe implementation of [WidgetRepository].
+ * Holds UI state for the resume screen. Scoped to the application lifetime so navigation
+ * back to the resume screen sees the already-loaded items.
  *
- * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety.
- * Scoped to the application lifetime via [@SingleIn][SingleIn].
+ * In tests, construct directly: `ResumePresenter(FakeTimer(), testScope)`.
  */
-@ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
-internal class WidgetRepositoryImpl @Inject constructor() : WidgetRepository {
+class ResumePresenter @Inject constructor(
+    private val timerProvider: TimerProvider,
+    @ApplicationModule.PresenterScope private val scope: CoroutineScope,
+) {
+    private val _items = MutableStateFlow<List<ResumeItem>>(emptyList())
 
-    private val widgets = mutableListOf<Widget>()
+    /** Resume items to display. Empty until after [INITIAL_DELAY_MS] has elapsed. */
+    val items: StateFlow<List<ResumeItem>> = _items.asStateFlow()
 
-    @Synchronized
-    override fun add(widget: Widget) {
-        widgets.add(widget)
+    init {
+        scope.launch {
+            timerProvider.delay(INITIAL_DELAY_MS)
+            _items.value = resumeItems
+        }
     }
 
-    @Synchronized
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
-
-    @Synchronized
-    override fun getAll(): List<Widget> {
-        return widgets.toList()
+    companion object {
+        /** Delay before resume items appear, matching the original animation timing. */
+        const val INITIAL_DELAY_MS = 200L
     }
 }

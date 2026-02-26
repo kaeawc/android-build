@@ -23,17 +23,16 @@
  */
 package dev.jasonpearson.android
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
-class ExampleUnitTest {
+/** Sanity checks for the application package. */
+class AppSanityTest {
+
     @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+    fun `App tag is non-empty`() {
+        assertNotNull(App.TAG)
+        assertEquals("App", App.TAG)
     }
 }

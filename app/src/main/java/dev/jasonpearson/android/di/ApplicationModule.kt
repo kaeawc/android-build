@@ -31,6 +31,7 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Qualifier
 import kotlin.annotation.AnnotationRetention.BINARY
 import kotlin.time.Clock
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 @ContributesTo(AppScope::class)
@@ -42,6 +43,8 @@ interface ApplicationModule {
 
     @Qualifier @Retention(BINARY) annotation class LazyDelegate
 
+    @Qualifier @Retention(BINARY) annotation class PresenterScope
+
     companion object {
 
         @Provides
@@ -50,6 +53,12 @@ interface ApplicationModule {
         fun provideApplicationContext(application: Application): Context = application
 
         @Provides @SingleIn(AppScope::class) fun provideClock(): Clock = Clock.System
+
+        @PresenterScope
+        @Provides
+        @SingleIn(AppScope::class)
+        fun providePresenterScope(backgroundScope: BackgroundAppCoroutineScope): CoroutineScope =
+            backgroundScope
     }
 }
 

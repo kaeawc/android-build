@@ -21,46 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
-
-import dev.jasonpearson.android.di.AppScope
-import dev.jasonpearson.android.di.SingleIn
-import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.Inject
-
-interface WidgetRepository {
-
-    fun add(widget: Widget)
-
-    fun getByName(name: String): Widget?
-
-    fun getAll(): List<Widget>
-}
+package dev.jasonpearson.android.timer
 
 /**
- * Thread-safe implementation of [WidgetRepository].
+ * Abstraction over coroutine time delays, enabling deterministic testing without real waits.
  *
- * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety.
- * Scoped to the application lifetime via [@SingleIn][SingleIn].
+ * Production code uses [RealTimerProvider]. Tests use [FakeTimer].
  */
-@ContributesBinding(AppScope::class)
-@SingleIn(AppScope::class)
-internal class WidgetRepositoryImpl @Inject constructor() : WidgetRepository {
-
-    private val widgets = mutableListOf<Widget>()
-
-    @Synchronized
-    override fun add(widget: Widget) {
-        widgets.add(widget)
-    }
-
-    @Synchronized
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
-
-    @Synchronized
-    override fun getAll(): List<Widget> {
-        return widgets.toList()
-    }
+interface TimerProvider {
+    /** Suspends the current coroutine for [millis] milliseconds. */
+    suspend fun delay(millis: Long)
 }

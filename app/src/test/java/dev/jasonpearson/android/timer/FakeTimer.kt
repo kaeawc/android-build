@@ -21,46 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
-
-import dev.jasonpearson.android.di.AppScope
-import dev.jasonpearson.android.di.SingleIn
-import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.Inject
-
-interface WidgetRepository {
-
-    fun add(widget: Widget)
-
-    fun getByName(name: String): Widget?
-
-    fun getAll(): List<Widget>
-}
+package dev.jasonpearson.android.timer
 
 /**
- * Thread-safe implementation of [WidgetRepository].
+ * Test double for [TimerProvider] that records delay calls and returns immediately.
  *
- * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety.
- * Scoped to the application lifetime via [@SingleIn][SingleIn].
+ * Use this in unit tests to verify timing behavior without real wall-clock waits.
+ *
+ * Example:
+ * ```
+ * val fakeTimer = FakeTimer()
+ * myClass.doSomethingWithDelay(fakeTimer)
+ * assertEquals(listOf(200L), fakeTimer.delays)
+ * ```
  */
-@ContributesBinding(AppScope::class)
-@SingleIn(AppScope::class)
-internal class WidgetRepositoryImpl @Inject constructor() : WidgetRepository {
+class FakeTimer : TimerProvider {
+    private val _delays = mutableListOf<Long>()
 
-    private val widgets = mutableListOf<Widget>()
+    /** All delay durations (in milliseconds) that were requested, in call order. */
+    val delays: List<Long> get() = _delays.toList()
 
-    @Synchronized
-    override fun add(widget: Widget) {
-        widgets.add(widget)
-    }
-
-    @Synchronized
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
-
-    @Synchronized
-    override fun getAll(): List<Widget> {
-        return widgets.toList()
+    /** Returns immediately without suspending. Records [millis] in [delays]. */
+    override suspend fun delay(millis: Long) {
+        _delays.add(millis)
     }
 }

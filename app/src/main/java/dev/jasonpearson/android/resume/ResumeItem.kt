@@ -21,46 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.widgets
+package dev.jasonpearson.android.resume
 
-import dev.jasonpearson.android.di.AppScope
-import dev.jasonpearson.android.di.SingleIn
-import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.Inject
+// Data models for the resume
+sealed class ResumeItem {
+    data class Profile(val description: String) : ResumeItem()
 
-interface WidgetRepository {
+    data class Experience(
+        val title: String,
+        val company: String,
+        val location: String,
+        val period: String,
+        val responsibilities: List<String>,
+    ) : ResumeItem()
 
-    fun add(widget: Widget)
+    data class Skills(val skills: List<String>) : ResumeItem()
 
-    fun getByName(name: String): Widget?
+    data class Education(val degree: String, val institution: String, val period: String) :
+        ResumeItem()
 
-    fun getAll(): List<Widget>
-}
+    data class Talks(val talks: List<Talk>) : ResumeItem()
 
-/**
- * Thread-safe implementation of [WidgetRepository].
- *
- * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety.
- * Scoped to the application lifetime via [@SingleIn][SingleIn].
- */
-@ContributesBinding(AppScope::class)
-@SingleIn(AppScope::class)
-internal class WidgetRepositoryImpl @Inject constructor() : WidgetRepository {
-
-    private val widgets = mutableListOf<Widget>()
-
-    @Synchronized
-    override fun add(widget: Widget) {
-        widgets.add(widget)
-    }
-
-    @Synchronized
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
-
-    @Synchronized
-    override fun getAll(): List<Widget> {
-        return widgets.toList()
-    }
+    data class Talk(val title: String, val event: String, val date: String)
 }

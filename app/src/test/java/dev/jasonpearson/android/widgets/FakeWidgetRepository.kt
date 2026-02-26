@@ -23,44 +23,18 @@
  */
 package dev.jasonpearson.android.widgets
 
-import dev.jasonpearson.android.di.AppScope
-import dev.jasonpearson.android.di.SingleIn
-import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.Inject
-
-interface WidgetRepository {
-
-    fun add(widget: Widget)
-
-    fun getByName(name: String): Widget?
-
-    fun getAll(): List<Widget>
-}
-
 /**
- * Thread-safe implementation of [WidgetRepository].
- *
- * Uses [@Synchronized][Synchronized] on each method to ensure thread-safety.
- * Scoped to the application lifetime via [@SingleIn][SingleIn].
+ * Test double for [WidgetRepository]. Simple in-memory implementation with no synchronization —
+ * unit tests are single-threaded.
  */
-@ContributesBinding(AppScope::class)
-@SingleIn(AppScope::class)
-internal class WidgetRepositoryImpl @Inject constructor() : WidgetRepository {
-
+class FakeWidgetRepository : WidgetRepository {
     private val widgets = mutableListOf<Widget>()
 
-    @Synchronized
     override fun add(widget: Widget) {
         widgets.add(widget)
     }
 
-    @Synchronized
-    override fun getByName(name: String): Widget? {
-        return widgets.firstOrNull { it.name == name }
-    }
+    override fun getByName(name: String): Widget? = widgets.firstOrNull { it.name == name }
 
-    @Synchronized
-    override fun getAll(): List<Widget> {
-        return widgets.toList()
-    }
+    override fun getAll(): List<Widget> = widgets.toList()
 }
