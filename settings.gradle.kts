@@ -39,6 +39,12 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
+        // Local Maven repository for auto-mobile-junit-runner SNAPSHOT artifacts.
+        // These JARs are committed to the repo so CI can resolve them without mavenLocal.
+        maven {
+            name = "LocalLibs"
+            url = uri("libs/maven")
+        }
         mavenLocal()
         google()
         mavenCentral()

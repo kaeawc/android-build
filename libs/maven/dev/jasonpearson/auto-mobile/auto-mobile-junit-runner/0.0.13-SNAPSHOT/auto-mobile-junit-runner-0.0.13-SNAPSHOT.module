@@ -1,0 +1,172 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "dev.jasonpearson.auto-mobile",
+    "module": "auto-mobile-junit-runner",
+    "version": "0.0.13-SNAPSHOT",
+    "attributes": {
+      "org.gradle.status": "integration"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.3.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 21,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "dev.jasonpearson.auto-mobile",
+          "module": "auto-mobile-test-plan-validation",
+          "version": {
+            "requires": "0.0.13-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "auto-mobile-junit-runner-0.0.13-SNAPSHOT.jar",
+          "url": "auto-mobile-junit-runner-0.0.13-SNAPSHOT.jar",
+          "size": 377189,
+          "sha512": "2d442071e2ab523403eefdbfd56e60fbcca520db92882206ad69180728ff175da41286505be68a3e843ec76862900ce46a0cf01d2801f718f153426981afaba3",
+          "sha256": "db00da6aba8c31ba16eb291d1beeb2167f42b813c504fe78e75bbef0075336f3",
+          "sha1": "9a53194aa4e6e25d63f4d65d2d75d40d4810c87a",
+          "md5": "1a84be57065a8483a7417cd70b9cd85d"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 21,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "junit",
+          "module": "junit",
+          "version": {
+            "requires": "4.13.2"
+          }
+        },
+        {
+          "group": "org.junit.jupiter",
+          "module": "junit-jupiter-api",
+          "version": {
+            "requires": "6.0.2"
+          }
+        },
+        {
+          "group": "org.junit.jupiter",
+          "module": "junit-jupiter-engine",
+          "version": {
+            "requires": "6.0.2"
+          }
+        },
+        {
+          "group": "org.yaml",
+          "module": "snakeyaml",
+          "version": {
+            "requires": "2.5"
+          }
+        },
+        {
+          "group": "com.networknt",
+          "module": "json-schema-validator",
+          "version": {
+            "requires": "3.0.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-json",
+          "version": {
+            "requires": "1.10.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.10.2"
+          }
+        },
+        {
+          "group": "ai.koog",
+          "module": "koog-agents",
+          "version": {
+            "requires": "0.6.2"
+          }
+        },
+        {
+          "group": "dev.jasonpearson.auto-mobile",
+          "module": "auto-mobile-test-plan-validation",
+          "version": {
+            "requires": "0.0.13-SNAPSHOT"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.3.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "auto-mobile-junit-runner-0.0.13-SNAPSHOT.jar",
+          "url": "auto-mobile-junit-runner-0.0.13-SNAPSHOT.jar",
+          "size": 377189,
+          "sha512": "2d442071e2ab523403eefdbfd56e60fbcca520db92882206ad69180728ff175da41286505be68a3e843ec76862900ce46a0cf01d2801f718f153426981afaba3",
+          "sha256": "db00da6aba8c31ba16eb291d1beeb2167f42b813c504fe78e75bbef0075336f3",
+          "sha1": "9a53194aa4e6e25d63f4d65d2d75d40d4810c87a",
+          "md5": "1a84be57065a8483a7417cd70b9cd85d"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "auto-mobile-junit-runner-0.0.13-SNAPSHOT-sources.jar",
+          "url": "auto-mobile-junit-runner-0.0.13-SNAPSHOT-sources.jar",
+          "size": 51058,
+          "sha512": "2d141e2359dfdba241040c94444d611e671738a853d35fdbcce669eb30578cb17cef37756f6ce36262c7846ff8f51e891398aa4dd313041b8857d80caa74b59e",
+          "sha256": "c513989eb65649bc039de4c7f65e4e03b162eb9ecd311c006a661b4d945c4a97",
+          "sha1": "da37c3b13bd353ff11a03381bc1e93699facda7b",
+          "md5": "bb3af3fa5fec3cb5220afdaef3558dd9"
+        }
+      ]
+    }
+  ]
+}

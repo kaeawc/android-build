@@ -37,7 +37,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: "testDebugUnitTest"
+          gradle-tasks: "testDebugUnitTest -PexcludeAutoMobileTests"
           reuse-configuration-cache: true
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
@@ -314,7 +314,7 @@ jobs:
         shell: "bash"
         run: |
           curl -fsSL \
-            https://github.com/emulator-wtf/ew-cli/releases/latest/download/ew-cli-linux \
+            https://maven.emulator.wtf/releases/ew-cli \
             -o /usr/local/bin/ew-cli
           chmod +x /usr/local/bin/ew-cli
 

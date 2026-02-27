@@ -218,6 +218,11 @@ tasks.withType<Test>().configureEach {
         environment("AUTOMOBILE_CTRL_PROXY_APK_PATH", apkPath)
         systemProperty("automobile.ctrl.proxy.apk.path", apkPath)
     }
+    // When running pure unit tests (no device available), exclude AutoMobile integration tests.
+    // Use -PexcludeAutoMobileTests to activate this filter (e.g. in the unit-tests CI job).
+    if (project.hasProperty("excludeAutoMobileTests")) {
+        filter.excludeTestsMatching("dev.jasonpearson.android.automobiletest.*")
+    }
 }
 
 tasks.withType<KotlinCompile>().configureEach {
