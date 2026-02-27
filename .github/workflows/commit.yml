@@ -328,7 +328,7 @@ jobs:
           EW_API_TOKEN: ${{ secrets.EW_API_TOKEN }}
         run: |
           ew-cli start-session \
-            --device model=Pixel6,version=33,gpu=auto \
+            --device model=Pixel2,version=33 \
             --adb \
             --max-time-limit 20m &
           echo "EW_SESSION_PID=$!" >> "$GITHUB_ENV"
