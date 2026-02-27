@@ -318,10 +318,6 @@ jobs:
             -o /usr/local/bin/ew-cli
           chmod +x /usr/local/bin/ew-cli
 
-      - name: "Add Android platform tools to PATH"
-        shell: "bash"
-        run: echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-
       - name: "Start emulator.wtf ADB session"
         shell: "bash"
         env:

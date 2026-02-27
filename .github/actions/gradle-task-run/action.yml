@@ -180,6 +180,10 @@ runs:
         ~/.config
       key: v4-${{ runner.os }}-android-sdk
 
+  - name: "Add Android platform tools to PATH"
+    shell: ${{ inputs.shell }}
+    run: echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+
   - name: "Run Tasks via Gradle"
     shell: ${{ inputs.shell }}
     run: |
