@@ -305,6 +305,13 @@ jobs:
         shell: "bash"
         run: npm install -g @kaeawc/auto-mobile --ignore-scripts
 
+      - name: "Copy auto-mobile schema to workspace"
+        shell: "bash"
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/schemas"
+          cp /usr/local/lib/node_modules/@kaeawc/auto-mobile/schemas/test-plan.schema.json \
+            "$GITHUB_WORKSPACE/schemas/test-plan.schema.json"
+
       - name: "Download app APK"
         uses: actions/download-artifact@v4.1.8
         with:
