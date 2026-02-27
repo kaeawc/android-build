@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Jason Pearson
+ * Copyright (c) 2026 Jason Pearson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,44 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
+package dev.jasonpearson.android.automobiletest
 
-        // Uncomment to pin R8 version from the R8 releases repo
-        // exclusiveContent {
-        //     forRepository {
-        //         maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
-        //     }
-        //     filter { includeModule("com.android.tools", "r8") }
-        // }
+import dev.jasonpearson.automobile.junit.AutoMobileRunner
+import dev.jasonpearson.automobile.junit.AutoMobileTest
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * AutoMobile JUnit tests for verifying app lifecycle transitions on a real Android device or
+ * emulator. These tests run on the host JVM and communicate with the device via ADB using the
+ * AutoMobile runner.
+ *
+ * Requires an ADB-connected device and the AutoMobile control proxy APK path set via
+ * AUTOMOBILE_CTRL_PROXY_APK_PATH environment variable.
+ */
+@RunWith(AutoMobileRunner::class)
+class AppLifecycleAutoMobileTest {
+
+    @Test
+    @AutoMobileTest(
+        plan = "test-plans/app-background-foreground.yaml",
+        appId = "dev.jasonpearson.android",
+        aiAssistance = false,
+        maxRetries = 1,
+        timeoutMs = 90000L,
+    )
+    fun `app survives background and foreground transition`() {
+        // AutoMobileRunner executes the referenced YAML plan and fails the test if any step fails
     }
 }
-
-dependencyResolutionManagement {
-    repositories {
-        mavenLocal()
-        google()
-        mavenCentral()
-    }
-}
-
-plugins {
-    // Applied here (not via CI init script injection) to avoid classloader conflicts between
-    // the Develocity agent and AGP 9.0 when the configuration cache is cold.
-    id("com.gradle.develocity") version "4.3.2"
-    id("com.fueledbycaffeine.spotlight") version "1.6.7"
-}
-
-develocity {
-    buildScan {
-        termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
-        termsOfUseAgree = "yes"
-    }
-}
-
-rootProject.name = "Android Build"
-
-include(":app")

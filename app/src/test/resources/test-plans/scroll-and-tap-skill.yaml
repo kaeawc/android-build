@@ -1,0 +1,72 @@
+---
+name: scroll-and-tap-skill
+description: Scroll the resume list down to the Skills section and tap skill chips
+steps:
+  - tool: launchApp
+    appId: dev.jasonpearson.android
+    clearAppData: true
+    label: Launch the app with clean state
+
+  - tool: observe
+    waitFor:
+      text: Profile
+    label: Wait for Profile section to be visible at the top
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Scroll down through first Experience section
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Scroll down through second Experience section
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Scroll down through third Experience section
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Scroll down through fourth Experience section
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Scroll down to reveal Skills section
+
+  - tool: observe
+    waitFor:
+      text: Skills
+    label: Verify Skills section header is visible
+
+  - tool: tapOn
+    action: tap
+    text: Kotlin
+    label: Tap the Kotlin skill chip
+
+  - tool: observe
+    waitFor:
+      text: Skills
+    label: Verify we remain on the resume screen after tapping chip
+
+  - tool: tapOn
+    action: tap
+    text: KMP
+    label: Tap the KMP skill chip
+
+  - tool: observe
+    waitFor:
+      text: Skills
+    label: Verify we remain on the resume screen after tapping KMP chip
+
+  - tool: terminateApp
+    appId: dev.jasonpearson.android
+    label: Terminate the app after test

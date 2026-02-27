@@ -1,0 +1,47 @@
+---
+name: linkedin-navigation
+description: Tap the LinkedIn share button, verify the QR screen appears, and navigate back
+steps:
+  - tool: launchApp
+    appId: dev.jasonpearson.android
+    clearAppData: true
+    label: Launch the app with clean state
+
+  - tool: observe
+    waitFor:
+      text: Jason Pearson
+    label: Wait for resume header to be visible
+
+  - tool: tapOn
+    action: tap
+    text: Share LinkedIn
+    label: Tap the LinkedIn share button in the top bar
+
+  - tool: observe
+    waitFor:
+      text: Connect with me
+    label: Verify LinkedIn QR screen is displayed
+
+  - tool: observe
+    waitFor:
+      text: "👋 Hi, nice to meet you!"
+    label: Verify greeting message is shown on QR screen
+
+  - tool: observe
+    waitFor:
+      text: Scan this code to connect on LinkedIn
+    label: Verify QR scan instructions are displayed
+
+  - tool: tapOn
+    action: tap
+    text: Back
+    label: Navigate back to resume screen
+
+  - tool: observe
+    waitFor:
+      text: Jason Pearson
+    label: Verify we returned to the resume screen
+
+  - tool: terminateApp
+    appId: dev.jasonpearson.android
+    label: Terminate the app after test

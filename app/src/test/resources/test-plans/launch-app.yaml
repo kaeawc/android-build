@@ -1,0 +1,15 @@
+---
+name: launch-app
+description: Launch the Android Build demo app and verify it opens without crashing
+steps:
+  - tool: launchApp
+    appId: dev.jasonpearson.android
+    clearAppData: true
+    label: Launch the app with clean state
+
+  - tool: observe
+    label: Verify the app UI renders without crashing
+
+  - tool: terminateApp
+    appId: dev.jasonpearson.android
+    label: Terminate the app after test

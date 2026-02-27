@@ -196,6 +196,7 @@ dependencies {
 
     debugImplementation(libs.bundles.compose.ui.debug)
 
+    testImplementation(libs.auto.mobile.junit.runner)
     testImplementation(libs.bundles.unit.test)
 
     androidTestImplementation(platform(libs.compose.bom))
@@ -205,8 +206,15 @@ dependencies {
 }
 
 val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.testWorker.jvmargs").get()
+val autoMobileCtrlProxyApkPath = providers.environmentVariable("AUTOMOBILE_CTRL_PROXY_APK_PATH")
 
-tasks.withType<Test>().configureEach { jvmArgs(gradleWorkerJvmArgs) }
+tasks.withType<Test>().configureEach {
+    jvmArgs(gradleWorkerJvmArgs)
+    autoMobileCtrlProxyApkPath.orNull?.let { apkPath ->
+        environment("AUTOMOBILE_CTRL_PROXY_APK_PATH", apkPath)
+        systemProperty("automobile.ctrl.proxy.apk.path", apkPath)
+    }
+}
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
