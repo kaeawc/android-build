@@ -172,7 +172,7 @@ jobs:
         uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "assembleDebug -Dbase.apk=true"
-          reuse-configuration-cache: true
+          reuse-configuration-cache: false
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: "Change APK file name"
