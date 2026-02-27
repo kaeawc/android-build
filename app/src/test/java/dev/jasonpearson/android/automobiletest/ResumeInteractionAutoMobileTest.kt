@@ -30,8 +30,8 @@ import org.junit.runner.RunWith
 
 /**
  * AutoMobile JUnit tests for verifying interactive swipe and tap gestures on the resume app UI.
- * Covers scrolling through the resume list, tapping skill chips, and navigating to the LinkedIn
- * QR screen and back.
+ * Covers scrolling through the resume list, tapping skill chips, and navigating to the LinkedIn QR
+ * screen and back.
  *
  * These tests run on the host JVM and communicate with the device via ADB using the AutoMobile
  * runner. Requires an ADB-connected device and the AutoMobile control proxy APK path set via

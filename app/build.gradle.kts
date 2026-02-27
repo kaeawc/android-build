@@ -210,6 +210,10 @@ val autoMobileCtrlProxyApkPath = providers.environmentVariable("AUTOMOBILE_CTRL_
 
 tasks.withType<Test>().configureEach {
     jvmArgs(gradleWorkerJvmArgs)
+    // Force AutoMobileRunner to use sequential test execution (1 test at a time per device).
+    // Without this, the runner parallelizes based on ADB device count, which may report more
+    // devices than the daemon pool actually manages, causing device contention and timeouts.
+    systemProperty("junit.parallel.forks", "1")
     autoMobileCtrlProxyApkPath.orNull?.let { apkPath ->
         environment("AUTOMOBILE_CTRL_PROXY_APK_PATH", apkPath)
         systemProperty("automobile.ctrl.proxy.apk.path", apkPath)
