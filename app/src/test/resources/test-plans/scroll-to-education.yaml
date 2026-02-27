@@ -1,0 +1,84 @@
+---
+name: scroll-to-education
+description: Scroll the resume to the Education and Talks sections and verify their content
+steps:
+  - tool: launchApp
+    appId: dev.jasonpearson.android
+    clearAppData: true
+    label: Launch the app with clean state
+
+  - tool: observe
+    waitFor:
+      text: Profile
+    label: Wait for initial Profile section to be visible
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Scroll down through Experience sections
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Continue scrolling
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Continue scrolling
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Continue scrolling
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Scroll to Skills section
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Scroll past Skills to Education
+
+  - tool: observe
+    waitFor:
+      text: Education
+    label: Verify Education section header is visible
+
+  - tool: observe
+    waitFor:
+      text: New Jersey Institute of Technology
+    label: Verify institution name is displayed
+
+  - tool: swipeOn
+    direction: up
+    speed: fast
+    autoTarget: false
+    label: Scroll to Talks section
+
+  - tool: observe
+    waitFor:
+      text: Talks
+    label: Verify Talks section header is visible
+
+  - tool: observe
+    waitFor:
+      text: From Laptop Builds to Advanced CI
+    label: Verify first talk title is displayed
+
+  - tool: observe
+    waitFor:
+      text: Droidcon London
+    label: Verify first talk event is displayed
+
+  - tool: terminateApp
+    appId: dev.jasonpearson.android
+    label: Terminate the app after test

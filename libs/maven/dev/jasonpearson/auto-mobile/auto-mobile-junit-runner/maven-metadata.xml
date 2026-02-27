@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>dev.jasonpearson.auto-mobile</groupId>
+  <artifactId>auto-mobile-junit-runner</artifactId>
+  <versioning>
+    <release>0.0.13-SNAPSHOT</release>
+    <versions>
+      <version>0.0.13-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20260213232046</lastUpdated>
+  </versioning>
+</metadata>

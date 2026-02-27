@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>dev.jasonpearson.auto-mobile</groupId>
+  <artifactId>auto-mobile-junit-runner</artifactId>
+  <version>0.0.13-SNAPSHOT</version>
+  <versioning>
+    <lastUpdated>20260213232046</lastUpdated>
+    <snapshot>
+      <localCopy>true</localCopy>
+    </snapshot>
+    <snapshotVersions>
+      <snapshotVersion>
+        <extension>pom</extension>
+        <value>0.0.13-SNAPSHOT</value>
+        <updated>20260213232046</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>jar</extension>
+        <value>0.0.13-SNAPSHOT</value>
+        <updated>20260213232046</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>module</extension>
+        <value>0.0.13-SNAPSHOT</value>
+        <updated>20260213232046</updated>
+      </snapshotVersion>
+    </snapshotVersions>
+  </versioning>
+</metadata>

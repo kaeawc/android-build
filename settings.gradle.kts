@@ -39,6 +39,13 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
+        // Local Maven repository for auto-mobile-junit-runner SNAPSHOT artifacts.
+        // These JARs are committed to the repo so CI can resolve them without mavenLocal.
+        maven {
+            name = "LocalLibs"
+            url = uri("libs/maven")
+        }
+        mavenLocal()
         google()
         mavenCentral()
     }
@@ -48,7 +55,6 @@ plugins {
     // Applied here (not via CI init script injection) to avoid classloader conflicts between
     // the Develocity agent and AGP 9.0 when the configuration cache is cold.
     id("com.gradle.develocity") version "4.3.2"
-    id("com.fueledbycaffeine.spotlight") version "1.6.7"
 }
 
 develocity {

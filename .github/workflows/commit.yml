@@ -37,7 +37,7 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: "testDebugUnitTest"
+          gradle-tasks: "testDebugUnitTest -PexcludeAutoMobileTests"
           reuse-configuration-cache: true
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
@@ -172,7 +172,7 @@ jobs:
         uses: ./.github/actions/gradle-task-run
         with:
           gradle-tasks: "assembleDebug -Dbase.apk=true"
-          reuse-configuration-cache: true
+          reuse-configuration-cache: false
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: "Change APK file name"
@@ -285,3 +285,88 @@ jobs:
         with:
           check_name: "UI Test Report"
           report_paths: 'build/test-results/**/*.xml'
+
+  auto-mobile-tests:
+    name: "AutoMobile JUnit Tests"
+    runs-on: ubuntu-latest
+    # Requires EW_API_TOKEN secret for the emulator.wtf adb session (closed alpha feature).
+    # Contact support@emulator.wtf to request access to start-session.
+    if: github.secret_source == 'Actions'
+    needs:
+      - build-apk
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Setup Bun"
+        uses: oven-sh/setup-bun@v2
+
+      - name: "Install auto-mobile"
+        shell: "bash"
+        run: npm install -g @kaeawc/auto-mobile --ignore-scripts
+
+      - name: "Download app APK"
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: apk
+
+      - name: "Add Android platform tools to PATH"
+        shell: "bash"
+        run: echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+
+      - name: "Install ew-cli"
+        shell: "bash"
+        run: |
+          curl -fsSL \
+            https://maven.emulator.wtf/releases/ew-cli \
+            -o /usr/local/bin/ew-cli
+          chmod +x /usr/local/bin/ew-cli
+
+      - name: "Start emulator.wtf ADB session"
+        shell: "bash"
+        env:
+          EW_API_TOKEN: ${{ secrets.EW_API_TOKEN }}
+        run: |
+          ew-cli start-session \
+            --device model=Pixel2,version=33 \
+            --adb \
+            --max-time-limit 20m &
+          echo "EW_SESSION_PID=$!" >> "$GITHUB_ENV"
+          adb wait-for-device
+          adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done'
+
+      - name: "Install app APK on emulator"
+        shell: "bash"
+        run: adb install app-debug.apk
+
+      - name: "Start auto-mobile daemon"
+        shell: "bash"
+        run: |
+          auto-mobile --daemon-mode &
+          echo "AUTOMOBILE_DAEMON_PID=$!" >> "$GITHUB_ENV"
+          sleep 3
+
+      - name: "Pre-install CtrlProxy via observe"
+        shell: "bash"
+        run: auto-mobile --cli observe --platform android
+
+      - name: "Run AutoMobile JUnit Tests"
+        uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: ":app:testDebugUnitTest --tests 'dev.jasonpearson.android.automobiletest.*'"
+          reuse-configuration-cache: false
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: "Stop emulator.wtf session and daemon"
+        if: always()
+        shell: "bash"
+        run: |
+          kill "$AUTOMOBILE_DAEMON_PID" 2>/dev/null || true
+          kill "$EW_SESSION_PID" 2>/dev/null || true
+
+      - name: "Publish Test Report"
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          check_name: "AutoMobile Test Report"
+          report_paths: 'app/build/test-results/**/*.xml'

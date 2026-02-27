@@ -1,0 +1,27 @@
+---
+name: app-background-foreground
+description: Launch the app, send it to the background, then bring it back to the foreground and verify state is restored
+steps:
+  - tool: launchApp
+    appId: dev.jasonpearson.android
+    clearAppData: true
+    label: Launch the app with clean state
+
+  - tool: observe
+    label: Wait for initial UI to render
+
+  - tool: pressButton
+    button: home
+    label: Press home button to background the app
+
+  - tool: launchApp
+    appId: dev.jasonpearson.android
+    clearAppData: false
+    label: Bring the app back to the foreground
+
+  - tool: observe
+    label: Verify app state is restored after returning to foreground
+
+  - tool: terminateApp
+    appId: dev.jasonpearson.android
+    label: Terminate the app after test

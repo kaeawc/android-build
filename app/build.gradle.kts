@@ -196,6 +196,7 @@ dependencies {
 
     debugImplementation(libs.bundles.compose.ui.debug)
 
+    testImplementation(libs.auto.mobile.junit.runner)
     testImplementation(libs.bundles.unit.test)
 
     androidTestImplementation(platform(libs.compose.bom))
@@ -205,8 +206,24 @@ dependencies {
 }
 
 val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.testWorker.jvmargs").get()
+val autoMobileCtrlProxyApkPath = providers.environmentVariable("AUTOMOBILE_CTRL_PROXY_APK_PATH")
 
-tasks.withType<Test>().configureEach { jvmArgs(gradleWorkerJvmArgs) }
+tasks.withType<Test>().configureEach {
+    jvmArgs(gradleWorkerJvmArgs)
+    // Force AutoMobileRunner to use sequential test execution (1 test at a time per device).
+    // Without this, the runner parallelizes based on ADB device count, which may report more
+    // devices than the daemon pool actually manages, causing device contention and timeouts.
+    systemProperty("junit.parallel.forks", "1")
+    autoMobileCtrlProxyApkPath.orNull?.let { apkPath ->
+        environment("AUTOMOBILE_CTRL_PROXY_APK_PATH", apkPath)
+        systemProperty("automobile.ctrl.proxy.apk.path", apkPath)
+    }
+    // When running pure unit tests (no device available), exclude AutoMobile integration tests.
+    // Use -PexcludeAutoMobileTests to activate this filter (e.g. in the unit-tests CI job).
+    if (project.hasProperty("excludeAutoMobileTests")) {
+        filter.excludeTestsMatching("dev.jasonpearson.android.automobiletest.*")
+    }
+}
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
