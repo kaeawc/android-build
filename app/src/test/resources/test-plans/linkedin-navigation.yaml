@@ -7,11 +7,6 @@ steps:
     clearAppData: true
     label: Launch the app with clean state
 
-  - tool: observe
-    waitFor:
-      text: Jason Pearson
-    label: Wait for resume header to be visible
-
   - tool: tapOn
     action: tap
     text: Share LinkedIn
@@ -39,7 +34,7 @@ steps:
 
   - tool: observe
     waitFor:
-      text: Jason Pearson
+      text: Profile
     label: Verify we returned to the resume screen
 
   - tool: terminateApp

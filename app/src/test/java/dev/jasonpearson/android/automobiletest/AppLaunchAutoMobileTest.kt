@@ -23,8 +23,9 @@
  */
 package dev.jasonpearson.android.automobiletest
 
+import dev.jasonpearson.automobile.junit.AutoMobilePlan
 import dev.jasonpearson.automobile.junit.AutoMobileRunner
-import dev.jasonpearson.automobile.junit.AutoMobileTest
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -40,14 +41,9 @@ import org.junit.runner.RunWith
 class AppLaunchAutoMobileTest {
 
     @Test
-    @AutoMobileTest(
-        plan = "test-plans/launch-app.yaml",
-        appId = "dev.jasonpearson.android",
-        aiAssistance = false,
-        maxRetries = 1,
-        timeoutMs = 60000L,
-    )
     fun `app launches without crashing`() {
-        // AutoMobileRunner executes the referenced YAML plan and fails the test if any step fails
+        val result = AutoMobilePlan(planPath = "test-plans/launch-app.yaml").execute()
+
+        assertTrue(result.success)
     }
 }

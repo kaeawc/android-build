@@ -59,7 +59,7 @@ fun ResumeApp(presenter: ResumePresenter, onShareLinkedIn: () -> Unit) {
     Scaffold(
         topBar = {
             Surface(shadowElevation = 4.dp, color = MaterialTheme.colorScheme.primary) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.statusBarsPadding().padding(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -142,7 +142,7 @@ fun ResumeApp(presenter: ResumePresenter, onShareLinkedIn: () -> Unit) {
             contentPadding =
                 PaddingValues(
                     top = paddingValues.calculateTopPadding() + 16.dp,
-                    bottom = 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 16.dp,
                     start = 16.dp,
                     end = 16.dp,
                 ),

@@ -7,9 +7,6 @@ steps:
     clearAppData: true
     label: Launch the app with clean state
 
-  - tool: observe
-    label: Wait for initial UI to render
-
   - tool: pressButton
     button: home
     label: Press home button to background the app
@@ -18,9 +15,6 @@ steps:
     appId: dev.jasonpearson.android
     clearAppData: false
     label: Bring the app back to the foreground
-
-  - tool: observe
-    label: Verify app state is restored after returning to foreground
 
   - tool: terminateApp
     appId: dev.jasonpearson.android

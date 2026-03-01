@@ -23,8 +23,9 @@
  */
 package dev.jasonpearson.android.automobiletest
 
+import dev.jasonpearson.automobile.junit.AutoMobilePlan
 import dev.jasonpearson.automobile.junit.AutoMobileRunner
-import dev.jasonpearson.automobile.junit.AutoMobileTest
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -40,14 +41,10 @@ import org.junit.runner.RunWith
 class AppLifecycleAutoMobileTest {
 
     @Test
-    @AutoMobileTest(
-        plan = "test-plans/app-background-foreground.yaml",
-        appId = "dev.jasonpearson.android",
-        aiAssistance = false,
-        maxRetries = 1,
-        timeoutMs = 90000L,
-    )
     fun `app survives background and foreground transition`() {
-        // AutoMobileRunner executes the referenced YAML plan and fails the test if any step fails
+        val result =
+            AutoMobilePlan(planPath = "test-plans/app-background-foreground.yaml").execute()
+
+        assertTrue(result.success)
     }
 }
