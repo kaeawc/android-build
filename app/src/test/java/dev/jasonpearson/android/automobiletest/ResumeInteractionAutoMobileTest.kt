@@ -25,7 +25,6 @@ package dev.jasonpearson.android.automobiletest
 
 import dev.jasonpearson.automobile.junit.AutoMobilePlan
 import dev.jasonpearson.automobile.junit.AutoMobileRunner
-import dev.jasonpearson.automobile.junit.AutoMobileTest
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,27 +46,21 @@ class ResumeInteractionAutoMobileTest {
 
     @Test
     fun `scroll to skills section and tap skill chips`() {
-        val result = AutoMobilePlan(
-            planPath = "test-plans/scroll-and-tap-skill.yaml"
-        ).execute()
+        val result = AutoMobilePlan(planPath = "test-plans/scroll-and-tap-skill.yaml").execute()
 
         assertTrue(result.success)
     }
 
     @Test
     fun `tap share button opens linkedin qr screen and back navigates home`() {
-        val result = AutoMobilePlan(
-            planPath = "test-plans/linkedin-navigation.yaml"
-        ).execute()
+        val result = AutoMobilePlan(planPath = "test-plans/linkedin-navigation.yaml").execute()
 
         assertTrue(result.success)
     }
 
     @Test
     fun `scroll to education and talks sections verifies resume content`() {
-        val result = AutoMobilePlan(
-            planPath = "test-plans/scroll-to-education.yaml"
-        ).execute()
+        val result = AutoMobilePlan(planPath = "test-plans/scroll-to-education.yaml").execute()
 
         assertTrue(result.success)
     }

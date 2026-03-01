@@ -25,7 +25,6 @@ package dev.jasonpearson.android.automobiletest
 
 import dev.jasonpearson.automobile.junit.AutoMobilePlan
 import dev.jasonpearson.automobile.junit.AutoMobileRunner
-import dev.jasonpearson.automobile.junit.AutoMobileTest
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -43,9 +42,7 @@ class AppLaunchAutoMobileTest {
 
     @Test
     fun `app launches without crashing`() {
-        val result = AutoMobilePlan(
-            planPath = "test-plans/launch-app.yaml"
-        ).execute()
+        val result = AutoMobilePlan(planPath = "test-plans/launch-app.yaml").execute()
 
         assertTrue(result.success)
     }
