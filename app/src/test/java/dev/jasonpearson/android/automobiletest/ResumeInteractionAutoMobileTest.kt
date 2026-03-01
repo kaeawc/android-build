@@ -23,8 +23,10 @@
  */
 package dev.jasonpearson.android.automobiletest
 
+import dev.jasonpearson.automobile.junit.AutoMobilePlan
 import dev.jasonpearson.automobile.junit.AutoMobileRunner
 import dev.jasonpearson.automobile.junit.AutoMobileTest
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -44,38 +46,29 @@ import org.junit.runner.RunWith
 class ResumeInteractionAutoMobileTest {
 
     @Test
-    @AutoMobileTest(
-        plan = "test-plans/scroll-and-tap-skill.yaml",
-        appId = "dev.jasonpearson.android",
-        aiAssistance = false,
-        maxRetries = 1,
-        timeoutMs = 90000L,
-    )
     fun `scroll to skills section and tap skill chips`() {
-        // AutoMobileRunner executes the referenced YAML plan and fails the test if any step fails
+        val result = AutoMobilePlan(
+            planPath = "test-plans/scroll-and-tap-skill.yaml"
+        ).execute()
+
+        assertTrue(result.success)
     }
 
     @Test
-    @AutoMobileTest(
-        plan = "test-plans/linkedin-navigation.yaml",
-        appId = "dev.jasonpearson.android",
-        aiAssistance = false,
-        maxRetries = 1,
-        timeoutMs = 60000L,
-    )
     fun `tap share button opens linkedin qr screen and back navigates home`() {
-        // AutoMobileRunner executes the referenced YAML plan and fails the test if any step fails
+        val result = AutoMobilePlan(
+            planPath = "test-plans/linkedin-navigation.yaml"
+        ).execute()
+
+        assertTrue(result.success)
     }
 
     @Test
-    @AutoMobileTest(
-        plan = "test-plans/scroll-to-education.yaml",
-        appId = "dev.jasonpearson.android",
-        aiAssistance = false,
-        maxRetries = 1,
-        timeoutMs = 90000L,
-    )
     fun `scroll to education and talks sections verifies resume content`() {
-        // AutoMobileRunner executes the referenced YAML plan and fails the test if any step fails
+        val result = AutoMobilePlan(
+            planPath = "test-plans/scroll-to-education.yaml"
+        ).execute()
+
+        assertTrue(result.success)
     }
 }

@@ -45,11 +45,11 @@
         {
           "name": "auto-mobile-junit-runner-0.0.13-SNAPSHOT.jar",
           "url": "auto-mobile-junit-runner-0.0.13-SNAPSHOT.jar",
-          "size": 377189,
-          "sha512": "2d442071e2ab523403eefdbfd56e60fbcca520db92882206ad69180728ff175da41286505be68a3e843ec76862900ce46a0cf01d2801f718f153426981afaba3",
-          "sha256": "db00da6aba8c31ba16eb291d1beeb2167f42b813c504fe78e75bbef0075336f3",
-          "sha1": "9a53194aa4e6e25d63f4d65d2d75d40d4810c87a",
-          "md5": "1a84be57065a8483a7417cd70b9cd85d"
+          "size": 377725,
+          "sha512": "941dc44d8306ed267133fb87755994d492b108d6d5a6bc7d7019bae9fa6a2d666d0607c427755f7d5dd28b1433e37cf9a0b9aa365c3adfefd5558957f4da4201",
+          "sha256": "ea57a91260f7d58ced8d7d343b0ae510aafb4319f3084aeecc73cfc920ee6908",
+          "sha1": "0a0ee3f702816e10a80f1e80f0b6a042652b78f5",
+          "md5": "17ea4e22d39be589c244ab83d2b2ad53"
         }
       ]
     },
@@ -76,21 +76,21 @@
           "group": "org.junit.jupiter",
           "module": "junit-jupiter-api",
           "version": {
-            "requires": "6.0.2"
+            "requires": "6.0.3"
           }
         },
         {
           "group": "org.junit.jupiter",
           "module": "junit-jupiter-engine",
           "version": {
-            "requires": "6.0.2"
+            "requires": "6.0.3"
           }
         },
         {
           "group": "org.yaml",
           "module": "snakeyaml",
           "version": {
-            "requires": "2.5"
+            "requires": "2.6"
           }
         },
         {
@@ -118,7 +118,7 @@
           "group": "ai.koog",
           "module": "koog-agents",
           "version": {
-            "requires": "0.6.2"
+            "requires": "0.6.3"
           }
         },
         {
@@ -140,11 +140,11 @@
         {
           "name": "auto-mobile-junit-runner-0.0.13-SNAPSHOT.jar",
           "url": "auto-mobile-junit-runner-0.0.13-SNAPSHOT.jar",
-          "size": 377189,
-          "sha512": "2d442071e2ab523403eefdbfd56e60fbcca520db92882206ad69180728ff175da41286505be68a3e843ec76862900ce46a0cf01d2801f718f153426981afaba3",
-          "sha256": "db00da6aba8c31ba16eb291d1beeb2167f42b813c504fe78e75bbef0075336f3",
-          "sha1": "9a53194aa4e6e25d63f4d65d2d75d40d4810c87a",
-          "md5": "1a84be57065a8483a7417cd70b9cd85d"
+          "size": 377725,
+          "sha512": "941dc44d8306ed267133fb87755994d492b108d6d5a6bc7d7019bae9fa6a2d666d0607c427755f7d5dd28b1433e37cf9a0b9aa365c3adfefd5558957f4da4201",
+          "sha256": "ea57a91260f7d58ced8d7d343b0ae510aafb4319f3084aeecc73cfc920ee6908",
+          "sha1": "0a0ee3f702816e10a80f1e80f0b6a042652b78f5",
+          "md5": "17ea4e22d39be589c244ab83d2b2ad53"
         }
       ]
     },
@@ -160,11 +160,11 @@
         {
           "name": "auto-mobile-junit-runner-0.0.13-SNAPSHOT-sources.jar",
           "url": "auto-mobile-junit-runner-0.0.13-SNAPSHOT-sources.jar",
-          "size": 51058,
-          "sha512": "2d141e2359dfdba241040c94444d611e671738a853d35fdbcce669eb30578cb17cef37756f6ce36262c7846ff8f51e891398aa4dd313041b8857d80caa74b59e",
-          "sha256": "c513989eb65649bc039de4c7f65e4e03b162eb9ecd311c006a661b4d945c4a97",
-          "sha1": "da37c3b13bd353ff11a03381bc1e93699facda7b",
-          "md5": "bb3af3fa5fec3cb5220afdaef3558dd9"
+          "size": 51262,
+          "sha512": "37c6ba02859611914a85f22af973fab36a90c075ccc7e9c76034ab7e665ffc86c6f72e45de650b5ecee87cf852e0d036fa2e5476f6f4986a71d11a55676ff360",
+          "sha256": "33f31ecf9b75776e66ff95156c195e1c57518f94afeb19aed122e19463e6b39a",
+          "sha1": "0e5a02f0f8d4eb58a8a7cec8ba1e37ed53d847be",
+          "md5": "97bbd28fc87c135812235153bd18ac6b"
         }
       ]
     }
