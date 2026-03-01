@@ -6,9 +6,5 @@ steps:
     appId: dev.jasonpearson.android
     clearAppData: true
 
-  - tool: tapOn
-    action: tap
-    text: asafasdfasdfasd
-
   - tool: terminateApp
     appId: dev.jasonpearson.android
