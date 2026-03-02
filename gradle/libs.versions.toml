@@ -21,7 +21,7 @@ build-gradle-spotless = "8.2.1"
 build-gradle-triplet-play = "4.0.0"
 androidx-core = "1.17.0"
 androidx-activity-compose = "1.12.4"
-androidx-compose-bom = "2026.02.00"
+androidx-compose-bom = "2026.02.01"
 androidx-lifecycle = "2.10.0"
 
 auto-mobile-junit-runner = "0.0.13-SNAPSHOT"
