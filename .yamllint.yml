@@ -1,0 +1,11 @@
+extends: default
+rules:
+  # GitHub Actions uses `on:` as a mapping key; don't flag it as a truthy value.
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
+  # Long GitHub Actions expressions (hashFiles, matrix refs) regularly exceed 80.
+  line-length:
+    max: 200
+  # YAML documents in this repo use --- markers.
+  document-start: disable

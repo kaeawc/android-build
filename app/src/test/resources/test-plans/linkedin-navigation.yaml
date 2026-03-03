@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://unpkg.com/@kaeawc/auto-mobile/schemas/test-plan.schema.json
 ---
 name: linkedin-navigation
 description: Tap the LinkedIn share button, verify the QR screen appears, and navigate back

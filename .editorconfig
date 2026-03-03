@@ -6,6 +6,31 @@
 #
 # If any option is wrong, PR are welcome
 
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.{sh}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.xml]
+indent_style = space
+indent_size = 2
+
 [{*.kt,*.kts}]
 indent_style = space
 insert_final_newline = true

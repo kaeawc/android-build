@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://unpkg.com/@kaeawc/auto-mobile/schemas/test-plan.schema.json
 ---
 name: app-background-foreground
 description: Launch the app, send it to the background, then bring it back to the foreground and verify state is restored
