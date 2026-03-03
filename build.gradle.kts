@@ -21,10 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import com.diffplug.gradle.spotless.SpotlessExtension
-import com.diffplug.gradle.spotless.SpotlessExtensionPredeclare
-import com.diffplug.spotless.LineEnding
-
 buildscript {
     dependencies {
         // Uncomment to pin R8 version
@@ -36,50 +32,11 @@ buildscript {
 
 plugins {
     `version-catalog`
-    alias(libs.plugins.spotless)
     //    alias(libs.plugins.doctor)
     alias(libs.plugins.dependencyAnalysis)
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.metro) apply false
-}
-
-configure<SpotlessExtension> {
-    predeclareDeps()
-    lineEndings = LineEnding.PLATFORM_NATIVE
-
-    format("misc") {
-        target("*.md", ".gitignore")
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    kotlinGradle {
-        target("*.kts")
-        trimTrailingWhitespace()
-        endWithNewline()
-        licenseHeaderFile(
-            file("spotless/copyright.kt"),
-            "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
-        )
-    }
-}
-
-configure<SpotlessExtensionPredeclare> {
-    lineEndings = LineEnding.PLATFORM_NATIVE
-    format("misc") {
-        target("*.md", ".gitignore")
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    kotlinGradle {
-        target("*.kts")
-        trimTrailingWhitespace()
-        endWithNewline()
-        licenseHeaderFile(
-            file("spotless/copyright.kt"),
-            "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
-        )
-    }
 }
 
 // doctor {

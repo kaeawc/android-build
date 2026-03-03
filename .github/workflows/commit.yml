@@ -41,19 +41,6 @@ jobs:
           reuse-configuration-cache: true
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
-  spotless:
-    name: "Spotless Check"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "spotlessCheck"
-          # Due to https://github.com/diffplug/spotless/issues/987
-          reuse-configuration-cache: false
-
   validate-xml:
     name: "Validate XML"
     runs-on: ubuntu-latest

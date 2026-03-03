@@ -17,7 +17,6 @@ build-gradle-dependencyAnalysis = "3.6.1"
 build-gradle-graphAssertion = "2.9.0"
 build-gradle-doctor = "0.12.1"
 build-gradle-sortDependencies = "0.16"
-build-gradle-spotless = "8.2.1"
 build-gradle-triplet-play = "4.0.0"
 androidx-core = "1.17.0"
 androidx-activity-compose = "1.12.4"
@@ -36,7 +35,6 @@ metro = "0.11.2"
 
 [plugins]
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "build-gradle-dependencyAnalysis" }
-spotless = { id = "com.diffplug.spotless", version.ref = "build-gradle-spotless" }
 sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "build-gradle-sortDependencies" }
 doctor = { id = "com.osacky.doctor", version.ref = "build-gradle-doctor" }
 graphAssertion = { id = "com.jraska.module.graph.assertion", version.ref = "build-gradle-graphAssertion" }

@@ -21,9 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import com.diffplug.gradle.spotless.KotlinExtension
-import com.diffplug.gradle.spotless.SpotlessExtension
-import com.diffplug.spotless.LineEnding
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -34,7 +31,6 @@ plugins {
     alias(libs.plugins.graphAssertion)
     alias(libs.plugins.publish)
     alias(libs.plugins.sortDependencies)
-    alias(libs.plugins.spotless)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.metro)
 }
@@ -62,41 +58,6 @@ play {
     defaultToAppBundles.set(true)
     serviceAccountCredentials.set(file("google-play-publishing-service-account.json"))
     resolutionStrategy.set(com.github.triplet.gradle.androidpublisher.ResolutionStrategy.IGNORE)
-}
-
-val externalFiles = listOf("MemoizedSequence").map { "src/**/$it.kt" }
-
-configure<SpotlessExtension> {
-    lineEndings = LineEnding.PLATFORM_NATIVE
-
-    format("misc") {
-        target("*.md", ".gitignore")
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    kotlin {
-        target("src/**/*.kt")
-        targetExclude(externalFiles)
-        trimTrailingWhitespace()
-        endWithNewline()
-        licenseHeaderFile(file("../spotless/copyright.kt"))
-        targetExclude("**/copyright.kt", *externalFiles.toTypedArray())
-    }
-    format("kotlinExternal", KotlinExtension::class.java) {
-        target(externalFiles)
-        trimTrailingWhitespace()
-        endWithNewline()
-        targetExclude("**/copyright.kt")
-    }
-    kotlinGradle {
-        target("*.kts")
-        trimTrailingWhitespace()
-        endWithNewline()
-        licenseHeaderFile(
-            file("../spotless/copyright.kt"),
-            "(import|plugins|buildscript|dependencies|pluginManagement|dependencyResolutionManagement)",
-        )
-    }
 }
 
 android {
