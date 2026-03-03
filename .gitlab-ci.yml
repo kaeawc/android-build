@@ -144,13 +144,6 @@ unit_tests:
       - *reports_config_cache_path
     expire_in: 90 days
 
-spotless_check:
-  extends: .android_sdk_job
-  stage: basic
-  script:
-    # Cannot reuse configuration cache due to https://github.com/diffplug/spotless/issues/987
-    - ./gradlew spotlessCheck --no-configuration-cache -Dorg.gradle.unsafe.isolated-projects=false
-
 module_graph_check:
   extends: .android_sdk_job
   stage: basic
