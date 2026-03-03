@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://unpkg.com/@kaeawc/auto-mobile/schemas/test-plan.schema.json
 ---
 name: linkedin-navigation
 description: Tap the LinkedIn share button, verify the QR screen appears, and navigate back
@@ -6,6 +7,11 @@ steps:
     appId: dev.jasonpearson.android
     clearAppData: true
     label: Launch the app with clean state
+
+  - tool: observe
+    waitFor:
+      text: Jason Pearson
+    label: Wait for resume header to be visible
 
   - tool: tapOn
     action: tap
@@ -34,7 +40,7 @@ steps:
 
   - tool: observe
     waitFor:
-      text: Profile
+      text: Jason Pearson
     label: Verify we returned to the resume screen
 
   - tool: terminateApp

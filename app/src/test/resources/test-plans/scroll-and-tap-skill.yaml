@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://unpkg.com/@kaeawc/auto-mobile/schemas/test-plan.schema.json
 ---
 name: scroll-and-tap-skill
 description: Scroll the resume list down to the Skills section and tap skill chips
@@ -5,15 +6,24 @@ steps:
   - tool: launchApp
     appId: dev.jasonpearson.android
     clearAppData: true
+    label: Launch the app with clean state
 
   - tool: swipeOn
     direction: up
+    label: Scroll down to reveal Skills section
     lookFor:
       text: Skills
 
   - tool: tapOn
     action: tap
     text: Kotlin
+    label: Tap the Kotlin skill chip
+
+  - tool: tapOn
+    action: tap
+    text: KMP
+    label: Tap the KMP skill chip
 
   - tool: terminateApp
     appId: dev.jasonpearson.android
+    label: Terminate the app after test

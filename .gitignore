@@ -40,3 +40,6 @@ google-services.json
 
 # Spotlight IDE Projects
 gradle/ide-projects.txt
+
+# AutoMobile schema (consumed from @kaeawc/auto-mobile npm package, not committed)
+schemas/
