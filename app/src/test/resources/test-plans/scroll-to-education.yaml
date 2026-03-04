@@ -15,39 +15,9 @@ steps:
 
   - tool: swipeOn
     direction: up
-    speed: fast
-    autoTarget: false
-    label: Scroll down through Experience sections
-
-  - tool: swipeOn
-    direction: up
-    speed: fast
-    autoTarget: false
-    label: Continue scrolling
-
-  - tool: swipeOn
-    direction: up
-    speed: fast
-    autoTarget: false
-    label: Continue scrolling
-
-  - tool: swipeOn
-    direction: up
-    speed: fast
-    autoTarget: false
-    label: Continue scrolling
-
-  - tool: swipeOn
-    direction: up
-    speed: fast
-    autoTarget: false
-    label: Scroll to Skills section
-
-  - tool: swipeOn
-    direction: up
-    speed: fast
-    autoTarget: false
-    label: Scroll past Skills to Education
+    lookFor:
+      text: Education
+    label: Scroll until Education section is visible
 
   - tool: observe
     waitFor:
@@ -61,9 +31,9 @@ steps:
 
   - tool: swipeOn
     direction: up
-    speed: fast
-    autoTarget: false
-    label: Scroll to Talks section
+    lookFor:
+      text: Talks
+    label: Scroll until Talks section is visible
 
   - tool: observe
     waitFor:
