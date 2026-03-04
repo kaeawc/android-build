@@ -250,9 +250,9 @@ tasks.withType<KotlinCompile>().configureEach {
     }
 }
 
-tasks.matching { it.name.startsWith("minify") && it.name.endsWith("WithR8") }.configureEach {
-    dependsOn(killKotlinCompileDaemon)
-}
+tasks
+    .matching { it.name.startsWith("minify") && it.name.endsWith("WithR8") }
+    .configureEach { dependsOn(killKotlinCompileDaemon) }
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
