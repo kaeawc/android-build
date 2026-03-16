@@ -7,7 +7,7 @@ build-android-agp = "9.2.0-alpha03"
 # Uncomment to pin R8 version (e.g. for dev versions needed for kotlin metadata)
 # build-android-r8 = "9.0.32"
 build-android-desugar = "2.1.5"
-build-kotlin = "2.3.10"
+build-kotlin = "2.3.20"
 build-kotlin-language = "2.3"
 build-kotlin-coroutines = "1.10.2"
 build-kotlin-datetime = "0.7.1"
