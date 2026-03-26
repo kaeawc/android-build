@@ -241,7 +241,6 @@ jobs:
   ui-tests:
     name: "Android UI Tests"
     runs-on: ubuntu-latest
-    if: false # Skipped until auto-mobile has a new release
     needs:
       - build-apk
       - build-test-apk
@@ -278,7 +277,6 @@ jobs:
     runs-on: ubuntu-latest
     # Requires EW_API_TOKEN secret for the emulator.wtf adb session (closed alpha feature).
     # Contact support@emulator.wtf to request access to start-session.
-    if: false # Skipped until auto-mobile has a new release
     needs:
       - build-apk
     steps:
