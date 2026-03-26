@@ -20,7 +20,7 @@ build-gradle-sortDependencies = "0.16"
 build-gradle-triplet-play = "4.0.0"
 androidx-core = "1.18.0"
 androidx-activity-compose = "1.13.0"
-androidx-compose-bom = "2026.03.00"
+androidx-compose-bom = "2026.03.01"
 androidx-lifecycle = "2.10.0"
 
 auto-mobile-junit-runner = "0.0.13-SNAPSHOT"
