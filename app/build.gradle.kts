@@ -89,7 +89,6 @@ android {
         debug {
             // Debug builds skip R8 for faster iteration
             isMinifyEnabled = false
-            isShrinkResources = false
         }
         release {
             // Enable R8 code shrinking, obfuscation, and optimization
