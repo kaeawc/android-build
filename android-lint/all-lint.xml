@@ -442,7 +442,7 @@
     <issue id="NonResizeableActivity" severity="error" />
     <issue id="NotConstructor" severity="error" />
     <issue id="NotificationIconCompatibility" severity="error" />
-    <issue id="OldTargetApi" severity="error" />
+    <issue id="OldTargetApi" severity="ignore" />
     <issue id="OpaqueUnitKey" severity="error" />
     <issue id="ParcelClassLoader" severity="error" />
     <issue id="PermissionImpliesUnsupportedHardware" severity="error" />

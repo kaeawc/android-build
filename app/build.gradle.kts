@@ -89,7 +89,6 @@ android {
         debug {
             // Debug builds skip R8 for faster iteration
             isMinifyEnabled = false
-            isShrinkResources = false
         }
         release {
             // Enable R8 code shrinking, obfuscation, and optimization
@@ -190,20 +189,19 @@ tasks.withType<Test>().configureEach {
 // the memory it held fully returned to the OS (~14-15% peak memory savings per the
 // blog post: https://dev.to/cdsap/what-happens-when-you-kill-the-kotlin-daemon-before-r8-el7).
 // Scoped to release only to avoid circular task dependency on debug/test builds.
-val killKotlinCompileDaemon by
-    tasks.registering {
-        doLast {
-            val process =
-                ProcessBuilder(
-                        "sh",
-                        "-c",
-                        "jps | grep KotlinCompileDaemon | awk '{print $1}' | xargs kill -9 2>/dev/null || true",
-                    )
-                    .start()
-            process.waitFor()
-            logger.lifecycle("Kill Kotlin compile daemon command executed")
-        }
+val killKotlinCompileDaemon by tasks.registering {
+    doLast {
+        val process =
+            ProcessBuilder(
+                    "sh",
+                    "-c",
+                    "jps | grep KotlinCompileDaemon | awk '{print $1}' | xargs kill -9 2>/dev/null || true",
+                )
+                .start()
+        process.waitFor()
+        logger.lifecycle("Kill Kotlin compile daemon command executed")
     }
+}
 
 tasks.withType<KotlinCompile>().configureEach {
     if (name.contains("Release") && !name.contains("Test")) {

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-KTFMT_VERSION="0.54" # Change this to the desired version. Note that Homebrew will always install the latest version
+KTFMT_VERSION="0.62" # Keep CI aligned with the Homebrew-installed formatter used by local hooks
 
 # Check if ktfmt is not installed
 if ! command -v ktfmt &>/dev/null; then
@@ -11,7 +11,15 @@ if ! command -v ktfmt &>/dev/null; then
   if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
     echo "Detected macOS system"
-    brew install ktfmt
+    if ! command -v brew &>/dev/null; then
+      echo "Error: Homebrew is required to install ktfmt on macOS"
+      exit 1
+    fi
+
+    if ! brew install ktfmt; then
+      echo "Error: Failed to install ktfmt with Homebrew"
+      exit 1
+    fi
   else
     # Linux
     echo "Detected Linux system"
@@ -28,7 +36,7 @@ if ! command -v ktfmt &>/dev/null; then
     
     # Download ktfmt jar with progress and error handling
     echo "Downloading ktfmt jar..."
-    if ! curl -L --fail --show-error -o "$JAR_PATH" "https://github.com/facebook/ktfmt/releases/download/v$KTFMT_VERSION/ktfmt-$KTFMT_VERSION-jar-with-dependencies.jar"; then
+    if ! curl -L --fail --show-error -o "$JAR_PATH" "https://github.com/facebook/ktfmt/releases/download/v$KTFMT_VERSION/ktfmt-$KTFMT_VERSION-with-dependencies.jar"; then
       echo "Error: Failed to download ktfmt jar"
       rm -rf "$TMP_DIR"
       exit 1
