@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-KTFMT_VERSION="0.54" # Change this to the desired version. Note that Homebrew will always install the latest version
+KTFMT_VERSION="0.62" # Keep CI aligned with the Homebrew-installed formatter used by local hooks
 
 # Check if ktfmt is not installed
 if ! command -v ktfmt &>/dev/null; then
