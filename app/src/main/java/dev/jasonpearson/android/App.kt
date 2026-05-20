@@ -24,14 +24,14 @@
 package dev.jasonpearson.android
 
 import android.app.Application
+import dev.jasonpearson.android.debug.setupStrictMode
 import dev.jasonpearson.android.di.AppGraph
-import dev.jasonpearson.android.di.ApplicationModule
 import dev.jasonpearson.android.di.BackgroundAppCoroutineScope
+import dev.jasonpearson.android.logging.Logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.createGraphFactory
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
-private typealias InitializerFunction = () -> Unit
 
 class App : Application() {
 
@@ -41,13 +41,9 @@ class App : Application() {
 
     internal lateinit var appComponent: AppGraph
 
-    @Inject @ApplicationModule.Initializers lateinit var initializers: Set<InitializerFunction>
-
-    @Inject
-    @ApplicationModule.AsyncInitializers
-    lateinit var asyncInitializers: Set<InitializerFunction>
-
     @Inject lateinit var backgroundScope: BackgroundAppCoroutineScope
+
+    @Inject lateinit var logger: Logger
 
     override fun onCreate() {
         super.onCreate()
@@ -55,12 +51,11 @@ class App : Application() {
         appComponent =
             createGraphFactory<AppGraph.Factory>().create(this).apply { inject(this@App) }
 
-        // Run synchronous initializers
-        initializers.forEach { it() }
-
-        // Run async initializers in parallel
         backgroundScope.launch {
-            asyncInitializers.forEach { initializer -> launch { initializer() } }
+            launch { setupStrictMode(logger) }
+            // Pre-initialize Dispatchers.Main off the main thread to avoid disk I/O on first
+            // access.
+            launch { Dispatchers.Main }
         }
     }
 }
