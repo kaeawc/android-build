@@ -24,20 +24,14 @@
 package dev.jasonpearson.android.di
 
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Qualifier
 import kotlin.annotation.AnnotationRetention.BINARY
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 
 @ContributesTo(AppScope::class)
 interface ApplicationModule {
-
-    @Qualifier @Retention(BINARY) annotation class Initializers
-
-    @Qualifier @Retention(BINARY) annotation class AsyncInitializers
 
     @Qualifier @Retention(BINARY) annotation class LazyDelegate
 
@@ -52,35 +46,5 @@ interface ApplicationModule {
         @SingleIn(AppScope::class)
         fun providePresenterScope(backgroundScope: BackgroundAppCoroutineScope): CoroutineScope =
             backgroundScope
-    }
-}
-
-/**
- * Module for app initialization hooks. Provides sets of initializer functions that run at app
- * startup.
- */
-@ContributesTo(AppScope::class)
-interface InitializersModule {
-
-    companion object {
-        /**
-         * Placeholder for synchronous initializers. In a real app, you would contribute actual
-         * initializers here using @IntoSet with @Initializers qualifier.
-         */
-        @ApplicationModule.Initializers
-        @Provides
-        fun provideInitializers(): Set<() -> Unit> = emptySet()
-
-        /**
-         * Pre-initializes Dispatchers.Main off the main thread to avoid disk I/O on first access.
-         * This is contributed to the async initializers set.
-         */
-        @ApplicationModule.AsyncInitializers
-        @IntoSet
-        @Provides
-        fun mainDispatcherInit(): () -> Unit = {
-            // This makes a call to disk, so initialize it off the main thread first... ironically
-            Dispatchers.Main
-        }
     }
 }

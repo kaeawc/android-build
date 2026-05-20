@@ -27,57 +27,37 @@ import android.os.Build
 import android.os.StrictMode
 import android.os.strictmode.DiskReadViolation
 import android.os.strictmode.UntaggedSocketViolation
-import dev.jasonpearson.android.di.AppScope
-import dev.jasonpearson.android.di.ApplicationModule
 import dev.jasonpearson.android.logging.Logger
 import dev.jasonpearson.android.logging.e
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.IntoSet
-import dev.zacsweers.metro.Provides
 import java.util.concurrent.Executors
 
-private const val TAG = "StrictModeModule"
+private const val TAG = "StrictModeSetup"
 
 /**
- * Contributes StrictMode setup to the async initializers set.
- *
- * StrictMode is configured to detect all violations and log them. Known false positives from
- * Flipper and Chrome Custom Tabs are suppressed.
+ * Configures StrictMode to detect all violations and log them. Known false positives from Flipper
+ * and Chrome Custom Tabs are suppressed.
  */
-@ContributesTo(AppScope::class)
-interface StrictModeModule {
+fun setupStrictMode(logger: Logger) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return
+    StrictMode.setVmPolicy(
+        StrictMode.VmPolicy.Builder()
+            .detectAll()
+            .penaltyListener(Executors.newSingleThreadExecutor()) { violation ->
+                when {
+                    violation is UntaggedSocketViolation -> {
+                        // Known issue with Flipper - ignore
+                    }
 
-    companion object {
+                    violation is DiskReadViolation &&
+                        violation.stackTraceToString().contains("CustomTabsConnection") -> {
+                        // Known issue with Chrome Custom Tabs - ignore
+                    }
 
-        @ApplicationModule.AsyncInitializers
-        @IntoSet
-        @Provides
-        fun strictModeInit(logger: Logger): () -> Unit = {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                StrictMode.setVmPolicy(
-                    StrictMode.VmPolicy.Builder()
-                        .detectAll()
-                        .penaltyListener(Executors.newSingleThreadExecutor()) { violation ->
-                            when {
-                                violation is UntaggedSocketViolation -> {
-                                    // Known issue with Flipper - ignore
-                                }
-
-                                violation is DiskReadViolation &&
-                                    violation
-                                        .stackTraceToString()
-                                        .contains("CustomTabsConnection") -> {
-                                    // Known issue with Chrome Custom Tabs - ignore
-                                }
-
-                                else -> {
-                                    logger.e(TAG, "StrictMode violation detected", violation)
-                                }
-                            }
-                        }
-                        .build()
-                )
+                    else -> {
+                        logger.e(TAG, "StrictMode violation detected", violation)
+                    }
+                }
             }
-        }
-    }
+            .build()
+    )
 }
