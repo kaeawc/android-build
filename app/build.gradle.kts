@@ -58,6 +58,11 @@ play {
     defaultToAppBundles.set(true)
     serviceAccountCredentials.set(file("google-play-publishing-service-account.json"))
     resolutionStrategy.set(com.github.triplet.gradle.androidpublisher.ResolutionStrategy.IGNORE)
+    // Play Publisher is only applied to this single module, so it never needs to reach across
+    // to the root project to register its shared "commit edit" task. Isolated Projects (enabled
+    // via org.gradle.unsafe.isolated-projects) forbids that cross-project access; this flag
+    // makes the plugin register the task on this project instead, which is also compatible.
+    isolatedSingleProject.set(true)
 }
 
 android {
