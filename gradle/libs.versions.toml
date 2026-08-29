@@ -1,6 +1,6 @@
 [versions]
 build-android-buildTools = "36.0.0"
-build-android-compileSdk = "36"
+build-android-compileSdk = "37"
 build-android-minSdk = "27"
 build-android-targetSdk = "36"
 build-android-agp = "9.3.2"
