@@ -24,8 +24,14 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
+          # Run task enumeration with Isolated Projects disabled. The module-graph
+          # assertion plugin (com.jraska.module.graph.assertion, latest 2.9.1)
+          # accesses other projects' configurations when registering its
+          # generateModulesGraphvizText task, which Gradle 9.7's Isolated Projects
+          # forbids. Real build/test jobs keep IP on; only whole-graph task
+          # realization needs it off. Mirrors the Module Graph Check job.
           gradle-tasks: "tasks"
-          reuse-configuration-cache: true
+          reuse-configuration-cache: false
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   unit-tests:
