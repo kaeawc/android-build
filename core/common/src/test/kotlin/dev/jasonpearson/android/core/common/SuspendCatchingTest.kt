@@ -21,44 +21,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-pluginManagement {
-    // Convention plugins (e.g. androidbuild.kotlin-common) live in the build-logic
-    // included build.
-    includeBuild("build-logic")
+package dev.jasonpearson.android.core.common
 
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
+import kotlin.coroutines.cancellation.CancellationException
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
+import org.junit.Test
 
-        // Uncomment to pin R8 version from the R8 releases repo
-        // exclusiveContent {
-        //     forRepository {
-        //         maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
-        //     }
-        //     filter { includeModule("com.android.tools", "r8") }
-        // }
+class SuspendCatchingTest {
+
+    @Test
+    fun `returns success for a normal result`() {
+        val result = runSuspendCatching { 21 * 2 }
+        assertEquals(42, result.getOrNull())
+    }
+
+    @Test
+    fun `wraps a thrown exception as failure`() {
+        val result = runSuspendCatching { error("boom") }
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `rethrows CancellationException instead of swallowing it`() {
+        try {
+            runSuspendCatching { throw CancellationException("cancelled") }
+            fail("Expected CancellationException to propagate")
+        } catch (expected: CancellationException) {
+            assertEquals("cancelled", expected.message)
+        }
     }
 }
-
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-// Type-safe project accessors (e.g. projects.app) for module dependencies as the
-// graph grows beyond a single module.
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
-// No spaces: the type-safe project accessors feature requires the root project name
-// to match [a-zA-Z]([A-Za-z0-9\-_])*.
-rootProject.name = "android-build"
-
-include(":app")
-
-// :core -- platform-agnostic, pure-Kotlin foundations (bottom of the module graph).
-include(":core:common")
-
-include(":core:model")
