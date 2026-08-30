@@ -69,3 +69,11 @@ include(":foundation:designassets")
 include(":foundation:designsystem")
 
 include(":foundation:navigation")
+
+// :subsystem -- non-UI cross-cutting domains (depend on :foundation and/or :core,
+// never on each other).
+include(":subsystem:analytics")
+
+include(":subsystem:storage")
+
+include(":subsystem:experimentation")
