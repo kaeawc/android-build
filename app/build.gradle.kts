@@ -43,6 +43,7 @@ moduleGraphAssert {
             ":feature:.* -> :foundation:.*",
             ":subsystem:.* -> :foundation:.*",
             ":subsystem:.* -> :core:.*",
+            ":foundation:.* -> :foundation:.*",
             ":foundation:.* -> :core:.*",
             ":core:.* -> :core:.*",
         )
@@ -157,6 +158,25 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.metro.runtime)
     implementation(libs.navigation.compose)
+
+    // Feature screens wired into the app NavHost.
+    implementation(projects.feature.login)
+    implementation(projects.feature.home)
+    implementation(projects.feature.discover)
+    implementation(projects.feature.settings)
+    implementation(projects.feature.mediaplayer)
+    implementation(projects.feature.onboarding)
+    implementation(projects.feature.slides)
+    implementation(projects.feature.demos)
+
+    // Foundation + subsystems the app references directly (the Destination route
+    // contract and the subsystem instances it injects into the feature screens).
+    // Features depend on these via `implementation`, so their types are not exposed
+    // to the app transitively -- the app declares them directly.
+    implementation(projects.foundation.navigation)
+    implementation(projects.subsystem.analytics)
+    implementation(projects.subsystem.storage)
+    implementation(projects.subsystem.experimentation)
 
     debugImplementation(libs.bundles.compose.ui.debug)
 

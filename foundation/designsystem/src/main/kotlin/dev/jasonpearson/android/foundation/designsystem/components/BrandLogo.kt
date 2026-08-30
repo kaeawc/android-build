@@ -21,35 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.feature.slides
+package dev.jasonpearson.android.foundation.designsystem.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import dev.jasonpearson.android.foundation.designsystem.components.PrimaryButton
-import dev.jasonpearson.android.foundation.designsystem.theme.AndroidBuildTheme
+import androidx.compose.ui.res.painterResource
+import dev.jasonpearson.android.foundation.designassets.R
 
-/** A simple wrap-around slide carousel driven by the pure [SlidesReducer]. */
+/** Renders the brand mark from the design-assets module. */
 @Composable
-fun SlidesScreen(modifier: Modifier = Modifier, slides: List<String> = DefaultSlides) {
-    var state by remember { mutableStateOf(slidesStateFor(slides)) }
-
-    AndroidBuildTheme {
-        Column(modifier = modifier.padding(16.dp)) {
-            Text(text = state.current)
-            Text(text = state.position)
-            PrimaryButton(text = "Next", onClick = { state = SlidesReducer.next(state) })
-        }
-    }
+fun BrandLogo(modifier: Modifier = Modifier, contentDescription: String? = "Brand logo") {
+    Image(
+        painter = painterResource(id = R.drawable.ic_brand_mark),
+        contentDescription = contentDescription,
+        modifier = modifier,
+    )
 }
-
-/** The slides shown when the host supplies none. */
-val DefaultSlides: List<String> =
-    listOf("Fast builds", "Modular by design", "Tested end to end", "Ship with confidence")

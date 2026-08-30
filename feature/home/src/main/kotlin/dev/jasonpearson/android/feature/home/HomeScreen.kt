@@ -45,9 +45,9 @@ import dev.jasonpearson.android.subsystem.experimentation.InMemoryExperimentRepo
 @Composable
 fun HomeScreen(
     analytics: AnalyticsClient,
+    modifier: Modifier = Modifier,
     experiments: ExperimentRepository = InMemoryExperimentRepository(),
     onOpenDiscover: () -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     val treatment = experiments.treatmentFor(HomeExperiments.Greeting)
     val state = remember(treatment) { homeStateFor(treatment) }
