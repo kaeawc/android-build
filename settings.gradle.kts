@@ -41,6 +41,12 @@ pluginManagement {
     }
 }
 
+// Spotlight moves the project `include`s into gradle/all-projects.txt and computes
+// the dependency graph by parsing build scripts, so the IDE can sync a focused
+// subset of projects (gradle/ide-projects.txt). It is also the prerequisite for
+// artifact-swap.
+plugins { id("com.fueledbycaffeine.spotlight") version "1.7.0" }
+
 dependencyResolutionManagement {
     repositories {
         google()
@@ -54,43 +60,10 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 // No spaces: the type-safe project accessors feature requires the root project name
 // to match [a-zA-Z]([A-Za-z0-9\-_])*.
-rootProject.name = "android-build"
+rootProject.name =
+    "android-build"
 
-include(":app")
-
-// :core -- platform-agnostic, pure-Kotlin foundations (bottom of the module graph).
-include(":core:common")
-
-include(":core:model")
-
-// :foundation -- shared UI + navigation building blocks (depend only on :core).
-include(":foundation:designassets")
-
-include(":foundation:designsystem")
-
-include(":foundation:navigation")
-
-// :subsystem -- non-UI cross-cutting domains (depend on :foundation and/or :core,
-// never on each other).
-include(":subsystem:analytics")
-
-include(":subsystem:storage")
-
-include(":subsystem:experimentation")
-
-// :feature -- user-facing screens (depend on :subsystem and :foundation).
-include(":feature:login")
-
-include(":feature:home")
-
-include(":feature:discover")
-
-include(":feature:settings")
-
-include(":feature:mediaplayer")
-
-include(":feature:onboarding")
-
-include(":feature:slides")
-
-include(":feature:demos")
+// Project `include`s live in gradle/all-projects.txt, managed by the Spotlight
+// plugin applied above. Add or remove projects there (or via ./gradlew
+// :fixAllProjectsList), not here. `./gradlew :checkAllProjectsList` verifies this
+// file contains no stray `include`s.
