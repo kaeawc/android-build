@@ -22,22 +22,10 @@
  * SOFTWARE.
  */
 pluginManagement {
-    // Convention plugins (e.g. androidbuild.kotlin-common) live in the build-logic
-    // included build.
-    includeBuild("build-logic")
-
     repositories {
+        gradlePluginPortal()
         google()
         mavenCentral()
-        gradlePluginPortal()
-
-        // Uncomment to pin R8 version from the R8 releases repo
-        // exclusiveContent {
-        //     forRepository {
-        //         maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
-        //     }
-        //     filter { includeModule("com.android.tools", "r8") }
-        // }
     }
 }
 
@@ -45,15 +33,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        gradlePluginPortal()
     }
+    // Reuse the root project's single version catalog so convention plugins read the
+    // same Kotlin/Java/plugin versions as the modules they configure.
+    versionCatalogs { create("libs") { from(files("../gradle/libs.versions.toml")) } }
 }
 
-// Type-safe project accessors (e.g. projects.app) for module dependencies as the
-// graph grows beyond a single module.
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
-// No spaces: the type-safe project accessors feature requires the root project name
-// to match [a-zA-Z]([A-Za-z0-9\-_])*.
-rootProject.name = "android-build"
-
-include(":app")
+rootProject.name = "build-logic"

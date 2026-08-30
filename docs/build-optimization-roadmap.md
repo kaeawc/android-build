@@ -29,8 +29,8 @@ playground's flat naming and `auto-mobile-sdk`/`navigation3` dependencies.
 
 | # | PR | Status | Acceptance |
 |---|----|--------|-----------|
-| 1 | Docs: IDE parallel model fetch + fill `Gradle Properties`/`Compiler Flags` | **in progress** | README sections filled; roadmap committed |
-| 2 | `build-logic` included build + `androidbuild.*` convention plugins | planned | `:app` builds via convention plugins; typesafe project accessors enabled; config cache + isolated projects still green |
+| 1 | Docs: IDE parallel model fetch + fill `Gradle Properties`/`Compiler Flags` | **merged** ([#405](https://github.com/kaeawc/android-build/pull/405)) | README sections filled; roadmap committed |
+| 2 | `build-logic` included build + `androidbuild.kotlin-common` convention plugin | **in progress** | `:app` builds via the convention plugin; typesafe project accessors enabled (root renamed `android-build`); config cache + isolated projects still green |
 | 3 | `:core:*` modules | planned | Bottom-layer modules build; `moduleGraphAssert` green |
 | 4 | `:foundation:*` modules | planned | e.g. `:foundation:designsystem`, `:foundation:navigation`; graph green |
 | 5 | `:subsystem:*` modules | planned | e.g. `:subsystem:auth`; graph green |
