@@ -1,0 +1,17 @@
+:app
+:core:common
+:core:model
+:feature:demos
+:feature:discover
+:feature:home
+:feature:login
+:feature:mediaplayer
+:feature:onboarding
+:feature:settings
+:feature:slides
+:foundation:designassets
+:foundation:designsystem
+:foundation:navigation
+:subsystem:analytics
+:subsystem:experimentation
+:subsystem:storage

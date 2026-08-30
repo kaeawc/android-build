@@ -122,3 +122,15 @@ Beyond that, sync cost scales with how many Gradle projects the IDE has to confi
 techniques for cutting that down at scale — project focusing, pre-compiled artifact substitution,
 and intransitive sync — are being adopted incrementally in this repo and tracked in
 [docs/build-optimization-roadmap.md](docs/build-optimization-roadmap.md).
+
+#### Project focusing (Spotlight)
+
+The [Spotlight](https://github.com/joshfriend/spotlight) Gradle plugin moves the project
+`include`s out of [settings.gradle.kts](settings.gradle.kts) into a flat
+[gradle/all-projects.txt](gradle/all-projects.txt) and computes the dependency graph by parsing
+build scripts. To load only the projects you're working on into the IDE, list them in
+`gradle/ide-projects.txt` (git-ignored, per-developer) and re-sync — Spotlight resolves their
+transitive dependencies for you, so the IDE configures a focused subset instead of all 17 projects.
+Install the companion [IDE plugin](https://plugins.jetbrains.com/plugin/27451-spotlight) to manage
+the focus set from the UI. `./gradlew :checkAllProjectsList` guards that no stray `include`s creep
+back into the settings file.

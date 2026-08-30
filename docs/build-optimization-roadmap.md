@@ -36,7 +36,7 @@ playground's flat naming and `auto-mobile-sdk`/`navigation3` dependencies.
 | 5 | `:subsystem:*` (`analytics`, `storage`, `experimentation`) | **merged** ([#409](https://github.com/kaeawc/android-build/pull/409)) | Independent non-UI domains (rules forbid subsystem→subsystem); build + test; graph green |
 | 6a | `:feature:*` ×8 (`login`, `home`, `discover`, `settings`, `mediaplayer`, `onboarding`, `slides`, `demos`) | **merged** ([#410](https://github.com/kaeawc/android-build/pull/410)) | Compose screens + pure UiState/reducers + tests; graph green |
 | 6b | Wire `:app` NavHost → features | **in progress** | `:app` depends on all features; NavHost routes the `Destination` contract to feature screens (resume stays the launch start). Allowed `:foundation → :foundation` (designsystem now renders the designassets brand mark). |
-| 7 | Adopt Spotlight (`com.fueledbycaffeine.spotlight`) | planned | Settings plugin applied; project focusing works; IDE plugin documented |
+| 7 | Adopt Spotlight (`com.fueledbycaffeine.spotlight` 1.7.0) | **in progress** | Settings plugin applied; `include`s moved to `gradle/all-projects.txt`; `:checkAllProjectsList` green; per-dev `gradle/ide-projects.txt` focuses IDE sync (gitignored); IDE plugin #27451 documented |
 | 8 | GitHub Packages publishing for modules | planned | `maven-publish` pushes module artifacts to GitHub Packages from CI on green `main` |
 | 9 | Adopt artifact-swap (GitHub-backed) | planned | `xyz.block.artifactswap` wired to GitHub Packages + `artifact-swap-green-main` BOM branch + post-checkout hook + CLI |
 | 10 | Fastsync / intransitive sync | planned | Runtime classpaths not resolved during IDE sync; compile classpath still complete |
