@@ -62,3 +62,10 @@ include(":app")
 include(":core:common")
 
 include(":core:model")
+
+// :foundation -- shared UI + navigation building blocks (depend only on :core).
+include(":foundation:designassets")
+
+include(":foundation:designsystem")
+
+include(":foundation:navigation")

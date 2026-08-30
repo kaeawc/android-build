@@ -21,17 +21,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-plugins { `kotlin-dsl` }
+package dev.jasonpearson.android.foundation.navigation
 
-// Precompiled convention plugins need the Kotlin Gradle plugin and AGP on the
-// classpath so they can reference KotlinCompile and the Android extensions. The
-// Kotlin DSL compiles on the build's JDK; pin its toolchain to the project's Java
-// target for consistency with the modules these plugins configure.
-kotlin { jvmToolchain(libs.versions.build.java.target.get().toInt()) }
+/**
+ * The top-level navigation destinations of the app, as a shared contract the feature modules and
+ * the app's NavHost both reference. Foundation owns only the routes -- the composables that render
+ * them live in their respective `:feature` modules and are wired together in `:app`.
+ */
+sealed interface Destination {
+    val route: String
 
-dependencies {
-    implementation(libs.kgp)
-    implementation(libs.agp)
-    // Lets androidbuild.android-compose apply the Compose compiler plugin by id.
-    implementation(libs.compose.compiler.plugin)
+    data object Onboarding : Destination {
+        override val route = "onboarding"
+    }
+
+    data object Login : Destination {
+        override val route = "login"
+    }
+
+    data object Home : Destination {
+        override val route = "home"
+    }
+
+    data object Discover : Destination {
+        override val route = "discover"
+    }
+
+    data object MediaPlayer : Destination {
+        override val route = "mediaplayer"
+    }
+
+    data object Settings : Destination {
+        override val route = "settings"
+    }
+
+    companion object {
+        val all: List<Destination> =
+            listOf(Onboarding, Login, Home, Discover, MediaPlayer, Settings)
+    }
 }

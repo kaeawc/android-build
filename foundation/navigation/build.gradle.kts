@@ -21,17 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-plugins { `kotlin-dsl` }
+plugins { id("androidbuild.android-library") }
 
-// Precompiled convention plugins need the Kotlin Gradle plugin and AGP on the
-// classpath so they can reference KotlinCompile and the Android extensions. The
-// Kotlin DSL compiles on the build's JDK; pin its toolchain to the project's Java
-// target for consistency with the modules these plugins configure.
-kotlin { jvmToolchain(libs.versions.build.java.target.get().toInt()) }
+android { namespace = "dev.jasonpearson.android.foundation.navigation" }
 
 dependencies {
-    implementation(libs.kgp)
-    implementation(libs.agp)
-    // Lets androidbuild.android-compose apply the Compose compiler plugin by id.
-    implementation(libs.compose.compiler.plugin)
+    api(libs.navigation.compose)
+
+    testImplementation(libs.junit)
 }

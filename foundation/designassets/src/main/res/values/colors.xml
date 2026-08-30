@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ MIT License
+  ~
+  ~ Copyright (c) 2024 Jason Pearson
+  -->
+<resources>
+    <color name="brand_primary">#D62A22</color>
+    <color name="brand_secondary">#1F6FC2</color>
+    <color name="brand_tertiary">#FFD23F</color>
+</resources>
