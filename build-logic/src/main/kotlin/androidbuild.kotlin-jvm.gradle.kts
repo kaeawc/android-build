@@ -29,4 +29,5 @@
 plugins {
     id("org.jetbrains.kotlin.jvm")
     id("androidbuild.kotlin-common")
+    id("androidbuild.publish")
 }

@@ -1,0 +1,31 @@
+name: "Publish"
+
+# Publishes every library module to GitHub Packages on each green push to main, so
+# artifact-swap has a pre-compiled artifact to substitute for each local project.
+# Runs only on main (never on PRs), so pull requests never publish.
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: "Publish to GitHub Packages"
+    runs-on: ubuntu-latest
+    env:
+      # The androidbuild.publish convention plugin reads GITHUB_ACTOR / GITHUB_TOKEN
+      # for the GitHub Packages Maven repository credentials.
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "publishAllPublicationsToGitHubPackagesRepository"
+          reuse-configuration-cache: true
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
