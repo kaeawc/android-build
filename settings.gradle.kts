@@ -77,3 +77,20 @@ include(":subsystem:analytics")
 include(":subsystem:storage")
 
 include(":subsystem:experimentation")
+
+// :feature -- user-facing screens (depend on :subsystem and :foundation).
+include(":feature:login")
+
+include(":feature:home")
+
+include(":feature:discover")
+
+include(":feature:settings")
+
+include(":feature:mediaplayer")
+
+include(":feature:onboarding")
+
+include(":feature:slides")
+
+include(":feature:demos")
