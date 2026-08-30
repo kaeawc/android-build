@@ -32,11 +32,53 @@ If your build does have an OOM and you want to analyze why it happened you're go
 
 ## Gradle Properties
 
-TBD
+The full set lives in [gradle.properties](gradle.properties) with inline commentary. The
+performance-relevant choices break down into three groups.
+
+### Caching
+
+- `org.gradle.caching=true` — the local (and, if configured, remote) build cache. Every task with
+  deterministic outputs for the same inputs is skipped on subsequent builds.
+- `org.gradle.configuration-cache=true` with `configuration-cache.problems=warn` — caches the whole
+  configuration phase, so an unchanged build graph skips configuration entirely.
+- `org.gradle.configuration-cache.parallel=true` — loads config cache entries in parallel (Gradle
+  8.11+).
+
+### Parallelism and isolation
+
+- `org.gradle.parallel=true` — runs decoupled projects in parallel.
+- `org.gradle.unsafe.isolated-projects=true` — [Isolated Projects](https://docs.gradle.org/current/userguide/isolated_projects.html)
+  lets each project configure and produce tooling models in parallel, cached and invalidated
+  independently. This is the ceiling that most "parallel sync" advice is chasing, and it is the
+  reason the module build files here avoid cross-project `subprojects {}`/`allprojects {}` wiring —
+  those blocks are incompatible with it.
+- `org.gradle.vfs.watch=true` — file-system watching keeps change detection cheap between builds.
+- `kotlin.compiler.execution.strategy=daemon` and `kotlin.incremental=true` — daemon reuse and
+  incremental Kotlin compilation.
+
+### Android / R8
+
+- `android.nonTransitiveRClass=true` — each library's `R` class holds only its own resources,
+  shrinking the generated `R` classes across a module graph.
+- `android.enableBuildConfigAsBytecode=true` with `buildFeatures.buildconfig=false` — skips the
+  `BuildConfig` source-gen round trip.
+- `android.r8.maxWorkers=2` — bounds R8 parallelism so it coexists with parallel Gradle tasks
+  without over-committing memory. R8 full mode is the AGP 9.0+ default.
+- `android.lint.useK2Uast=true` and the disabled `buildfeatures` (aidl, renderscript, resvalues,
+  shaders) trim work this project never needs.
 
 ## Compiler Flags
 
-TBD
+Kotlin compilation is configured once per module (see [app/build.gradle.kts](app/build.gradle.kts),
+and once the module graph lands, the `androidbuild.kotlin-common` convention plugin):
+
+- `languageVersion` and `jvmTarget` are pinned from the version catalog
+  ([gradle/libs.versions.toml](gradle/libs.versions.toml)) rather than the developer's default JDK,
+  so `./gradlew` behaves identically across machines.
+- `freeCompilerArgs` uses `addAll` (not assignment) so plugin-contributed args — Compose, Metro,
+  `-Xcontext-parameters` — survive alongside the project's `-opt-in` list.
+- `coreLibraryDesugaring` is enabled so the app can target a modern JDK while still running on the
+  project's `minSdk`.
 
 # CI Setup
 
@@ -65,3 +107,18 @@ Diff APK from Base: Uses Diffuse against the current and base APK artifacts and 
 ## Android Studio
 
 [studio.vmoptions](studio.vmoptions): I've included a sample file in this repo with some decent options. Since this is not the only project I work on with Android Studio I set my heap size a bit higher, but otherwise it matches the Gradle & Kotlin Daemon JVM args.
+
+### IDE Sync
+
+The single biggest sync win is not a Gradle setting at all — it's an IDE one. Enable **parallel
+model fetch** under *Settings → Build, Execution, Deployment → Gradle* — it fetches each project's
+Tooling API model in parallel instead of serially. Block reported a ~57%
+reduction in sync duration from this one switch in their
+[Shrinking Elephants](https://engineering.block.xyz/blog/shrinking-elephants) writeup. It is
+experimental and can be less stable on very large builds, but for most projects it is a free win
+and pairs naturally with the Isolated Projects flag documented above.
+
+Beyond that, sync cost scales with how many Gradle projects the IDE has to configure. The
+techniques for cutting that down at scale — project focusing, pre-compiled artifact substitution,
+and intransitive sync — are being adopted incrementally in this repo and tracked in
+[docs/build-optimization-roadmap.md](docs/build-optimization-roadmap.md).
