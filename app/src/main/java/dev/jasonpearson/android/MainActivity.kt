@@ -28,13 +28,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dev.jasonpearson.android.di.appGraph
+import dev.jasonpearson.android.navigation.featureGraph
 import dev.jasonpearson.android.resume.ResumePresenter
 import dev.jasonpearson.android.resume.ui.LinkedInQRScreen
 import dev.jasonpearson.android.resume.ui.ResumeApp
+import dev.jasonpearson.android.subsystem.analytics.RecordingAnalyticsClient
+import dev.jasonpearson.android.subsystem.experimentation.InMemoryExperimentRepository
+import dev.jasonpearson.android.subsystem.storage.InMemoryKeyValueStore
+import dev.jasonpearson.android.subsystem.storage.SessionRepository
+import dev.jasonpearson.android.subsystem.storage.UserPreferencesRepository
 import dev.jasonpearson.android.ui.theme.AndroidTheme
 
 class MainActivity : ComponentActivity() {
@@ -49,6 +56,18 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ResumeNavigation(presenter: ResumePresenter) {
     val navController = rememberNavController()
+
+    // Lightweight in-memory subsystem instances shared by the feature screens. These are
+    // constructed here (rather than through the Metro graph) to keep this wiring self-contained;
+    // the app still exercises the full :app -> :feature -> :subsystem dependency chain.
+    val store = remember { InMemoryKeyValueStore() }
+    val analytics = remember { RecordingAnalyticsClient() }
+    val preferences = remember { UserPreferencesRepository(store) }
+    val session = remember { SessionRepository(store) }
+    val experiments = remember { InMemoryExperimentRepository() }
+
+    // Launch destination stays "resume" so the existing resume UI and its UI tests are unaffected;
+    // the feature screens are additional destinations reachable by navigation.
     NavHost(navController = navController, startDestination = "resume") {
         composable("resume") {
             ResumeApp(
@@ -57,5 +76,6 @@ fun ResumeNavigation(presenter: ResumePresenter) {
             )
         }
         composable("linkedin_qr") { LinkedInQRScreen(onBack = { navController.popBackStack() }) }
+        featureGraph(navController, analytics, preferences, session, experiments)
     }
 }

@@ -46,8 +46,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     preferencesRepository: UserPreferencesRepository,
-    onLoggedIn: () -> Unit = {},
     modifier: Modifier = Modifier,
+    onLoggedIn: () -> Unit = {},
 ) {
     var state by remember { mutableStateOf(initialLoginState()) }
     val scope = rememberCoroutineScope()

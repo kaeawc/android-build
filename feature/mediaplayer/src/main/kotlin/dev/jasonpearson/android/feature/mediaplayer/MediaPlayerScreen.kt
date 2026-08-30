@@ -49,8 +49,8 @@ import kotlinx.datetime.LocalDate
 @Composable
 fun MediaPlayerScreen(
     session: SessionRepository,
-    item: MediaItem = SampleTrack,
     modifier: Modifier = Modifier,
+    item: MediaItem = SampleTrack,
 ) {
     var state by remember { mutableStateOf(initialMediaPlayerState()) }
     val scope = rememberCoroutineScope()

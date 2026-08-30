@@ -46,8 +46,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun OnboardingScreen(
     preferencesRepository: UserPreferencesRepository,
-    onFinished: () -> Unit = {},
     modifier: Modifier = Modifier,
+    onFinished: () -> Unit = {},
 ) {
     var state by remember { mutableStateOf(initialOnboardingState()) }
     val scope = rememberCoroutineScope()
