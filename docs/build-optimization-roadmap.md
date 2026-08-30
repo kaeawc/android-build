@@ -31,8 +31,8 @@ playground's flat naming and `auto-mobile-sdk`/`navigation3` dependencies.
 |---|----|--------|-----------|
 | 1 | Docs: IDE parallel model fetch + fill `Gradle Properties`/`Compiler Flags` | **merged** ([#405](https://github.com/kaeawc/android-build/pull/405)) | README sections filled; roadmap committed |
 | 2 | `build-logic` included build + `androidbuild.kotlin-common` convention plugin | **merged** ([#406](https://github.com/kaeawc/android-build/pull/406)) | `:app` builds via the convention plugin; typesafe project accessors enabled (root renamed `android-build`); config cache + isolated projects still green |
-| 3 | `:core:*` modules (`:core:common`, `:core:model`) + `androidbuild.kotlin-jvm` | **in progress** | Pure-Kotlin modules build and test; `:core:model → :core:common` edge; `assertModuleGraph` green |
-| 4 | `:foundation:*` modules | planned | e.g. `:foundation:designsystem`, `:foundation:navigation`; graph green |
+| 3 | `:core:*` modules (`:core:common`, `:core:model`) + `androidbuild.kotlin-jvm` | **merged** ([#407](https://github.com/kaeawc/android-build/pull/407)) | Pure-Kotlin modules build and test; `:core:model → :core:common` edge; `assertModuleGraph` green |
+| 4 | `:foundation:*` (`designassets`, `designsystem`, `navigation`) + `androidbuild.android-library`/`android-compose` | **in progress** | Compose theme + components, nav route contract; graph green |
 | 5 | `:subsystem:*` modules | planned | e.g. `:subsystem:auth`; graph green |
 | 6 | `:feature:*` modules + wire `:app` | planned | Ported playground features build and are reachable from `:app`; UI/unit tests green |
 | 7 | Adopt Spotlight (`com.fueledbycaffeine.spotlight`) | planned | Settings plugin applied; project focusing works; IDE plugin documented |

@@ -1,0 +1,17 @@
+<!--
+  ~ MIT License
+  ~
+  ~ Copyright (c) 2024 Jason Pearson
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#D62A22"
+        android:pathData="M24,4L44,24L24,44L4,24Z" />
+    <path
+        android:fillColor="#FFD23F"
+        android:pathData="M24,16L32,24L24,32L16,24Z" />
+</vector>

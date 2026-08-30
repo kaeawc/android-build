@@ -21,17 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-plugins { `kotlin-dsl` }
+import com.android.build.api.dsl.LibraryExtension
+import org.gradle.kotlin.dsl.configure
 
-// Precompiled convention plugins need the Kotlin Gradle plugin and AGP on the
-// classpath so they can reference KotlinCompile and the Android extensions. The
-// Kotlin DSL compiles on the build's JDK; pin its toolchain to the project's Java
-// target for consistency with the modules these plugins configure.
-kotlin { jvmToolchain(libs.versions.build.java.target.get().toInt()) }
-
-dependencies {
-    implementation(libs.kgp)
-    implementation(libs.agp)
-    // Lets androidbuild.android-compose apply the Compose compiler plugin by id.
-    implementation(libs.compose.compiler.plugin)
+// Compose-enabled Android library: the base android-library convention plus the
+// Compose compiler plugin and the compose build feature. Modules add their own
+// Compose dependencies (BOM, bundles) so each declares only what it uses.
+plugins {
+    id("androidbuild.android-library")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
+
+extensions.configure<LibraryExtension> { buildFeatures { compose = true } }
