@@ -21,44 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-pluginManagement {
-    // Convention plugins (e.g. androidbuild.kotlin-common) live in the build-logic
-    // included build.
-    includeBuild("build-logic")
+package dev.jasonpearson.android.core.model
 
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
+import dev.jasonpearson.android.core.common.Identifiable
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.datetime.LocalDate
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
-        // Uncomment to pin R8 version from the R8 releases repo
-        // exclusiveContent {
-        //     forRepository {
-        //         maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
-        //     }
-        //     filter { includeModule("com.android.tools", "r8") }
-        // }
+class MediaItemTest {
+
+    @Test
+    fun `is addressable as an Identifiable from core-common`() {
+        val item: Identifiable =
+            MediaItem(
+                id = "track-1",
+                title = "Elephant March",
+                artist = "The Herd",
+                duration = 214.seconds,
+                releaseDate = LocalDate(2024, 1, 1),
+            )
+        assertEquals("track-1", item.id)
+    }
+
+    @Test
+    fun `data class equality holds by value`() {
+        fun sample() =
+            MediaItem("track-1", "Elephant March", "The Herd", 214.seconds, LocalDate(2024, 1, 1))
+        assertTrue(sample() == sample())
     }
 }
-
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-// Type-safe project accessors (e.g. projects.app) for module dependencies as the
-// graph grows beyond a single module.
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
-// No spaces: the type-safe project accessors feature requires the root project name
-// to match [a-zA-Z]([A-Za-z0-9\-_])*.
-rootProject.name = "android-build"
-
-include(":app")
-
-// :core -- platform-agnostic, pure-Kotlin foundations (bottom of the module graph).
-include(":core:common")
-
-include(":core:model")
