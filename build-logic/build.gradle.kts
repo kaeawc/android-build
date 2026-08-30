@@ -21,39 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-pluginManagement {
-    // Convention plugins (e.g. androidbuild.kotlin-common) live in the build-logic
-    // included build.
-    includeBuild("build-logic")
+plugins { `kotlin-dsl` }
 
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
+// Precompiled convention plugins need the Kotlin Gradle plugin and AGP on the
+// classpath so they can reference KotlinCompile and the Android extensions. The
+// Kotlin DSL compiles on the build's JDK; pin its toolchain to the project's Java
+// target for consistency with the modules these plugins configure.
+kotlin { jvmToolchain(libs.versions.build.java.target.get().toInt()) }
 
-        // Uncomment to pin R8 version from the R8 releases repo
-        // exclusiveContent {
-        //     forRepository {
-        //         maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
-        //     }
-        //     filter { includeModule("com.android.tools", "r8") }
-        // }
-    }
+dependencies {
+    implementation(libs.kgp)
+    implementation(libs.agp)
 }
-
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-// Type-safe project accessors (e.g. projects.app) for module dependencies as the
-// graph grows beyond a single module.
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
-// No spaces: the type-safe project accessors feature requires the root project name
-// to match [a-zA-Z]([A-Za-z0-9\-_])*.
-rootProject.name = "android-build"
-
-include(":app")

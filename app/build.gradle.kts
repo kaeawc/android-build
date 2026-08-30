@@ -22,11 +22,10 @@
  * SOFTWARE.
  */
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    id("androidbuild.kotlin-common")
     alias(libs.plugins.android.application)
     alias(libs.plugins.graphAssertion)
     alias(libs.plugins.publish)
@@ -216,25 +215,9 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks
     .matching { it.name.startsWith("minify") && it.name.endsWith("WithR8") }
-    .configureEach { dependsOn(killKotlinCompileDaemon) }
-
-tasks.withType<KotlinCompile>().configureEach {
-    compilerOptions {
-        languageVersion.set(
-            KotlinVersion.valueOf(
-                "KOTLIN_${libs.versions.build.kotlin.language.get().replace(".", "_")}"
-            )
-        )
-        jvmTarget.set(JvmTarget.valueOf("JVM_${libs.versions.build.java.target.get()}"))
-        freeCompilerArgs.addAll(
-            listOf(
-                "-opt-in=kotlin.time.ExperimentalTime",
-                "-opt-in=kotlin.RequiresOptIn",
-                "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                "-opt-in=kotlin.ExperimentalUnsignedTypes",
-                "-opt-in=kotlinx.coroutines.FlowPreview",
-                "-Xcontext-parameters",
-            )
-        )
+    .configureEach {
+        dependsOn(killKotlinCompileDaemon)
     }
-}
+
+// Kotlin language version, JVM target, and the project-wide opt-in list are applied
+// by the androidbuild.kotlin-common convention plugin.
