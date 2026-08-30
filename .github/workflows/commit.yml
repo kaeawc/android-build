@@ -294,7 +294,11 @@ jobs:
 
       - name: "Install auto-mobile"
         shell: "bash"
-        run: npm install -g @kaeawc/auto-mobile --ignore-scripts
+        # Pin to match auto-mobile-junit-runner in gradle/libs.versions.toml.
+        # The daemon/CLI and the runner must be the same version: a mismatch makes
+        # the daemon disable the executePlan tool (version-compatibility gate) and
+        # every AutoMobile plan fails. Bump both together.
+        run: npm install -g @kaeawc/auto-mobile@0.0.60 --ignore-scripts
 
       - name: "Copy auto-mobile schema to workspace"
         shell: "bash"
