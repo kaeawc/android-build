@@ -34,6 +34,7 @@ import org.gradle.kotlin.dsl.getByType
 plugins {
     id("com.android.library")
     id("androidbuild.kotlin-common")
+    id("androidbuild.publish")
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
