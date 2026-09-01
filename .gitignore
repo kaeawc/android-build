@@ -48,3 +48,5 @@ schemas/
 tools/artifactswap/
 # Artifact Swap hashing output
 artifactswapHashes/
+# Artifact Swap CLI task-finder output
+taskOutputs/

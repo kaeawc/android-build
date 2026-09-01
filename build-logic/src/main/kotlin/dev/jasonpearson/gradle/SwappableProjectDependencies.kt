@@ -28,6 +28,7 @@ import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.plugins.ExtensionAware
+import xyz.block.artifactswap.gradle.artifactSwapCoordinates
 import xyz.block.gradle.isArtifactSwapActive
 
 /**
@@ -154,14 +155,23 @@ private fun DependencyHandler.swappable(path: String): ModuleDependency {
     val owner =
         ((this as ExtensionAware).extensions.findByName(SWAP_CONTEXT_EXTENSION) as? SwapContext)
             ?.project
+            ?: error(
+                "Dependency on $path was declared via the swap-aware projects.* accessors, but " +
+                    "no $SWAP_CONTEXT_EXTENSION extension is registered on this project's " +
+                    "dependencies. Apply the androidbuild.kotlin-common convention (directly, " +
+                    "or via androidbuild.kotlin-jvm / androidbuild.android-library / " +
+                    "androidbuild.android-compose). A silent fallback here would only fail " +
+                    "later, during a swap-active IDE sync, far from the cause."
+            )
 
-    if (owner == null || !owner.isArtifactSwapActive) {
+    if (!owner.isArtifactSwapActive) {
         return project(mapOf("path" to path)) as ProjectDependency
     }
 
     val group = owner.providers.gradleProperty("artifactswap.primaryArtifactsMavenGroup").get()
-    val artifactId = path.removePrefix(":").replace(":", "_")
-    // Versionless notation, exactly like the Groovy override: ArtifactSwapProjectPlugin's
-    // dependency substitution supplies the BOM version (or swaps back to the project).
-    return create("$group:$artifactId") as ModuleDependency
+    // Path -> artifactId via upstream's own helper, so consumer coordinates stay in
+    // lockstep with what the publish plugin and BOM use. Versionless notation, exactly
+    // like the Groovy override: ArtifactSwapProjectPlugin's dependency substitution
+    // supplies the BOM version (or swaps back to the project).
+    return create("$group:${path.artifactSwapCoordinates}") as ModuleDependency
 }

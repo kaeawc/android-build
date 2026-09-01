@@ -24,9 +24,10 @@ store; the notable difference is that GitHub Packages requires an authenticated 
 | CI: publish artifacts + BOM, advance `artifact-swap-green-main` | [.github/workflows/publish.yml](../.github/workflows/publish.yml) |
 | Background artifact refresh on branch switch (opt-in) | `.githooks/post-checkout` |
 
-The cycle: CI hashes every module's sources, publishes artifacts for changed modules at their
-**content-hash version**, publishes a BOM (module → hash version), and fast-forwards the
-`artifact-swap-green-main` branch. A developer's sync finds the newest BOM reachable from their
+The cycle: after the Commit workflow goes green on `main`, CI hashes every module's sources,
+publishes artifacts for changed modules at their **content-hash version**, publishes a BOM
+(module → hash version), and advances the `artifact-swap-green-main` branch (forward-only,
+serialized by a concurrency group, and gated on the tests — so the branch really is green). A developer's sync finds the newest BOM reachable from their
 branch, downloads artifacts to Maven Local, and swaps every unchanged, unfocused module. Modules
 with local changes (vs. the BOM commit) always stay real projects.
 
@@ -89,9 +90,11 @@ Locally proven end-to-end (fresh clone, simulated sync via `-Didea.sync.active=t
   unaffected with the swap enabled or disabled.
 
 Not yet exercised: the CI publish pipeline against GitHub Packages end-to-end (`artifact-checker`
-existence checks and BOM upload run for the first time on the first `main` push after this lands;
-the Bearer-token auth and Maven-layout PUTs are the same calls the already-verified local publish
-and PR-8 CI publish used).
+existence checks and BOM upload run for the first time on the first gated `main` run after this
+lands; the Bearer-token auth and Maven-layout PUTs are the same calls the already-verified local
+publish and PR-8 CI publish used). Note the publish repository requires BOTH
+`artifactswap.artifactRepo.username` and the token to attach credentials at all -- the username is
+set in gradle.properties; removing it would silently publish unauthenticated and 401.
 
 ## Known caveats
 

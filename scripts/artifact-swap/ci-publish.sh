@@ -15,13 +15,18 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-VERSION="0.1.12"
-git_root=$(git rev-parse --show-toplevel)
-bin_path="$git_root/tools/artifactswap/artifactswap-$VERSION/bin/artifactswap"
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=scripts/artifact-swap/env.sh
+source "$script_dir/env.sh"
 
-if [[ ! -x "$bin_path" ]]; then
-  "$git_root/scripts/artifact-swap/install-cli.sh"
-fi
+git_root=$(git rev-parse --show-toplevel)
+# Anchor all relative output paths (artifactswapHashes/, taskOutputs/) to the repo
+# root: the Gradle publish plugin resolves artifactswap.artifactVersionFile against
+# rootDir, so running from a subdirectory would otherwise split the two locations.
+cd "$git_root"
+
+ensure_artifactswap_cli "$git_root"
+bin_path=$(artifactswap_bin "$git_root")
 
 export ARTIFACTSWAP_TOOL_OPTS="-Xmx2048M"
 hash_file="artifactswapHashes/hashing.out"

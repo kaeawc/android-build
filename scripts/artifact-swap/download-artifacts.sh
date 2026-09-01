@@ -13,22 +13,26 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-VERSION="0.1.12"
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=scripts/artifact-swap/env.sh
+source "$script_dir/env.sh"
+
 BRANCH="artifact-swap-green-main"
 git_root=$(git rev-parse --show-toplevel)
-bin_path="$git_root/tools/artifactswap/artifactswap-$VERSION/bin/artifactswap"
 
-if [[ ! -x "$bin_path" ]]; then
-  "$git_root/scripts/artifact-swap/install-cli.sh"
-fi
+ensure_artifactswap_cli "$git_root"
 
 # Resolve the GitHub Packages token: explicit SECRETS_PATH wins; otherwise mint
 # one from the gh CLI.
 if [[ -z "${SECRETS_PATH:-}" || ! -f "${SECRETS_PATH:-}/github-token.txt" ]]; then
   if command -v gh >/dev/null 2>&1 && gh auth token >/dev/null 2>&1; then
-    scopes=$(gh auth status 2>/dev/null | grep -i "Token scopes" || true)
+    # Check the ACTIVE token's actual scopes via the API response header — parsing
+    # `gh auth status` text would match any logged-in account's scopes, not
+    # necessarily the token `gh auth token` returns. Fine-grained tokens have no
+    # scopes header; proceed in that case and let a real 401 surface downstream.
+    scopes=$(gh api -i user 2>/dev/null | tr -d '\r' | grep -i '^x-oauth-scopes:' | cut -d' ' -f2- || true)
     if [[ -n "$scopes" && "$scopes" != *"packages"* ]]; then
-      echo "error: the gh CLI token lacks the read:packages scope." >&2
+      echo "error: the active gh CLI token lacks the read:packages scope (has: $scopes)." >&2
       echo "Run:  gh auth refresh -s read:packages   and retry." >&2
       exit 1
     fi
@@ -54,4 +58,4 @@ if ! git fetch origin "$BRANCH" --quiet 2>/dev/null; then
 fi
 
 echo "Syncing artifacts for Artifact Swap"
-"$bin_path" download-artifacts --dir "$git_root" "$@"
+"$(artifactswap_bin "$git_root")" download-artifacts --dir "$git_root" "$@"

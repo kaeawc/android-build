@@ -39,7 +39,12 @@ dependencies {
     // classpath; applying it manually via a convention plugin is the supported
     // alternative and keeps it on the module classpath where it belongs.
     implementation(libs.artifactswap.publish.plugin)
-    // The publish plugin references core Artifact Swap Gradle classes (artifactSwapConfig,
-    // coordinates); gradle-publish-plugin declares them compileOnly, so add them here.
+    // gradle-plugin provides xyz.block.gradle.isArtifactSwapActive and the BOM build
+    // service, both used by SwappableProjectDependencies; it also satisfies the publish
+    // plugin's compileOnly references at runtime.
     implementation(libs.artifactswap.gradle.plugin)
+    // gradle-utils provides the artifactSwapCoordinates path->artifactId helper, imported
+    // by SwappableProjectDependencies so consumer coordinates stay in lockstep with what
+    // upstream's publish plugin and BOM use.
+    implementation(libs.artifactswap.gradle.utils)
 }
