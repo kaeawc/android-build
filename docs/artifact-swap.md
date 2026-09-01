@@ -103,6 +103,10 @@ set in gradle.properties; removing it would silently publish unauthenticated and
 - `artifactswap.enabled` defaults to **false** because an enabled sync with no BOM in Maven Local
   fails module selection ("found no matching BOMs"). Enable it after the first
   `download-artifacts.sh` run.
+- The CLI is a patched build of upstream v0.1.12 (GitHub Packages requires authentication on
+  every request, and its generated maven-metadata.xml omits `<release>`); see
+  [patches/artifact-swap/](../patches/artifact-swap/) for the diff and rebuild instructions. The
+  Gradle plugins are stock.
 - Artifact Swap's settings plugin requires the Develocity plugin on the settings classpath (it
   references the build-scan API); it's applied without a server, so no scans are published.
 - The CLI's telemetry endpoint is pointed at a fast-failing localhost port; the resulting log
