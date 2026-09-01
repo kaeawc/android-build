@@ -43,10 +43,17 @@ echo "===== Finding publish tasks ====="
 # Note: no -Partifactswap.publishingEnabled=true here. This repo applies the Artifact
 # Swap publish plugin through the androidbuild.publish convention (gated on the
 # version-file property) instead of the settings-plugin auto-apply.
+# --no-configuration-cache -Dorg.gradle.unsafe.isolated-projects=false: task-finder
+# realizes every project's tasks via the Tooling API, and the module-graph assertion
+# plugin's task registration reaches across projects, which Isolated Projects forbids.
+# Mirrors the repo's own whole-graph CI jobs (gradle-task-run with
+# reuse-configuration-cache: false). Real builds keep IP on.
 "$bin_path" task-finder \
   --dir "$git_root" \
   --logging INFO \
   --gradle-args "-Partifactswap.artifactVersionFile=$hash_file" \
+  --gradle-args "--no-configuration-cache" \
+  --gradle-args "-Dorg.gradle.unsafe.isolated-projects=false" \
   --task-list-output-directory "taskOutputs" \
   --task publishToArtifactSwapRepository \
   --log-gradle \
@@ -65,6 +72,8 @@ echo "===== Publishing missing artifacts ====="
   --dir "$git_root" \
   --logging INFO \
   --gradle-args "-Partifactswap.artifactVersionFile=$hash_file" \
+  --gradle-args "--no-configuration-cache" \
+  --gradle-args "-Dorg.gradle.unsafe.isolated-projects=false" \
   --task-list-file "taskOutputs/task-output-filtered.out" \
   --log-gradle
 
