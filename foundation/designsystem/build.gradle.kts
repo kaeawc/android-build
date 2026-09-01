@@ -21,6 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import dev.jasonpearson.gradle.projects
+
 plugins { id("androidbuild.android-compose") }
 
 android { namespace = "dev.jasonpearson.android.foundation.designsystem" }

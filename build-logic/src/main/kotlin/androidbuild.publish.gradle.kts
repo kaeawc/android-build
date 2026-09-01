@@ -21,87 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import com.android.build.api.dsl.LibraryExtension
-import org.gradle.api.plugins.JavaPluginExtension
-import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.get
+import xyz.block.artifactswap.ArtifactSwapProjectPublishPlugin
 
-// Publishes each library module to GitHub Packages so artifact-swap can substitute
-// a pre-compiled artifact for a local project. Applied automatically by the
+// Applies Artifact Swap's publish plugin to every library module (auto-applied by the
 // androidbuild.android-library and androidbuild.kotlin-jvm conventions; the app is
-// never published. artifactId is the module's Gradle path flattened with dashes
-// (e.g. :core:common -> core-common) so names never collide across layers.
-plugins { id("maven-publish") }
-
-// Every green main publishes a new, immutable version: the base VERSION_NAME plus
-// the commit short SHA. GitHub Packages forbids overwriting an existing version, so
-// a fixed version (e.g. -SNAPSHOT) would 409 on the second publish. The SHA comes
-// from GITHUB_SHA on CI, falling back to `git rev-parse HEAD` locally, then "local".
-val commitSha =
-    providers
-        .environmentVariable("GITHUB_SHA")
-        .orElse(providers.exec { commandLine("git", "rev-parse", "HEAD") }.standardOutput.asText)
-        .map { it.trim().take(7) }
-        .orElse("local")
-
-group = providers.gradleProperty("GROUP").get()
-
-version = "${providers.gradleProperty("VERSION_NAME").get()}-${commitSha.get()}"
-
-val moduleArtifactId = path.removePrefix(":").replace(":", "-")
-
-extensions.configure<PublishingExtension> {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/kaeawc/android-build")
-            credentials {
-                username =
-                    providers
-                        .gradleProperty("gpr.user")
-                        .orElse(providers.environmentVariable("GITHUB_ACTOR"))
-                        .orNull
-                password =
-                    providers
-                        .gradleProperty("gpr.key")
-                        .orElse(providers.environmentVariable("GITHUB_TOKEN"))
-                        .orNull
-            }
-        }
-    }
-}
-
-// Android library modules: publish the release variant (with sources).
-pluginManager.withPlugin("com.android.library") {
-    extensions.configure<LibraryExtension> {
-        publishing { singleVariant("release") { withSourcesJar() } }
-    }
-    afterEvaluate {
-        extensions.configure<PublishingExtension> {
-            publications {
-                create<MavenPublication>("release") {
-                    from(components["release"])
-                    artifactId = moduleArtifactId
-                }
-            }
-        }
-    }
-}
-
-// Pure-JVM modules: publish the java component (with sources).
-pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
-    extensions.configure<JavaPluginExtension> { withSourcesJar() }
-    afterEvaluate {
-        extensions.configure<PublishingExtension> {
-            publications {
-                create<MavenPublication>("maven") {
-                    from(components["java"])
-                    artifactId = moduleArtifactId
-                }
-            }
-        }
-    }
+// never published). The plugin is a no-op on normal builds -- it only configures
+// Maven publishing when the Artifact Swap CLI drives a publish with a content-hash
+// version file (-Partifactswap.artifactVersionFile=...). Artifacts are published to
+// artifactswap.artifactRepo.url (GitHub Packages) under group
+// artifactswap.primaryArtifactsMavenGroup, versioned by each module's content hash so
+// that unchanged modules keep the same immutable version across commits.
+if (providers.gradleProperty("artifactswap.artifactVersionFile").isPresent) {
+    pluginManager.apply(ArtifactSwapProjectPublishPlugin::class.java)
 }

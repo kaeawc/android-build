@@ -34,4 +34,12 @@ dependencies {
     implementation(libs.agp)
     // Lets androidbuild.android-compose apply the Compose compiler plugin by id.
     implementation(libs.compose.compiler.plugin)
+    // Artifact Swap's publish plugin, applied per-module by androidbuild.publish. Its
+    // settings plugin can auto-apply this, but that needs the class on the settings
+    // classpath; applying it manually via a convention plugin is the supported
+    // alternative and keeps it on the module classpath where it belongs.
+    implementation(libs.artifactswap.publish.plugin)
+    // The publish plugin references core Artifact Swap Gradle classes (artifactSwapConfig,
+    // coordinates); gradle-publish-plugin declares them compileOnly, so add them here.
+    implementation(libs.artifactswap.gradle.plugin)
 }

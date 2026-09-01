@@ -121,7 +121,9 @@ and pairs naturally with the Isolated Projects flag documented above.
 Beyond that, sync cost scales with how many Gradle projects the IDE has to configure. The
 techniques for cutting that down at scale — project focusing, pre-compiled artifact substitution,
 and intransitive sync — are being adopted incrementally in this repo and tracked in
-[docs/build-optimization-roadmap.md](docs/build-optimization-roadmap.md).
+[docs/build-optimization-roadmap.md](docs/build-optimization-roadmap.md). Artifact substitution is
+live: see [docs/artifact-swap.md](docs/artifact-swap.md) for how unchanged modules are swapped for
+pre-compiled GitHub-Packages artifacts during IDE sync, and what that took on a Kotlin-DSL build.
 
 #### Project focusing (Spotlight)
 

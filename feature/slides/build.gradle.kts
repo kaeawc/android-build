@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 
+import dev.jasonpearson.gradle.projects
+
 plugins { id("androidbuild.android-compose") }
 
 android { namespace = "dev.jasonpearson.android.feature.slides" }

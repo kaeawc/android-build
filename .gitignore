@@ -43,3 +43,8 @@ gradle/ide-projects.txt
 
 # AutoMobile schema (consumed from @kaeawc/auto-mobile npm package, not committed)
 schemas/
+
+# Artifact Swap CLI (downloaded by scripts/artifact-swap/install-cli.sh)
+tools/artifactswap/
+# Artifact Swap hashing output
+artifactswapHashes/

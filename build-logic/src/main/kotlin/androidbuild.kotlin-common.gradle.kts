@@ -69,3 +69,11 @@ tasks.withType<KotlinCompile>().configureEach {
         )
     }
 }
+
+// Carries this project into the dev.jasonpearson.gradle.project(String) dependency
+// override (see SwappableProjectDependencies.kt) so it can consult Artifact Swap
+// state when rewriting project dependencies during IDE sync.
+dependencies.extensions.add(
+    dev.jasonpearson.gradle.SWAP_CONTEXT_EXTENSION,
+    dev.jasonpearson.gradle.SwapContext(project),
+)

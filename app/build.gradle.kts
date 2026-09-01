@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+import dev.jasonpearson.gradle.projects
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
