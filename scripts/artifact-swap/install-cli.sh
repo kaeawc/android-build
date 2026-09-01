@@ -22,9 +22,12 @@ mkdir -p "$tools_dir"
 tmp_zip=$(mktemp -t artifactswap-cli.XXXXXX)
 trap 'rm -f "$tmp_zip"' EXIT
 
+# Patched build for GitHub Packages compatibility (always-authenticated Basic
+# requests; nullable <release> in maven metadata), hosted as a release asset on
+# this repo. See patches/artifact-swap/ for the exact diff vs upstream v0.1.12.
 echo "Downloading Artifact Swap CLI $ARTIFACTSWAP_VERSION..."
 curl -sL --fail --max-time 300 \
-  "https://repo.maven.apache.org/maven2/xyz/block/artifactswap/cli/$ARTIFACTSWAP_VERSION/cli-$ARTIFACTSWAP_VERSION.zip" \
+  "https://github.com/kaeawc/android-build/releases/download/cli-$ARTIFACTSWAP_VERSION/artifactswap-$ARTIFACTSWAP_VERSION.zip" \
   -o "$tmp_zip"
 unzip -q -o "$tmp_zip" -d "$tools_dir"
 chmod +x "$bin_path"

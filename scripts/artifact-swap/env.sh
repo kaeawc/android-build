@@ -1,11 +1,12 @@
 # shellcheck shell=bash
 # Shared environment for the Artifact Swap scripts. Source, don't execute.
 #
-# Single source of truth for the CLI version on the shell side. Keep in lockstep
-# with `build-artifactswap` in gradle/libs.versions.toml and the
-# xyz.block.artifactswap.settings plugin version in settings.gradle.kts (Gradle
-# cannot read this file, so those two are declared separately).
-ARTIFACTSWAP_VERSION="0.1.12"
+# Single source of truth for the CLI version on the shell side. The CLI is a
+# patched build of upstream v0.1.12 (see patches/artifact-swap/), hosted as a
+# release asset on this repo; the Gradle plugins stay on stock 0.1.12
+# (`build-artifactswap` in gradle/libs.versions.toml and the settings plugin
+# version in settings.gradle.kts).
+ARTIFACTSWAP_VERSION="0.1.12-kaeawc.1"
 
 # Absolute path to the CLI binary for a given repo root.
 artifactswap_bin() {

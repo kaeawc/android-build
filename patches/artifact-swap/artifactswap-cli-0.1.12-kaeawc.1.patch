@@ -1,0 +1,69 @@
+diff --git a/cli/src/main/kotlin/xyz/block/artifactswap/cli/di/NetworkModule.kt b/cli/src/main/kotlin/xyz/block/artifactswap/cli/di/NetworkModule.kt
+index 4e6f1e9..37e9b48 100644
+--- a/cli/src/main/kotlin/xyz/block/artifactswap/cli/di/NetworkModule.kt
++++ b/cli/src/main/kotlin/xyz/block/artifactswap/cli/di/NetworkModule.kt
+@@ -31,7 +31,6 @@ import xyz.block.artifactswap.core.eventstream.EventstreamService
+ import xyz.block.artifactswap.core.network.ArtifactoryEndpoints
+ import xyz.block.artifactswap.core.network.ArtifactoryService
+ 
+-private val UNAUTHENTICATED_HTTP_METHODS = listOf("GET", "HEAD")
+ private const val MAX_RETRY_ATTEMPTS = 5
+ 
+ internal fun artifactoryNetworkModule() = module {
+@@ -110,17 +109,20 @@ internal fun artifactoryNetworkModule() = module {
+       }
+       .addNetworkInterceptor(get<Interceptor>(named("cache404Interceptor")))
+       .addInterceptor { chain ->
+-        // GET/HEAD methods don't require authentication
+-        if (chain.request().method !in UNAUTHENTICATED_HTTP_METHODS) {
+-          val newRequest =
+-            chain
+-              .request()
+-              .newBuilder()
+-              .addHeader("Authorization", "Bearer ${get<String>(named("artifactoryToken"))}")
+-              .build()
+-          return@addInterceptor chain.proceed(newRequest)
+-        }
+-        return@addInterceptor chain.proceed(chain.request())
++        // kaeawc patch for GitHub Packages: unlike Artifactory with anonymous reads,
++        // GitHub Packages requires authentication on EVERY request (including GET/HEAD),
++        // and accepts Basic (any username + token) rather than Bearer. Always attach
++        // Basic credentials.
++        val newRequest =
++          chain
++            .request()
++            .newBuilder()
++            .addHeader(
++              "Authorization",
++              okhttp3.Credentials.basic("token", get<String>(named("artifactoryToken"))),
++            )
++            .build()
++        return@addInterceptor chain.proceed(newRequest)
+       }
+       .build()
+   }
+diff --git a/core/src/main/kotlin/xyz/block/artifactswap/core/maven/Metadata.kt b/core/src/main/kotlin/xyz/block/artifactswap/core/maven/Metadata.kt
+index 572d188..18d6699 100644
+--- a/core/src/main/kotlin/xyz/block/artifactswap/core/maven/Metadata.kt
++++ b/core/src/main/kotlin/xyz/block/artifactswap/core/maven/Metadata.kt
+@@ -8,7 +8,9 @@ data class Metadata(val groupId: String, val artifactId: String, val versioning:
+ 
+ data class Versioning(
+   val latest: String,
+-  val release: String,
++  // kaeawc patch for GitHub Packages: its generated maven-metadata.xml omits the
++  // <release> element that Artifactory includes; nothing outside this model reads it.
++  val release: String? = null,
+   val versions: Versions,
+   val lastUpdated: Long,
+ )
+diff --git a/gradle.properties b/gradle.properties
+index 238ce55..fcffecc 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -11,4 +11,4 @@ org.gradle.configuration-cache.parallel=true
+ org.gradle.parallel=true
+ 
+ group=xyz.block.artifactswap
+-version=0.1.12
++version=0.1.12-kaeawc.1
