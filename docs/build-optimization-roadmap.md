@@ -37,8 +37,8 @@ playground's flat naming and `auto-mobile-sdk`/`navigation3` dependencies.
 | 6a | `:feature:*` ×8 (`login`, `home`, `discover`, `settings`, `mediaplayer`, `onboarding`, `slides`, `demos`) | **merged** ([#410](https://github.com/kaeawc/android-build/pull/410)) | Compose screens + pure UiState/reducers + tests; graph green |
 | 6b | Wire `:app` NavHost → features | **in progress** | `:app` depends on all features; NavHost routes the `Destination` contract to feature screens (resume stays the launch start). Allowed `:foundation → :foundation` (designsystem now renders the designassets brand mark). |
 | 7 | Adopt Spotlight (`com.fueledbycaffeine.spotlight` 1.7.0) | **in progress** | Settings plugin applied; `include`s moved to `gradle/all-projects.txt`; `:checkAllProjectsList` green; per-dev `gradle/ide-projects.txt` focuses IDE sync (gitignored); IDE plugin #27451 documented |
-| 8 | GitHub Packages publishing for modules | **in progress** | `androidbuild.publish` convention plugin (auto-applied to every library module) + a `publish.yml` workflow pushes 16 module artifacts to GitHub Packages on green `main`; validated via `publishToMavenLocal` |
-| 9 | Adopt artifact-swap (GitHub-backed) | planned | `xyz.block.artifactswap` wired to GitHub Packages + `artifact-swap-green-main` BOM branch + post-checkout hook + CLI |
+| 8 | GitHub Packages publishing for modules | **merged** ([#413](https://github.com/kaeawc/android-build/pull/413)) | Superseded by PR 9: the same convention plugin now applies Artifact Swap's content-hash publishing |
+| 9 | Adopt artifact-swap (GitHub-backed) | **in progress** | Full functional swap on Kotlin DSL via hand-rolled swap-aware `projects.*` accessors — see [artifact-swap.md](artifact-swap.md). Sync excludes unchanged modules and resolves content-hash artifacts; locally-changed modules stay projects; CLI builds unaffected |
 | 10 | Fastsync / intransitive sync | planned | Runtime classpaths not resolved during IDE sync; compile classpath still complete |
 
 ## Infrastructure notes

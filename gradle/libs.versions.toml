@@ -18,6 +18,7 @@ build-gradle-graphAssertion = "2.9.1"
 build-gradle-doctor = "0.12.1"
 build-gradle-sortDependencies = "0.18.0"
 build-gradle-triplet-play = "4.1.1"
+build-artifactswap = "0.1.12"
 androidx-core = "1.19.0"
 androidx-activity-compose = "1.13.0"
 androidx-compose-bom = "2026.08.00"
@@ -49,6 +50,9 @@ kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "bui
 agp = { module = "com.android.tools.build:gradle", version.ref = "build-android-agp" }
 # Compose compiler Gradle plugin as a library so build-logic convention plugins can apply it by id.
 compose-compiler-plugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "build-kotlin" }
+artifactswap-publish-plugin = { module = "xyz.block.artifactswap:gradle-publish-plugin", version.ref = "build-artifactswap" }
+artifactswap-gradle-plugin = { module = "xyz.block.artifactswap:gradle-plugin", version.ref = "build-artifactswap" }
+artifactswap-gradle-utils = { module = "xyz.block.artifactswap:gradle-utils", version.ref = "build-artifactswap" }
 # Uncomment to pin R8 version
 # r8 = { module = "com.android.tools:r8", version.ref = "build-android-r8" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "build-kotlin" }

@@ -1,31 +1,67 @@
 name: "Publish"
 
-# Publishes every library module to GitHub Packages on each green push to main, so
-# artifact-swap has a pre-compiled artifact to substitute for each local project.
-# Runs only on main (never on PRs), so pull requests never publish.
+# Artifact Swap publishing: after the Commit workflow succeeds on main, publish
+# content-hash-versioned module artifacts + a BOM to GitHub Packages, then advance the
+# artifact-swap-green-main branch so developer IDE syncs can discover the BOM and swap
+# unchanged modules for pre-compiled artifacts.
+#
+# Gated on the Commit workflow (workflow_run + conclusion check) so a commit with red
+# tests never becomes the swap baseline, serialized via a concurrency group, and the
+# branch is only ever advanced forward (guarded, non-force push) so an out-of-order
+# run cannot rewind it.
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Commit"]
+    types: [completed]
+    branches: [main]
 
 permissions:
-  contents: read
+  contents: write
   packages: write
+
+concurrency:
+  group: publish-green-main
+  cancel-in-progress: false
 
 jobs:
   publish:
-    name: "Publish to GitHub Packages"
+    name: "Publish Artifact Swap artifacts + BOM"
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    env:
-      # The androidbuild.publish convention plugin reads GITHUB_ACTOR / GITHUB_TOKEN
-      # for the GitHub Packages Maven repository credentials.
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: "Git Checkout"
         uses: actions/checkout@v4
-
-      - uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: "publishAllPublicationsToGitHubPackagesRepository"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          # Build exactly the commit the green Commit run validated.
+          ref: ${{ github.event.workflow_run.head_sha }}
+          # hashing + BOM-branch operations need real history, not a shallow clone
+          fetch-depth: 0
+
+      - name: "Set up JDK"
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: "Write GitHub Packages token for the Artifact Swap CLI"
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/artifactswap-secrets"
+          printf '%s' "${{ secrets.GITHUB_TOKEN }}" > "$RUNNER_TEMP/artifactswap-secrets/github-token.txt"
+
+      - name: "Run Artifact Swap publish pipeline"
+        shell: bash
+        env:
+          SECRETS_PATH: ${{ runner.temp }}/artifactswap-secrets
+        run: scripts/artifact-swap/ci-publish.sh
+
+      - name: "Advance artifact-swap-green-main"
+        shell: bash
+        run: |
+          git fetch origin artifact-swap-green-main --quiet 2>/dev/null || true
+          if git rev-parse --verify --quiet refs/remotes/origin/artifact-swap-green-main >/dev/null \
+            && git merge-base --is-ancestor HEAD refs/remotes/origin/artifact-swap-green-main; then
+            echo "artifact-swap-green-main is already at or ahead of this commit; nothing to advance"
+          else
+            git push origin "HEAD:refs/heads/artifact-swap-green-main"
+          fi

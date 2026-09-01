@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024 Jason Pearson
+ * Copyright (c) 2026 Jason Pearson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,4 +34,17 @@ dependencies {
     implementation(libs.agp)
     // Lets androidbuild.android-compose apply the Compose compiler plugin by id.
     implementation(libs.compose.compiler.plugin)
+    // Artifact Swap's publish plugin, applied per-module by androidbuild.publish. Its
+    // settings plugin can auto-apply this, but that needs the class on the settings
+    // classpath; applying it manually via a convention plugin is the supported
+    // alternative and keeps it on the module classpath where it belongs.
+    implementation(libs.artifactswap.publish.plugin)
+    // gradle-plugin provides xyz.block.gradle.isArtifactSwapActive and the BOM build
+    // service, both used by SwappableProjectDependencies; it also satisfies the publish
+    // plugin's compileOnly references at runtime.
+    implementation(libs.artifactswap.gradle.plugin)
+    // gradle-utils provides the artifactSwapCoordinates path->artifactId helper, imported
+    // by SwappableProjectDependencies so consumer coordinates stay in lockstep with what
+    // upstream's publish plugin and BOM use.
+    implementation(libs.artifactswap.gradle.utils)
 }

@@ -1,3 +1,18 @@
 #!/bin/sh
 command -v git-lfs >/dev/null 2>&1 || { echo >&2 "\nThis repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'post-checkout' file in the hooks directory (set by 'core.hookspath'; usually '.git/hooks').\n"; exit 2; }
 git lfs post-checkout "$@"
+
+# Artifact Swap: refresh pre-compiled artifacts in the background after branch
+# switches (git passes $3=1 for branch checkouts, 0 for file checkouts -- the BOM
+# cannot have moved on a file checkout, and skipping those also avoids spawning
+# concurrent downloads during rebases). Opt-in: runs only once the developer has
+# installed the CLI (any version -- the path is globbed so a CLI upgrade cannot
+# silently disable this) and enabled the swap in gradle.properties.
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+artifactswap_cli=$(ls "$repo_root"/tools/artifactswap/artifactswap-*/bin/artifactswap 2>/dev/null | head -n 1)
+if [ "${3:-0}" = "1" ] \
+  && [ -n "$repo_root" ] \
+  && [ -x "$artifactswap_cli" ] \
+  && grep -q '^artifactswap.enabled=true' "$repo_root/gradle.properties" 2>/dev/null; then
+  "$repo_root/scripts/artifact-swap/download-artifacts.sh" >/dev/null 2>&1 &
+fi

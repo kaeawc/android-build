@@ -39,13 +39,28 @@ pluginManagement {
         //     filter { includeModule("com.android.tools", "r8") }
         // }
     }
+
+    plugins {
+        id("com.gradle.develocity") version "4.0.2"
+        id("com.fueledbycaffeine.spotlight") version "1.7.0"
+        id("xyz.block.artifactswap.settings") version "0.1.12"
+    }
 }
 
-// Spotlight moves the project `include`s into gradle/all-projects.txt and computes
-// the dependency graph by parsing build scripts, so the IDE can sync a focused
-// subset of projects (gradle/ide-projects.txt). It is also the prerequisite for
-// artifact-swap.
-plugins { id("com.fueledbycaffeine.spotlight") version "1.7.0" }
+// Spotlight moves the project `include`s into gradle/all-projects.txt and computes the
+// dependency graph by parsing build scripts, so the IDE can sync a focused subset of
+// projects (gradle/ide-projects.txt). Artifact Swap builds on top of it: for projects
+// outside the focused set that are unchanged vs the BOM branch, it swaps the local
+// project for a pre-compiled artifact so Gradle never configures it. Artifact Swap
+// applies Spotlight itself, so Spotlight is declared here with `apply false`.
+plugins {
+    // Artifact Swap's settings plugin references the Develocity build-scan API, so the
+    // Develocity plugin must be on the settings classpath. Applied without a server, it
+    // only provides the classes -- no build scans are published.
+    id("com.gradle.develocity")
+    id("com.fueledbycaffeine.spotlight") apply false
+    id("xyz.block.artifactswap.settings")
+}
 
 dependencyResolutionManagement {
     repositories {
@@ -54,12 +69,13 @@ dependencyResolutionManagement {
     }
 }
 
-// Type-safe project accessors (e.g. projects.app) for module dependencies as the
-// graph grows beyond a single module.
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
-// No spaces: the type-safe project accessors feature requires the root project name
-// to match [a-zA-Z]([A-Za-z0-9\-_])*.
+// Gradle's generated type-safe project accessors (TYPESAFE_PROJECT_ACCESSORS) are
+// intentionally NOT enabled: they require every referenced project to exist in the
+// build, while Artifact Swap excludes swapped projects during IDE sync. Modules use
+// the hand-maintained, swap-aware `projects.*` accessors from
+// build-logic (dev.jasonpearson.gradle.SwappableProjectDependencies) instead --
+// same call-site syntax, but each accessor resolves to the real project or a
+// pre-compiled artifact as appropriate. See docs/artifact-swap.md.
 rootProject.name =
     "android-build"
 
