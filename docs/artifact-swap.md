@@ -32,11 +32,13 @@ with local changes (vs. the BOM commit) always stay real projects.
 
 ## Developer setup
 
-1. Create a PAT with `read:packages`, then:
+1. Grant the GitHub CLI's token the packages scope (one-time):
    ```
-   mkdir -p ~/.config/android-build && printf '%s' "<your PAT>" > ~/.config/android-build/github-token.txt
-   export SECRETS_PATH=~/.config/android-build
+   gh auth refresh -s read:packages
    ```
+   `download-artifacts.sh` then mints the token file from `gh auth token` automatically — no
+   manually-created PAT needed. (No `gh`? Export `SECRETS_PATH` to a directory containing
+   `github-token.txt` with a `read:packages` PAT instead.)
 2. `scripts/artifact-swap/download-artifacts.sh` — installs the CLI on first run and pulls the
    BOM + artifacts into `~/.m2`.
 3. Set `artifactswap.enabled=true` in `gradle.properties` (or `-Partifactswap.enabled=true`).
@@ -93,8 +95,8 @@ and PR-8 CI publish used).
 
 ## Known caveats
 
-- GitHub Packages needs an authenticated token for every read; each developer needs a
-  `read:packages` PAT (see setup).
+- GitHub Packages needs an authenticated token for every read; the gh CLI covers this after a
+  one-time `gh auth refresh -s read:packages` (see setup).
 - `artifactswap.enabled` defaults to **false** because an enabled sync with no BOM in Maven Local
   fails module selection ("found no matching BOMs"). Enable it after the first
   `download-artifacts.sh` run.
