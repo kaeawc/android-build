@@ -16,7 +16,7 @@ set -o pipefail
 set -o nounset
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-# shellcheck source=scripts/artifact-swap/env.sh
+# shellcheck source=scripts/artifact-swap/env.sh disable=SC1091
 source "$script_dir/env.sh"
 
 git_root=$(git rev-parse --show-toplevel)
