@@ -247,6 +247,8 @@ jobs:
   ui-tests:
     name: "Android UI Tests"
     runs-on: ubuntu-latest
+    # emulator.wtf needs the EW_API_TOKEN secret, which Dependabot-triggered runs do not receive, so this job is skipped there.
+    if: github.secret_source == 'Actions'
     needs:
       - build-apk
       - build-test-apk
@@ -281,6 +283,8 @@ jobs:
   auto-mobile-tests:
     name: "AutoMobile JUnit Tests"
     runs-on: ubuntu-latest
+    # emulator.wtf needs the EW_API_TOKEN secret, which Dependabot-triggered runs do not receive, so this job is skipped there.
+    if: github.secret_source == 'Actions'
     # Requires EW_API_TOKEN secret for the emulator.wtf adb session (closed alpha feature).
     # Contact support@emulator.wtf to request access to start-session.
     needs:
