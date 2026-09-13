@@ -40,7 +40,25 @@ playground's flat naming and `auto-mobile-sdk`/`navigation3` dependencies.
 | 8 | GitHub Packages publishing for modules | **merged** ([#413](https://github.com/kaeawc/android-build/pull/413)) | Superseded by PR 9: the same convention plugin now applies Artifact Swap's content-hash publishing |
 | 9 | Adopt artifact-swap (GitHub-backed) | **merged** ([#415](https://github.com/kaeawc/android-build/pull/415), [#417](https://github.com/kaeawc/android-build/pull/417), [#418](https://github.com/kaeawc/android-build/pull/418)) | Full functional swap on Kotlin DSL via hand-rolled swap-aware `projects.*` accessors — see [artifact-swap.md](artifact-swap.md). Sync excludes unchanged modules and resolves content-hash artifacts; locally-changed modules stay projects; CLI builds unaffected |
 | 10 | Fastsync / intransitive sync | **in progress** | `androidbuild.fastsync` convention plugin: every `*RuntimeClasspath` is non-transitive (and resolves consistently with its compile classpath) only when `idea.sync.active` is set; CLI/CI unchanged; `:app` sync-time runtime graph shrinks from 909 to 80 report lines with zero unresolved deps. See README "Intransitive sync" |
-| 11 | Dependency pre-fetching | planned | `prefetchDependencies` task resolving every module's external compile/runtime dependencies; opt-in background run from `.githooks/post-checkout` on branch switches, alongside the Artifact Swap refresh |
+| 11 | Dependency pre-fetching | **in progress** | `prefetchDependencies` task (`androidbuild.prefetch`) resolves every module's external compile/runtime artifacts with no compilation; `scripts/prefetch-dependencies.sh` + opt-in (`prefetch.onCheckout=true`) background run from `.githooks/post-checkout` on branch switches, same contract as the Artifact Swap refresh. See README "Dependency pre-fetching" |
+
+## Final state
+
+With rows 10 and 11 merged, every technique from the Shrinking Elephants post has a working,
+documented counterpart in this repo:
+
+| Blog technique | Here |
+|---|---|
+| Modularization | 17 modules, layered graph, `assertModuleGraph` (rows 2–6b) |
+| Parallel configuration | Isolated Projects + configuration cache (`gradle.properties`) |
+| Parallel model fetch | IDE setting, README "IDE Sync" (row 1) |
+| Project focusing | Spotlight, `gradle/ide-projects.txt` (row 7) |
+| Artifact substitution | Artifact Swap on GitHub Packages, [artifact-swap.md](artifact-swap.md) (rows 8–9) |
+| Intransitive sync | `androidbuild.fastsync` (row 10) |
+| Dependency pre-fetching | `prefetchDependencies` + `post-checkout` hook (row 11) |
+
+The measured wins here are small by design: at 17 modules the build is a reference implementation
+of each mechanism, and every README section reports the real numbers rather than the blog's.
 
 ## Infrastructure notes
 

@@ -16,3 +16,16 @@ if [ "${3:-0}" = "1" ] \
   && grep -q '^artifactswap.enabled=true' "$repo_root/gradle.properties" 2>/dev/null; then
   "$repo_root/scripts/artifact-swap/download-artifacts.sh" >/dev/null 2>&1 &
 fi
+
+# Dependency pre-fetching: warm the Gradle dependency cache in the background after
+# branch switches, so the next IDE sync or build on the new branch never waits on
+# downloads. Same contract as the Artifact Swap refresh above: branch checkouts only,
+# backgrounded, silent, and opt-in via prefetch.onCheckout=true in gradle.properties
+# (the repo's, or the developer's ~/.gradle/gradle.properties).
+gradle_user_home="${GRADLE_USER_HOME:-$HOME/.gradle}"
+if [ "${3:-0}" = "1" ] \
+  && [ -n "$repo_root" ] \
+  && { grep -q '^prefetch.onCheckout=true' "$repo_root/gradle.properties" 2>/dev/null \
+       || grep -q '^prefetch.onCheckout=true' "$gradle_user_home/gradle.properties" 2>/dev/null; }; then
+  "$repo_root/scripts/prefetch-dependencies.sh" >/dev/null 2>&1 &
+fi

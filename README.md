@@ -47,6 +47,8 @@ performance-relevant choices break down into three groups.
 ### Parallelism and isolation
 
 - `org.gradle.parallel=true` — runs decoupled projects in parallel.
+- `org.gradle.tooling.parallel=true` — turns on the IDE's parallel model fetch during sync
+  (Android Studio Quail 1+; see [IDE Sync](#ide-sync)). Ignored by command-line builds.
 - `org.gradle.unsafe.isolated-projects=true` — [Isolated Projects](https://docs.gradle.org/current/userguide/isolated_projects.html)
   lets each project configure and produce tooling models in parallel, cached and invalidated
   independently. This is the ceiling that most "parallel sync" advice is chasing, and it is the
@@ -110,13 +112,15 @@ Diff APK from Base: Uses Diffuse against the current and base APK artifacts and 
 
 ### IDE Sync
 
-The single biggest sync win is not a Gradle setting at all — it's an IDE one. Enable **parallel
-model fetch** under *Settings → Build, Execution, Deployment → Gradle* — it fetches each project's
-Tooling API model in parallel instead of serially. Block reported a ~57%
-reduction in sync duration from this one switch in their
-[Shrinking Elephants](https://engineering.block.xyz/blog/shrinking-elephants) writeup. It is
-experimental and can be less stable on very large builds, but for most projects it is a free win
-and pairs naturally with the Isolated Projects flag documented above.
+The single biggest sync win is **parallel model fetch**: the IDE fetches each project's Tooling
+API model in parallel instead of serially. Block reported a ~57% reduction in sync duration from
+this one switch in their [Shrinking Elephants](https://engineering.block.xyz/blog/shrinking-elephants)
+writeup. How you turn it on has moved around: it began as an experimental IDE setting, then
+piggy-backed on `org.gradle.parallel=true`, and since Android Studio Quail 1 (2026.1.2) it is its
+own Gradle property, `org.gradle.tooling.parallel=true` in `gradle.properties` — which this repo
+sets. (Before Quail 1 Patch 1 that property also required the build to be Isolated-Projects
+compatible, which this one is; Patch 1 lifted the requirement.) It pairs naturally with the
+Isolated Projects flag documented above.
 
 Beyond that, sync cost scales with how many Gradle projects the IDE has to configure and how much
 dependency resolution each one triggers. The techniques for cutting that down at scale — project
@@ -171,3 +175,39 @@ under an Artifact-Swap-active sync where swapped modules resolve to content-hash
 the wall-clock win is zero here: with 17 small modules and a warm dependency cache, resolution is
 not where sync time goes. Block's 94% came from thousands of modules where it is. This repo is the
 reference implementation of the mechanism; the honest numbers are the point.
+
+#### Dependency pre-fetching
+
+The last sync cost that none of the above touches is the network: the first sync on a freshly
+checked-out branch still downloads whatever dependencies changed since the last one. Block's fix
+is to warm the Gradle dependency cache in the background, from a git `post-checkout` hook and on
+a schedule, so the sync finds everything already on disk. This repo's version:
+
+- `./gradlew prefetchDependencies` — a task on every module (`androidbuild.prefetch`, applied via
+  `androidbuild.kotlin-common`) whose only input is an artifact view of the *external* half of
+  each compile and runtime classpath. Declaring those as task inputs makes Gradle download them
+  (and run the AAR transforms) before the action runs; project dependencies are filtered out so
+  nothing compiles. It has no outputs, so it always re-resolves, which is cheap once warm.
+- [scripts/prefetch-dependencies.sh](scripts/prefetch-dependencies.sh) runs it quietly with a
+  `mkdir` lock so rapid branch hops don't stack Gradle invocations.
+- [.githooks/post-checkout](.githooks/post-checkout) runs the script in the background after
+  *branch* checkouts only (the `$3 = 1` contract the Artifact Swap refresh already uses), when
+  `prefetch.onCheckout=true` is set in `gradle.properties` (repo or `~/.gradle`). It is opt-in and
+  off by default; CI restores its dependency cache instead.
+
+Measured on this repo (fresh `GRADLE_USER_HOME`, wrapper and plugins already downloaded, so the
+numbers isolate `modules-2`):
+
+| Fresh `modules-2`, then… | Without prefetch | With prefetch |
+|---|---|---|
+| `prefetchDependencies` (background, cold) | — | 60.8 s (+134 MB) |
+| First `:app:dependencies` on the branch (resolves every `:app` configuration) | 92.7 s | 24.4 s |
+| Second, warm run | 1.1 s | 1.1 s |
+
+A 74% cut in the first-resolve wait, in the same ballpark as Block's 83% (theirs is Develocity
+telemetry across a fleet; this is one machine, one run). The 24 s that remains is what the proxy
+resolves beyond the compile/runtime classpaths: lint and Kotlin-compiler classpaths, annotation
+processors, and the report's own metadata fetches. On this repo the dependency set is small and CI
+already restores its cache, so the value here is the pattern: the task, the lock-guarded script, and
+the hook contract are what transfer to a build where a branch switch really does mean minutes of
+downloads.
