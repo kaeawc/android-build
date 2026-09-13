@@ -24,12 +24,18 @@ store; the notable difference is that GitHub Packages requires an authenticated 
 | CI: publish artifacts + BOM, advance `artifact-swap-green-main` | [.github/workflows/publish.yml](../.github/workflows/publish.yml) |
 | Background artifact refresh on branch switch (opt-in; the same hook also runs the opt-in dependency pre-fetch) | `.githooks/post-checkout` |
 
-The cycle: after the Commit workflow goes green on `main`, CI hashes every module's sources,
-publishes artifacts for changed modules at their **content-hash version**, publishes a BOM
-(module → hash version), and advances the `artifact-swap-green-main` branch (forward-only,
-serialized by a concurrency group, and gated on the tests — so the branch really is green). A developer's sync finds the newest BOM reachable from their
-branch, downloads artifacts to Maven Local, and swaps every unchanged, unfocused module. Modules
-with local changes (vs. the BOM commit) always stay real projects.
+The cycle: after the Commit workflow goes green on `main`, CI first compares the commit with
+`artifact-swap-green-main`. If only non-swap-relevant files changed (for example, docs or an
+unrelated workflow), it skips the publish pipeline and leaves that branch unadvanced because the
+BOM would be unchanged. Otherwise CI hashes every module's sources, publishes artifacts for
+changed modules at their **content-hash version**, publishes a BOM (module → hash version), and
+advances the `artifact-swap-green-main` branch (forward-only, serialized by a concurrency group,
+and gated on the tests — so the branch really is green). The publish job also uses
+`gradle/actions/setup-gradle@v4` to cache the Gradle distribution and dependency caches used by
+the two CLI-driven Gradle invocations; the actual time saved depends on cache hits. A developer's
+sync finds the newest BOM reachable from their branch, downloads artifacts to Maven Local, and
+swaps every unchanged, unfocused module. Modules with local changes (vs. the BOM commit) always
+stay real projects.
 
 ## Developer setup
 
@@ -89,12 +95,21 @@ Locally proven end-to-end (fresh clone, simulated sync via `-Didea.sync.active=t
 - CLI builds (`assembleDebug`, `assertModuleGraph`, `checkAllProjectsList`, unit tests) are
   unaffected with the swap enabled or disabled.
 
-Not yet exercised: the CI publish pipeline against GitHub Packages end-to-end (`artifact-checker`
-existence checks and BOM upload run for the first time on the first gated `main` run after this
-lands; the Bearer-token auth and Maven-layout PUTs are the same calls the already-verified local
-publish and PR-8 CI publish used). Note the publish repository requires BOTH
+The CI publish pipeline against GitHub Packages has now been proven end-to-end in CI: since PR
+#418, commits a5bb1e7, f6d25c4, and e6f8705 each published a BOM
+`dev.jasonpearson.android:bom:<sha>` to GitHub Packages and advanced the `artifact-swap-green-main`
+marker/ref, and `artifact-checker` skipped already-published module hashes on the latest run. The
+guard is covered by its standalone throwaway-repository test and workflow lint, but its first real
+skip/publish decision and the Gradle cache behavior still need a gated GitHub Actions run. Note the
+publish repository requires BOTH
 `artifactswap.artifactRepo.username` and the token to attach credentials at all -- the username is
 set in gradle.properties; removing it would silently publish unauthenticated and 401.
+
+Before this optimization, a measured publish run took 165 seconds: hashing took 54 seconds
+(including Gradle distribution download and configuration), task-finder took 100 seconds from a
+second cold Gradle invocation, artifact-checker took 4 seconds, and task-runner plus BOM publisher
+took 1 second each. The guard removes that work for non-swap-relevant commits; setup-gradle may
+reduce the two Gradle costs on cache hits, but a post-change measurement is not available yet.
 
 ## Known caveats
 
