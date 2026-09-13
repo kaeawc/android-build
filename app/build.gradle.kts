@@ -151,6 +151,23 @@ dependencies {
     // Needed for reading Java 19+ class files due to JVM target higher than 11
     implementation(platform(libs.asm.bom))
     implementation(platform(libs.compose.bom))
+    // Feature screens wired into the app NavHost.
+    implementation(projects.feature.demos)
+    implementation(projects.feature.discover)
+    implementation(projects.feature.home)
+    implementation(projects.feature.login)
+    implementation(projects.feature.mediaplayer)
+    implementation(projects.feature.onboarding)
+    implementation(projects.feature.settings)
+    implementation(projects.feature.slides)
+    // Foundation + subsystems the app references directly (the Destination route
+    // contract and the subsystem instances it injects into the feature screens).
+    // Features depend on these via `implementation`, so their types are not exposed
+    // to the app transitively -- the app declares them directly.
+    implementation(projects.foundation.navigation)
+    implementation(projects.subsystem.analytics)
+    implementation(projects.subsystem.experimentation)
+    implementation(projects.subsystem.storage)
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.bundles.compose.ui)
@@ -159,25 +176,6 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.metro.runtime)
     implementation(libs.navigation.compose)
-
-    // Feature screens wired into the app NavHost.
-    implementation(projects.feature.login)
-    implementation(projects.feature.home)
-    implementation(projects.feature.discover)
-    implementation(projects.feature.settings)
-    implementation(projects.feature.mediaplayer)
-    implementation(projects.feature.onboarding)
-    implementation(projects.feature.slides)
-    implementation(projects.feature.demos)
-
-    // Foundation + subsystems the app references directly (the Destination route
-    // contract and the subsystem instances it injects into the feature screens).
-    // Features depend on these via `implementation`, so their types are not exposed
-    // to the app transitively -- the app declares them directly.
-    implementation(projects.foundation.navigation)
-    implementation(projects.subsystem.analytics)
-    implementation(projects.subsystem.storage)
-    implementation(projects.subsystem.experimentation)
 
     debugImplementation(libs.bundles.compose.ui.debug)
 
