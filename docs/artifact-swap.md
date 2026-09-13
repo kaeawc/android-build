@@ -22,7 +22,7 @@ store; the notable difference is that GitHub Packages requires an authenticated 
 | Publish plugin (content-hash versions), gated behind the CLI's version file | `build-logic/src/main/kotlin/androidbuild.publish.gradle.kts` |
 | CLI install / artifact download / CI publish scripts | `scripts/artifact-swap/` |
 | CI: publish artifacts + BOM, advance `artifact-swap-green-main` | [.github/workflows/publish.yml](../.github/workflows/publish.yml) |
-| Background artifact refresh on branch switch (opt-in) | `.githooks/post-checkout` |
+| Background artifact refresh on branch switch (opt-in; the same hook also runs the opt-in dependency pre-fetch) | `.githooks/post-checkout` |
 
 The cycle: after the Commit workflow goes green on `main`, CI hashes every module's sources,
 publishes artifacts for changed modules at their **content-hash version**, publishes a BOM
