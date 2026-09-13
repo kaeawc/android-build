@@ -94,7 +94,8 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: "assertModuleGraph"
+          # checkSortDependencies enforces com.squareup.sort-dependencies ordering in app/build.gradle.kts
+          gradle-tasks: "assertModuleGraph :app:checkSortDependencies"
           reuse-configuration-cache: false
 
   android-lint:
