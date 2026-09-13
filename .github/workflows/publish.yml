@@ -4,6 +4,9 @@ name: "Publish"
 # content-hash-versioned module artifacts + a BOM to GitHub Packages, then advance the
 # artifact-swap-green-main branch so developer IDE syncs can discover the BOM and swap
 # unchanged modules for pre-compiled artifacts.
+# A change-detection guard skips this pipeline, without advancing artifact-swap-green-main,
+# when the commit only changes files that cannot affect published artifacts. setup-gradle
+# caches the Gradle distribution and dependencies used by the CLI-driven Gradle invocations.
 #
 # Gated on the Commit workflow (workflow_run + conclusion check) so a commit with red
 # tests never becomes the swap baseline, serialized via a concurrency group, and the
@@ -37,25 +40,55 @@ jobs:
           # hashing + BOM-branch operations need real history, not a shallow clone
           fetch-depth: 0
 
+      - name: "Decide whether to publish"
+        id: decide
+        shell: bash
+        run: |
+          git fetch origin artifact-swap-green-main --quiet 2>/dev/null || true
+          set +e
+          reason=$(scripts/artifact-swap/ci-should-publish.sh "${{ github.event.workflow_run.head_sha }}")
+          rc=$?
+          set -e
+          printf '%s\n' "$reason"
+          if [[ $rc -eq 0 ]]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          elif [[ $rc -eq 1 ]]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            printf 'ci-should-publish failed with exit code %d\n' "$rc" >&2
+            exit "$rc"
+          fi
+
       - name: "Set up JDK"
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "21"
 
+      - name: "Setup Gradle"
+        if: steps.decide.outputs.publish == 'true'
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          cache-cleanup: "on-success"
+          validate-wrappers: true
+
       - name: "Write GitHub Packages token for the Artifact Swap CLI"
+        if: steps.decide.outputs.publish == 'true'
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/artifactswap-secrets"
           printf '%s' "${{ secrets.GITHUB_TOKEN }}" > "$RUNNER_TEMP/artifactswap-secrets/github-token.txt"
 
       - name: "Run Artifact Swap publish pipeline"
+        if: steps.decide.outputs.publish == 'true'
         shell: bash
         env:
           SECRETS_PATH: ${{ runner.temp }}/artifactswap-secrets
         run: scripts/artifact-swap/ci-publish.sh
 
       - name: "Advance artifact-swap-green-main"
+        if: steps.decide.outputs.publish == 'true'
         shell: bash
         run: |
           git fetch origin artifact-swap-green-main --quiet 2>/dev/null || true
