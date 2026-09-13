@@ -39,9 +39,12 @@ stay real projects. The advance push uses the `GREEN_MAIN_TOKEN` repository secr
 PAT with Contents and Workflows read/write access, scoped to this repo only) because GitHub refuses
 a `GITHUB_TOKEN`-authenticated push when the target commit's workflow files differ from main's
 workflow files at push time. This occurs when a newer workflow change has landed on main before the
-earlier run reaches its push step. Without the secret set, the step falls back to `GITHUB_TOKEN` and
-only fails when this happens; a maintainer can then push the branch by hand (`git push origin
-<sha>:refs/heads/artifact-swap-green-main`) to a commit whose BOM is already published.
+earlier run reaches its push step. The push clears the checkout-persisted Authorization header
+(`http.https://github.com/.extraheader`) so the PAT is actually used instead of being silently
+overridden by the persisted `GITHUB_TOKEN` header. Without the secret set, the step falls back to
+`GITHUB_TOKEN` and only fails when this happens; a maintainer can then push the branch by hand
+(`git push origin <sha>:refs/heads/artifact-swap-green-main`) to a commit whose BOM is already
+published.
 
 ## Developer setup
 
