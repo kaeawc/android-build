@@ -7,6 +7,9 @@ name: "Publish"
 # A change-detection guard skips this pipeline, without advancing artifact-swap-green-main,
 # when the commit only changes files that cannot affect published artifacts. setup-gradle
 # caches the Gradle distribution and dependencies used by the CLI-driven Gradle invocations.
+# GREEN_MAIN_TOKEN is a fine-grained PAT with Contents + Workflows write scoped to this repo,
+# needed when a newer workflow edit has landed on main before this run's advance push; GITHUB_TOKEN
+# cannot be granted workflows permission.
 #
 # Gated on the Commit workflow (workflow_run + conclusion check) so a commit with red
 # tests never becomes the swap baseline, serialized via a concurrency group, and the
@@ -87,14 +90,23 @@ jobs:
           SECRETS_PATH: ${{ runner.temp }}/artifactswap-secrets
         run: scripts/artifact-swap/ci-publish.sh
 
+      # Use the PAT when a newer workflow edit has landed on main before this advance push;
+      # GITHUB_TOKEN cannot be granted workflows permission, so the PAT needs Contents + Workflows write.
       - name: "Advance artifact-swap-green-main"
         if: steps.decide.outputs.publish == 'true'
         shell: bash
+        env:
+          GREEN_MAIN_TOKEN: ${{ secrets.GREEN_MAIN_TOKEN }}
         run: |
+          if [[ -n "${GREEN_MAIN_TOKEN:-}" ]]; then
+            push_url="https://x-access-token:${GREEN_MAIN_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          else
+            push_url=origin
+          fi
           git fetch origin artifact-swap-green-main --quiet 2>/dev/null || true
           if git rev-parse --verify --quiet refs/remotes/origin/artifact-swap-green-main >/dev/null \
             && git merge-base --is-ancestor HEAD refs/remotes/origin/artifact-swap-green-main; then
             echo "artifact-swap-green-main is already at or ahead of this commit; nothing to advance"
           else
-            git push origin "HEAD:refs/heads/artifact-swap-green-main"
+            git push "$push_url" "HEAD:refs/heads/artifact-swap-green-main"
           fi
