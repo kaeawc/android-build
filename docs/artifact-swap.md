@@ -35,7 +35,13 @@ and gated on the tests — so the branch really is green). The publish job also 
 the two CLI-driven Gradle invocations; the actual time saved depends on cache hits. A developer's
 sync finds the newest BOM reachable from their branch, downloads artifacts to Maven Local, and
 swaps every unchanged, unfocused module. Modules with local changes (vs. the BOM commit) always
-stay real projects.
+stay real projects. The advance push uses the `GREEN_MAIN_TOKEN` repository secret (a fine-grained
+PAT with Contents and Workflows read/write access, scoped to this repo only) because GitHub refuses
+a `GITHUB_TOKEN`-authenticated push when the target commit's workflow files differ from main's
+workflow files at push time. This occurs when a newer workflow change has landed on main before the
+earlier run reaches its push step. Without the secret set, the step falls back to `GITHUB_TOKEN` and
+only fails when this happens; a maintainer can then push the branch by hand (`git push origin
+<sha>:refs/heads/artifact-swap-green-main`) to a commit whose BOM is already published.
 
 ## Developer setup
 
@@ -99,17 +105,28 @@ The CI publish pipeline against GitHub Packages has now been proven end-to-end i
 #418, commits a5bb1e7, f6d25c4, and e6f8705 each published a BOM
 `dev.jasonpearson.android:bom:<sha>` to GitHub Packages and advanced the `artifact-swap-green-main`
 marker/ref, and `artifact-checker` skipped already-published module hashes on the latest run. The
-guard is covered by its standalone throwaway-repository test and workflow lint, but its first real
-skip/publish decision and the Gradle cache behavior still need a gated GitHub Actions run. Note the
-publish repository requires BOTH
+guard is covered by its standalone throwaway-repository test and workflow lint; the publish path and
+Gradle cache behavior were exercised on commit 2c63735, and only the skip path is still
+unexercised. Note the publish repository requires BOTH
 `artifactswap.artifactRepo.username` and the token to attach credentials at all -- the username is
 set in gradle.properties; removing it would silently publish unauthenticated and 401.
 
-Before this optimization, a measured publish run took 165 seconds: hashing took 54 seconds
-(including Gradle distribution download and configuration), task-finder took 100 seconds from a
-second cold Gradle invocation, artifact-checker took 4 seconds, and task-runner plus BOM publisher
-took 1 second each. The guard removes that work for non-swap-relevant commits; setup-gradle may
-reduce the two Gradle costs on cache hits, but a post-change measurement is not available yet.
+The first before-and-after publish measurements are:
+
+| phase | before | after |
+| --- | --- | --- |
+| hashing | 54s | 15s |
+| task-finder | 100s | 19s |
+| artifact-checker | 4s | 3s |
+| task-runner | — | 1s |
+| bom-publisher | — | 4s |
+
+The pipeline total dropped from 165s to 41s, and the whole job took about 80 seconds including
+checkout, setup-gradle cache restore, and cache save. The after numbers come from one Publish run on
+main for commit 2c63735 on 2026-09-13, with a warm dependency cache restored from the Commit
+workflow's cache; this is a single-run measurement, not an average. The skip path is still
+unexercised because no docs-only commit has landed since the guard merged to trigger a real skip
+decision.
 
 ## Known caveats
 
