@@ -32,6 +32,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+// Every Kotlin module also gets Fastsync (intransitive runtime classpaths during IDE
+// sync); see androidbuild.fastsync.gradle.kts.
+plugins { id("androidbuild.fastsync") }
+
 // Shared Kotlin compiler configuration for every Kotlin module (JVM and Android):
 // the language version, JVM target, opt-in list, and Java toolchain, all sourced
 // from the single version catalog. Centralizing this here avoids re-declaring the

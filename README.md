@@ -118,12 +118,13 @@ reduction in sync duration from this one switch in their
 experimental and can be less stable on very large builds, but for most projects it is a free win
 and pairs naturally with the Isolated Projects flag documented above.
 
-Beyond that, sync cost scales with how many Gradle projects the IDE has to configure. The
-techniques for cutting that down at scale — project focusing, pre-compiled artifact substitution,
-and intransitive sync — are being adopted incrementally in this repo and tracked in
-[docs/build-optimization-roadmap.md](docs/build-optimization-roadmap.md). Artifact substitution is
-live: see [docs/artifact-swap.md](docs/artifact-swap.md) for how unchanged modules are swapped for
-pre-compiled GitHub-Packages artifacts during IDE sync, and what that took on a Kotlin-DSL build.
+Beyond that, sync cost scales with how many Gradle projects the IDE has to configure and how much
+dependency resolution each one triggers. The techniques for cutting that down at scale — project
+focusing, pre-compiled artifact substitution, and intransitive sync — are all adopted in this repo
+and tracked in [docs/build-optimization-roadmap.md](docs/build-optimization-roadmap.md). Artifact
+substitution is live: see [docs/artifact-swap.md](docs/artifact-swap.md) for how unchanged modules
+are swapped for pre-compiled GitHub-Packages artifacts during IDE sync, and what that took on a
+Kotlin-DSL build.
 
 #### Project focusing (Spotlight)
 
@@ -136,3 +137,37 @@ transitive dependencies for you, so the IDE configures a focused subset instead 
 Install the companion [IDE plugin](https://plugins.jetbrains.com/plugin/27451-spotlight) to manage
 the focus set from the UI. `./gradlew :checkAllProjectsList` guards that no stray `include`s creep
 back into the settings file.
+
+#### Intransitive sync (Fastsync)
+
+IDE code completion only needs each module's *compile* classpath, but the Gradle model the IDE
+builds during sync also resolves every variant's *runtime* classpath — for a large graph, that is
+most of the dependency-resolution work in a sync. Block's
+[Fastsync](https://github.com/joshfriend/fastsync) trick is to make runtime classpaths
+non-transitive during sync. This repo implements it as the `androidbuild.fastsync` convention
+plugin ([build-logic](build-logic/src/main/kotlin/androidbuild.fastsync.gradle.kts)), applied to
+every module through `androidbuild.kotlin-common`: when the `idea.sync.active` system property is
+set, every resolvable `*RuntimeClasspath` configuration is marked `isTransitive = false` and
+resolved consistently with its `*CompileClasspath` twin (which keeps BOM-managed versions intact).
+It matches by name suffix rather than walking the JVM `SourceSetContainer` the way the upstream
+plugin does, because AGP's variant classpaths (`debugRuntimeClasspath`,
+`debugUnitTestRuntimeClasspath`, …) never appear in that container.
+
+Command-line builds and CI are byte-identical — nothing keys off anything but the sync property.
+Simulate a sync from the terminal with `-Didea.sync.active=true`; opt out for a session with
+`-Pfastsync.enabled=false` (Compose previews and the debugger use the runtime classpath, so if one
+of those stops finding a transitively-provided class, that is the switch). Measured on this repo
+(17 modules, normal clone, simulated sync, best-of-three; "cold" is `--no-configuration-cache`):
+
+| Simulated sync (`./gradlew help -Didea.sync.active=true`) | Fastsync on | Fastsync off |
+|---|---|---|
+| Cold configuration | 1.5 s | 1.5 s |
+| Warm (configuration-cache hit) | 0.9 s | 0.9 s |
+| `:app:dependencies --configuration debugRuntimeClasspath`, warm | 0.9 s | 0.9 s |
+| `:app` `debugRuntimeClasspath` report, lines | 80 | 909 |
+
+The graph shrinks exactly as intended (and stays fully resolved — zero `FAILED` entries, including
+under an Artifact-Swap-active sync where swapped modules resolve to content-hash artifacts), but
+the wall-clock win is zero here: with 17 small modules and a warm dependency cache, resolution is
+not where sync time goes. Block's 94% came from thousands of modules where it is. This repo is the
+reference implementation of the mechanism; the honest numbers are the point.
