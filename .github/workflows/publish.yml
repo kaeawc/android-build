@@ -100,13 +100,16 @@ jobs:
         run: |
           if [[ -n "${GREEN_MAIN_TOKEN:-}" ]]; then
             push_url="https://x-access-token:${GREEN_MAIN_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+            # Clear checkout's persisted extraheader so it does not override the PAT in the URL.
+            push_git_opts=(-c http.https://github.com/.extraheader=)
           else
             push_url=origin
+            push_git_opts=()
           fi
           git fetch origin artifact-swap-green-main --quiet 2>/dev/null || true
           if git rev-parse --verify --quiet refs/remotes/origin/artifact-swap-green-main >/dev/null \
             && git merge-base --is-ancestor HEAD refs/remotes/origin/artifact-swap-green-main; then
             echo "artifact-swap-green-main is already at or ahead of this commit; nothing to advance"
           else
-            git push "$push_url" "HEAD:refs/heads/artifact-swap-green-main"
+            git "${push_git_opts[@]}" push "$push_url" "HEAD:refs/heads/artifact-swap-green-main"
           fi
