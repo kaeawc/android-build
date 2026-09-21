@@ -42,7 +42,7 @@ pluginManagement {
 
     plugins {
         id("com.gradle.develocity") version "4.5.1"
-        id("com.fueledbycaffeine.spotlight") version "1.7.1"
+        id("com.fueledbycaffeine.spotlight") version "1.8.0"
         id("xyz.block.artifactswap.settings") version "0.1.12"
     }
 }
