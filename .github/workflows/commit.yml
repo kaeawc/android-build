@@ -362,11 +362,11 @@ jobs:
         with:
           # Launch, lifecycle, and tab-navigation plans exercise the Nav3 shell of the jasonpearson.dev app.
           # Assertions target the bottom-nav chrome, not network content (CI has no Ghost key).
+          # A package wildcard (rather than one --tests per class) keeps the artifact name this
+          # action derives from gradle-tasks under GitHub's 256-character limit.
           gradle-tasks: >-
             :app:testDebugUnitTest
-            --tests 'dev.jasonpearson.android.automobiletest.AppLaunchAutoMobileTest'
-            --tests 'dev.jasonpearson.android.automobiletest.AppLifecycleAutoMobileTest'
-            --tests 'dev.jasonpearson.android.automobiletest.TabNavigationAutoMobileTest'
+            --tests 'dev.jasonpearson.android.automobiletest.*'
           reuse-configuration-cache: false
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
