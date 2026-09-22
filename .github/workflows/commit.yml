@@ -189,7 +189,10 @@ jobs:
 
       - uses: ./.github/actions/gradle-task-run
         with:
-          gradle-tasks: "assembleAndroidTest"
+          # Only :app has androidTest sources, and only its test APK is uploaded below. Building
+          # every library module's (empty) androidTest APK in parallel ran D8 dex merges that
+          # exhausted the 2 GiB daemon heap.
+          gradle-tasks: ":app:assembleAndroidTest"
           reuse-configuration-cache: false
           optional-suffix: "-test"
 
