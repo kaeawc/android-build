@@ -23,6 +23,10 @@
  */
 package dev.jasonpearson.android.di
 
+import dev.jasonpearson.android.core.di.AppScope
+import dev.jasonpearson.android.core.di.GhostApiUrl
+import dev.jasonpearson.android.core.di.GhostContentKey
+import dev.jasonpearson.android.core.di.SingleIn
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Qualifier
@@ -40,6 +44,15 @@ interface ApplicationModule {
     companion object {
 
         @Provides @SingleIn(AppScope::class) fun provideClock(): Clock = Clock.System
+
+        @Provides
+        @GhostApiUrl
+        fun provideGhostApiUrl(): String = dev.jasonpearson.android.BuildConfig.GHOST_API_URL
+
+        @Provides
+        @GhostContentKey
+        fun provideGhostContentKey(): String =
+            dev.jasonpearson.android.BuildConfig.GHOST_CONTENT_API_KEY
 
         @PresenterScope
         @Provides

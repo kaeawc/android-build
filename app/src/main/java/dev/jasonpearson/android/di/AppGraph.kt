@@ -25,7 +25,13 @@ package dev.jasonpearson.android.di
 
 import android.app.Application
 import dev.jasonpearson.android.App
-import dev.jasonpearson.android.resume.ResumePresenter
+import dev.jasonpearson.android.core.di.AppScope
+import dev.jasonpearson.android.core.di.SingleIn
+import dev.jasonpearson.android.feature.about.data.AboutRepository
+import dev.jasonpearson.android.feature.articles.data.ArticlesRepository
+import dev.jasonpearson.android.feature.photography.data.PhotographyRepository
+import dev.jasonpearson.android.feature.projects.data.ProjectsRepository
+import dev.jasonpearson.android.feature.talks.data.TalksRepository
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 
@@ -56,5 +62,9 @@ internal interface AppGraph {
     // Exposed dependencies for convenient access
     // Note: In a larger app, consider using subcomponents instead of exposing everything
     val application: Application
-    val resumePresenter: ResumePresenter
+    val aboutRepository: AboutRepository
+    val articlesRepository: ArticlesRepository
+    val photographyRepository: PhotographyRepository
+    val projectsRepository: ProjectsRepository
+    val talksRepository: TalksRepository
 }

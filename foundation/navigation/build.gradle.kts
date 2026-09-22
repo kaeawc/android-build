@@ -21,12 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-plugins { id("androidbuild.android-library") }
+plugins {
+    id("androidbuild.android-library")
+    alias(libs.plugins.kotlin.serialization)
+}
 
 android { namespace = "dev.jasonpearson.android.foundation.navigation" }
 
 dependencies {
-    api(libs.navigation.compose)
+    api(libs.navigation3.runtime)
 
-    testImplementation(libs.junit)
+    implementation(libs.kotlinx.serialization.json)
 }

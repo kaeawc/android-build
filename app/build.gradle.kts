@@ -40,6 +40,9 @@ moduleGraphAssert {
     allowed =
         arrayOf(
             ":app -> :.*",
+            ":client:.* -> :core:.*",
+            ":feature:.* -> :client:.*",
+            ":feature:.* -> :core:.*",
             ":feature:.* -> :subsystem:.*",
             ":feature:.* -> :foundation:.*",
             ":subsystem:.* -> :foundation:.*",
@@ -77,6 +80,20 @@ android {
         targetSdk = libs.versions.build.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField(
+            "String",
+            "GHOST_API_URL",
+            "\"" +
+                (project.findProperty("GHOST_API_URL") as String?
+                    ?: "https://www.jasonpearson.dev/ghost/api/content/") +
+                "\"",
+        )
+        buildConfigField(
+            "String",
+            "GHOST_CONTENT_API_KEY",
+            "\"" + (project.findProperty("GHOST_CONTENT_API_KEY") as String? ?: "") + "\"",
+        )
 
         testInstrumentationRunner = "dev.jasonpearson.android.TestRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -120,6 +137,7 @@ android {
         targetCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
     }
     buildFeatures {
+        buildConfig = true
         compose = true
         // Explicitly disable viewBinding since we're using Compose only
         viewBinding = false
@@ -151,61 +169,35 @@ dependencies {
     // Needed for reading Java 19+ class files due to JVM target higher than 11
     implementation(platform(libs.asm.bom))
     implementation(platform(libs.compose.bom))
-    // Feature screens wired into the app NavHost.
-    implementation(projects.feature.demos)
-    implementation(projects.feature.discover)
-    implementation(projects.feature.home)
-    implementation(projects.feature.login)
-    implementation(projects.feature.mediaplayer)
-    implementation(projects.feature.onboarding)
-    implementation(projects.feature.settings)
-    implementation(projects.feature.slides)
-    // Foundation + subsystems the app references directly (the Destination route
-    // contract and the subsystem instances it injects into the feature screens).
-    // Features depend on these via `implementation`, so their types are not exposed
-    // to the app transitively -- the app declares them directly.
+    implementation(projects.client.ghost)
+    implementation(projects.client.github)
+    implementation(projects.core.di)
+    implementation(projects.core.network)
+    implementation(projects.feature.about)
+    implementation(projects.feature.articles)
+    implementation(projects.feature.photography)
+    implementation(projects.feature.projects)
+    implementation(projects.feature.talks)
     implementation(projects.foundation.navigation)
-    implementation(projects.subsystem.analytics)
-    implementation(projects.subsystem.experimentation)
-    implementation(projects.subsystem.storage)
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.bundles.compose.ui)
     implementation(libs.bundles.kotlin)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material.icons)
+    implementation(libs.lifecycle.viewmodel.navigation3)
     implementation(libs.metro.runtime)
-    implementation(libs.navigation.compose)
+    implementation(libs.navigation3.runtime)
+    implementation(libs.navigation3.ui)
 
     debugImplementation(libs.bundles.compose.ui.debug)
 
-    testImplementation(libs.auto.mobile.junit.runner)
     testImplementation(libs.bundles.unit.test)
 
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.bundles.compose.ui.espresso.test)
 
     coreLibraryDesugaring(libs.desugar)
-}
-
-val gradleWorkerJvmArgs = providers.gradleProperty("org.gradle.testWorker.jvmargs").get()
-val autoMobileCtrlProxyApkPath = providers.environmentVariable("AUTOMOBILE_CTRL_PROXY_APK_PATH")
-
-tasks.withType<Test>().configureEach {
-    jvmArgs(gradleWorkerJvmArgs)
-    // Force AutoMobileRunner to use sequential test execution (1 test at a time per device).
-    // Without this, the runner parallelizes based on ADB device count, which may report more
-    // devices than the daemon pool actually manages, causing device contention and timeouts.
-    systemProperty("junit.parallel.forks", "1")
-    autoMobileCtrlProxyApkPath.orNull?.let { apkPath ->
-        environment("AUTOMOBILE_CTRL_PROXY_APK_PATH", apkPath)
-        systemProperty("automobile.ctrl.proxy.apk.path", apkPath)
-    }
-    // When running pure unit tests (no device available), exclude AutoMobile integration tests.
-    // Use -PexcludeAutoMobileTests to activate this filter (e.g. in the unit-tests CI job).
-    if (project.hasProperty("excludeAutoMobileTests")) {
-        filter.excludeTestsMatching("dev.jasonpearson.android.automobiletest.*")
-    }
 }
 
 // Kill the Kotlin compile daemon after release compilation finishes so R8 runs with

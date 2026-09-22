@@ -23,6 +23,8 @@
  */
 package dev.jasonpearson.android.di
 
+import dev.jasonpearson.android.core.di.AppScope
+import dev.jasonpearson.android.core.di.SingleIn
 import dev.jasonpearson.android.coroutines.CoroutineDispatchers
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineScope

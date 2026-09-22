@@ -23,8 +23,8 @@
  */
 package dev.jasonpearson.android.timer
 
-import dev.jasonpearson.android.di.AppScope
-import dev.jasonpearson.android.di.SingleIn
+import dev.jasonpearson.android.core.di.AppScope
+import dev.jasonpearson.android.core.di.SingleIn
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 

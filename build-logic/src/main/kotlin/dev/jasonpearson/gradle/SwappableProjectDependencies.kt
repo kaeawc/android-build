@@ -82,6 +82,9 @@ public val DependencyHandler.projects: RootProjects
     get() = RootProjects(this)
 
 public class RootProjects internal constructor(private val handler: DependencyHandler) {
+    public val client: ClientProjects
+        get() = ClientProjects(handler)
+
     public val core: CoreProjects
         get() = CoreProjects(handler)
 
@@ -95,12 +98,26 @@ public class RootProjects internal constructor(private val handler: DependencyHa
         get() = FeatureProjects(handler)
 }
 
+public class ClientProjects internal constructor(private val handler: DependencyHandler) {
+    public val github: ModuleDependency
+        get() = handler.swappable(":client:github")
+
+    public val ghost: ModuleDependency
+        get() = handler.swappable(":client:ghost")
+}
+
 public class CoreProjects internal constructor(private val handler: DependencyHandler) {
     public val common: ModuleDependency
         get() = handler.swappable(":core:common")
 
+    public val di: ModuleDependency
+        get() = handler.swappable(":core:di")
+
     public val model: ModuleDependency
         get() = handler.swappable(":core:model")
+
+    public val network: ModuleDependency
+        get() = handler.swappable(":core:network")
 }
 
 public class FoundationProjects internal constructor(private val handler: DependencyHandler) {
@@ -126,29 +143,20 @@ public class SubsystemProjects internal constructor(private val handler: Depende
 }
 
 public class FeatureProjects internal constructor(private val handler: DependencyHandler) {
-    public val demos: ModuleDependency
-        get() = handler.swappable(":feature:demos")
+    public val about: ModuleDependency
+        get() = handler.swappable(":feature:about")
 
-    public val discover: ModuleDependency
-        get() = handler.swappable(":feature:discover")
+    public val articles: ModuleDependency
+        get() = handler.swappable(":feature:articles")
 
-    public val home: ModuleDependency
-        get() = handler.swappable(":feature:home")
+    public val photography: ModuleDependency
+        get() = handler.swappable(":feature:photography")
 
-    public val login: ModuleDependency
-        get() = handler.swappable(":feature:login")
+    public val projects: ModuleDependency
+        get() = handler.swappable(":feature:projects")
 
-    public val mediaplayer: ModuleDependency
-        get() = handler.swappable(":feature:mediaplayer")
-
-    public val onboarding: ModuleDependency
-        get() = handler.swappable(":feature:onboarding")
-
-    public val settings: ModuleDependency
-        get() = handler.swappable(":feature:settings")
-
-    public val slides: ModuleDependency
-        get() = handler.swappable(":feature:slides")
+    public val talks: ModuleDependency
+        get() = handler.swappable(":feature:talks")
 }
 
 private fun DependencyHandler.swappable(path: String): ModuleDependency {
