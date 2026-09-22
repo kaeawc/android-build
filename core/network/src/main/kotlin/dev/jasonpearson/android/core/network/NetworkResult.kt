@@ -34,7 +34,4 @@ sealed interface NetworkResult<out T> {
 
 inline fun <T> networkResult(block: () -> T): NetworkResult<T> =
     runSuspendCatching(block)
-        .fold(
-            onSuccess = { NetworkResult.Success(it) },
-            onFailure = { NetworkResult.Failure(it) },
-        )
+        .fold(onSuccess = { NetworkResult.Success(it) }, onFailure = { NetworkResult.Failure(it) })

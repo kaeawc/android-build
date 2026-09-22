@@ -59,10 +59,8 @@ fun TalksScreen(repository: TalksRepository, modifier: Modifier = Modifier) {
                 }
         }
 
-    Scaffold(
-        modifier = modifier,
-        topBar = { TopAppBar(title = { Text("Talks") }) },
-    ) { paddingValues ->
+    Scaffold(modifier = modifier, topBar = { TopAppBar(title = { Text("Talks") }) }) { paddingValues
+        ->
         when (val currentState = state) {
             TalksUiState.Loading -> LoadingContent(paddingValues)
             is TalksUiState.Error -> ErrorContent(currentState.message, paddingValues)

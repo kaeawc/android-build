@@ -128,9 +128,7 @@ private fun ProjectCard(project: Project, onClick: () -> Unit) {
                 project.topics
                     .take(3)
                     .takeIf { it.isNotEmpty() }
-                    ?.let { topics ->
-                        add(topics.joinToString())
-                    }
+                    ?.let { topics -> add(topics.joinToString()) }
             }
             Row {
                 Text(

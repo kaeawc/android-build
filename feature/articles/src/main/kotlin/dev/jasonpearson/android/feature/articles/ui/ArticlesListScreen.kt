@@ -123,9 +123,7 @@ private fun ArticleCard(article: Article, onClick: () -> Unit) {
             val metadata = buildList {
                 article.tags
                     .takeIf { it.isNotEmpty() }
-                    ?.let { tags ->
-                        add(tags.joinToString { it.name })
-                    }
+                    ?.let { tags -> add(tags.joinToString { it.name }) }
                 article.readingTimeMinutes?.let { minutes -> add("$minutes min read") }
             }
             if (metadata.isNotEmpty()) {

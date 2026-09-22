@@ -47,12 +47,7 @@ data class GhostPostDto(
     val authors: List<GhostAuthorDto>? = null,
 )
 
-@Serializable
-data class GhostTagDto(
-    val id: String,
-    val slug: String,
-    val name: String,
-)
+@Serializable data class GhostTagDto(val id: String, val slug: String, val name: String)
 
 @Serializable
 data class GhostAuthorDto(

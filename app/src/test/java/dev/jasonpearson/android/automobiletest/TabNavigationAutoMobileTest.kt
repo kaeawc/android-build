@@ -21,36 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.foundation.designsystem.components
+package dev.jasonpearson.android.automobiletest
 
-import android.text.method.LinkMovementMethod
-import android.widget.TextView
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.text.HtmlCompat
+import dev.jasonpearson.automobile.junit.AutoMobilePlan
+import dev.jasonpearson.automobile.junit.AutoMobileRunner
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
 
-/** Renders HTML text; inline <img> tags are not rendered in v1. */
-@Composable
-fun HtmlText(
-    html: String,
-    modifier: Modifier = Modifier,
-    color: Color = LocalContentColor.current,
-    textSizeSp: Float = 16f,
-) {
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            TextView(context).apply { movementMethod = LinkMovementMethod.getInstance() }
-        },
-        update = { textView ->
-            textView.text = HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_COMPACT)
-            textView.setTextColor(color.toArgb())
-            textView.textSize = textSizeSp
-            textView.setLinkTextColor(color.toArgb())
-        },
-    )
+/**
+ * AutoMobile JUnit tests for tapping through every bottom-navigation tab on a real device or
+ * emulator. These tests run on the host JVM and communicate with the device via ADB using the
+ * AutoMobile runner.
+ *
+ * Requires an ADB-connected device and the AutoMobile control proxy APK path set via
+ * AUTOMOBILE_CTRL_PROXY_APK_PATH environment variable.
+ */
+@RunWith(AutoMobileRunner::class)
+class TabNavigationAutoMobileTest {
+
+    @Test
+    fun `every bottom navigation tab renders without crashing`() {
+        val result = AutoMobilePlan(planPath = "test-plans/tab-navigation.yaml").execute()
+
+        assertTrue(result.success)
+    }
 }

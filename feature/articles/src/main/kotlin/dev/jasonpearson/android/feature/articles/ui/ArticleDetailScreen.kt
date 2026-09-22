@@ -138,9 +138,7 @@ private fun ArticleContent(article: Article, paddingValues: PaddingValues) {
         Text(text = article.title, style = MaterialTheme.typography.headlineMedium)
         articleMetadata(article)
             .takeIf { it.isNotEmpty() }
-            ?.let { metadata ->
-                Text(text = metadata, style = MaterialTheme.typography.bodyMedium)
-            }
+            ?.let { metadata -> Text(text = metadata, style = MaterialTheme.typography.bodyMedium) }
         HtmlText(html = article.html.orEmpty(), modifier = Modifier.fillMaxWidth())
     }
 }

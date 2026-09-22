@@ -43,10 +43,7 @@ import dev.jasonpearson.android.feature.photography.data.PhotographyRepository
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 
 @Composable
-fun PhotographyScreen(
-    repository: PhotographyRepository,
-    modifier: Modifier = Modifier,
-) {
+fun PhotographyScreen(repository: PhotographyRepository, modifier: Modifier = Modifier) {
     val state by
         produceState<PhotographyUiState>(PhotographyUiState.Loading, repository) {
             value =
@@ -61,10 +58,7 @@ fun PhotographyScreen(
         PhotographyUiState.Loading -> LoadingContent(modifier)
         is PhotographyUiState.Error -> ErrorContent(currentState.message, modifier)
         is PhotographyUiState.Content -> {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = modifier.fillMaxSize(),
-            ) {
+            LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = modifier.fillMaxSize()) {
                 items(currentState.photos) { photo ->
                     NetworkImage(
                         url = photo.url,

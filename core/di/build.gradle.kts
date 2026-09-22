@@ -23,6 +23,4 @@
  */
 plugins { id("androidbuild.kotlin-jvm") }
 
-dependencies {
-    implementation(libs.metro.runtime)
-}
+dependencies { implementation(libs.metro.runtime) }
