@@ -40,6 +40,9 @@ moduleGraphAssert {
     allowed =
         arrayOf(
             ":app -> :.*",
+            ":client:.* -> :core:.*",
+            ":feature:.* -> :client:.*",
+            ":feature:.* -> :core:.*",
             ":feature:.* -> :subsystem:.*",
             ":feature:.* -> :foundation:.*",
             ":subsystem:.* -> :foundation:.*",
@@ -77,6 +80,20 @@ android {
         targetSdk = libs.versions.build.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField(
+            "String",
+            "GHOST_API_URL",
+            "\"" +
+                (project.findProperty("GHOST_API_URL") as String?
+                    ?: "https://www.jasonpearson.dev/ghost/api/content/") +
+                "\"",
+        )
+        buildConfigField(
+            "String",
+            "GHOST_CONTENT_API_KEY",
+            "\"" + (project.findProperty("GHOST_CONTENT_API_KEY") as String? ?: "") + "\"",
+        )
 
         testInstrumentationRunner = "dev.jasonpearson.android.TestRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -120,6 +137,7 @@ android {
         targetCompatibility = JavaVersion.toVersion(libs.versions.build.java.target.get())
     }
     buildFeatures {
+        buildConfig = true
         compose = true
         // Explicitly disable viewBinding since we're using Compose only
         viewBinding = false
@@ -151,31 +169,26 @@ dependencies {
     // Needed for reading Java 19+ class files due to JVM target higher than 11
     implementation(platform(libs.asm.bom))
     implementation(platform(libs.compose.bom))
-    // Feature screens wired into the app NavHost.
-    implementation(projects.feature.demos)
-    implementation(projects.feature.discover)
-    implementation(projects.feature.home)
-    implementation(projects.feature.login)
-    implementation(projects.feature.mediaplayer)
-    implementation(projects.feature.onboarding)
-    implementation(projects.feature.settings)
-    implementation(projects.feature.slides)
-    // Foundation + subsystems the app references directly (the Destination route
-    // contract and the subsystem instances it injects into the feature screens).
-    // Features depend on these via `implementation`, so their types are not exposed
-    // to the app transitively -- the app declares them directly.
+    implementation(projects.client.ghost)
+    implementation(projects.client.github)
+    implementation(projects.core.di)
+    implementation(projects.core.network)
+    implementation(projects.feature.about)
+    implementation(projects.feature.articles)
+    implementation(projects.feature.photography)
+    implementation(projects.feature.projects)
+    implementation(projects.feature.talks)
     implementation(projects.foundation.navigation)
-    implementation(projects.subsystem.analytics)
-    implementation(projects.subsystem.experimentation)
-    implementation(projects.subsystem.storage)
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.bundles.compose.ui)
     implementation(libs.bundles.kotlin)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material.icons)
+    implementation(libs.lifecycle.viewmodel.navigation3)
     implementation(libs.metro.runtime)
-    implementation(libs.navigation.compose)
+    implementation(libs.navigation3.runtime)
+    implementation(libs.navigation3.ui)
 
     debugImplementation(libs.bundles.compose.ui.debug)
 

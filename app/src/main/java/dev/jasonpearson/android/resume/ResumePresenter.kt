@@ -23,9 +23,9 @@
  */
 package dev.jasonpearson.android.resume
 
-import dev.jasonpearson.android.di.AppScope
+import dev.jasonpearson.android.core.di.AppScope
+import dev.jasonpearson.android.core.di.SingleIn
 import dev.jasonpearson.android.di.ApplicationModule
-import dev.jasonpearson.android.di.SingleIn
 import dev.jasonpearson.android.timer.TimerProvider
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineScope

@@ -30,6 +30,9 @@ android { namespace = "dev.jasonpearson.android.foundation.designsystem" }
 dependencies {
     implementation(projects.foundation.designassets)
 
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    implementation(libs.androidx.browser)
     implementation(libs.androidx.core)
     implementation(platform(libs.compose.bom))
     implementation(libs.bundles.compose.ui)

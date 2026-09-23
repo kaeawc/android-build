@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=https://unpkg.com/@kaeawc/auto-mobile/schemas/test-plan.schema.json
+---
+name: tab-navigation
+description: Tap through every bottom navigation tab and verify the app keeps rendering each destination
+steps:
+  - tool: launchApp
+    appId: dev.jasonpearson.android
+    clearAppData: true
+    label: Launch the app with clean state
+
+  - tool: observe
+    waitFor:
+      text: Articles
+    label: Wait for the bottom navigation to render
+
+  - tool: tapOn
+    action: tap
+    text: Talks
+    label: Open the Talks tab
+
+  - tool: tapOn
+    action: tap
+    text: Projects
+    label: Open the Projects tab
+
+  - tool: tapOn
+    action: tap
+    text: Photography
+    label: Open the Photography tab
+
+  - tool: tapOn
+    action: tap
+    text: About
+    label: Open the About tab
+
+  - tool: tapOn
+    action: tap
+    text: Articles
+    label: Return to the Articles tab
+
+  - tool: observe
+    waitFor:
+      text: Articles
+    label: Verify the app is still showing the navigation shell
+
+  - tool: terminateApp
+    appId: dev.jasonpearson.android
+    label: Terminate the app after test

@@ -27,55 +27,124 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import dev.jasonpearson.android.di.AppGraph
 import dev.jasonpearson.android.di.appGraph
-import dev.jasonpearson.android.navigation.featureGraph
-import dev.jasonpearson.android.resume.ResumePresenter
-import dev.jasonpearson.android.resume.ui.LinkedInQRScreen
-import dev.jasonpearson.android.resume.ui.ResumeApp
-import dev.jasonpearson.android.subsystem.analytics.RecordingAnalyticsClient
-import dev.jasonpearson.android.subsystem.experimentation.InMemoryExperimentRepository
-import dev.jasonpearson.android.subsystem.storage.InMemoryKeyValueStore
-import dev.jasonpearson.android.subsystem.storage.SessionRepository
-import dev.jasonpearson.android.subsystem.storage.UserPreferencesRepository
+import dev.jasonpearson.android.feature.about.ui.AboutScreen
+import dev.jasonpearson.android.feature.articles.ui.ArticleDetailScreen
+import dev.jasonpearson.android.feature.articles.ui.ArticlesListScreen
+import dev.jasonpearson.android.feature.photography.ui.PhotographyScreen
+import dev.jasonpearson.android.feature.projects.ui.ProjectsScreen
+import dev.jasonpearson.android.feature.talks.ui.TalksScreen
+import dev.jasonpearson.android.foundation.navigation.AppDestination
 import dev.jasonpearson.android.ui.theme.AndroidTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val presenter = appGraph.resumePresenter
-        setContent { AndroidTheme { ResumeNavigation(presenter = presenter) } }
+        val graph = appGraph
+        setContent { AndroidTheme { AppRoot(graph = graph) } }
     }
 }
 
 @Composable
-fun ResumeNavigation(presenter: ResumePresenter) {
-    val navController = rememberNavController()
+private fun AppRoot(graph: AppGraph) {
+    val backStack = rememberNavBackStack(AppDestination.Articles)
 
-    // Lightweight in-memory subsystem instances shared by the feature screens. These are
-    // constructed here (rather than through the Metro graph) to keep this wiring self-contained;
-    // the app still exercises the full :app -> :feature -> :subsystem dependency chain.
-    val store = remember { InMemoryKeyValueStore() }
-    val analytics = remember { RecordingAnalyticsClient() }
-    val preferences = remember { UserPreferencesRepository(store) }
-    val session = remember { SessionRepository(store) }
-    val experiments = remember { InMemoryExperimentRepository() }
-
-    // Launch destination stays "resume" so the existing resume UI and its UI tests are unaffected;
-    // the feature screens are additional destinations reachable by navigation.
-    NavHost(navController = navController, startDestination = "resume") {
-        composable("resume") {
-            ResumeApp(
-                presenter = presenter,
-                onShareLinkedIn = { navController.navigate("linkedin_qr") },
-            )
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                AppDestination.topLevel.forEach { dest ->
+                    NavigationBarItem(
+                        selected = backStack.firstOrNull() == dest,
+                        onClick = {
+                            if (backStack.firstOrNull() != dest) {
+                                backStack.clear()
+                                backStack.add(dest)
+                            }
+                        },
+                        icon = { Icon(tabIcon(dest), contentDescription = null) },
+                        label = { Text(tabLabel(dest)) },
+                    )
+                }
+            }
         }
-        composable("linkedin_qr") { LinkedInQRScreen(onBack = { navController.popBackStack() }) }
-        featureGraph(navController, analytics, preferences, session, experiments)
+    ) { innerPadding ->
+        NavDisplay(
+            modifier = Modifier.padding(innerPadding),
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            entryDecorators =
+                listOf(
+                    rememberSaveableStateHolderNavEntryDecorator(),
+                    rememberViewModelStoreNavEntryDecorator(),
+                ),
+            entryProvider =
+                entryProvider {
+                    entry<AppDestination.Articles> {
+                        ArticlesListScreen(
+                            repository = graph.articlesRepository,
+                            onArticleClick = { slug ->
+                                backStack.add(AppDestination.ArticleDetail(slug))
+                            },
+                        )
+                    }
+                    entry<AppDestination.ArticleDetail> { key ->
+                        ArticleDetailScreen(
+                            repository = graph.articlesRepository,
+                            slug = key.slug,
+                            onBack = { backStack.removeLastOrNull() },
+                        )
+                    }
+                    entry<AppDestination.Talks> { TalksScreen(repository = graph.talksRepository) }
+                    entry<AppDestination.Projects> {
+                        ProjectsScreen(repository = graph.projectsRepository)
+                    }
+                    entry<AppDestination.Photography> {
+                        PhotographyScreen(repository = graph.photographyRepository)
+                    }
+                    entry<AppDestination.About> { AboutScreen(repository = graph.aboutRepository) }
+                },
+        )
     }
 }
+
+private fun tabLabel(dest: AppDestination): String =
+    when (dest) {
+        AppDestination.Articles,
+        is AppDestination.ArticleDetail -> "Articles"
+        AppDestination.Talks -> "Talks"
+        AppDestination.Projects -> "Projects"
+        AppDestination.Photography -> "Photography"
+        AppDestination.About -> "About"
+    }
+
+private fun tabIcon(dest: AppDestination): ImageVector =
+    when (dest) {
+        AppDestination.Articles,
+        is AppDestination.ArticleDetail -> Icons.AutoMirrored.Filled.Article
+        AppDestination.Talks -> Icons.Filled.Mic
+        AppDestination.Projects -> Icons.Filled.Code
+        AppDestination.Photography -> Icons.Filled.PhotoCamera
+        AppDestination.About -> Icons.Filled.Person
+    }
