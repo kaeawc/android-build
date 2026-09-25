@@ -23,12 +23,12 @@
  */
 package dev.jasonpearson.android.feature.talks.ui
 
-import dev.jasonpearson.android.core.model.ContentPage
+import dev.jasonpearson.android.data.talks.Talk
 
 sealed interface TalksUiState {
     data object Loading : TalksUiState
 
     data class Error(val message: String) : TalksUiState
 
-    data class Content(val page: ContentPage) : TalksUiState
+    data class Content(val talks: List<Talk>) : TalksUiState
 }

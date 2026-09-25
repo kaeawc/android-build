@@ -43,4 +43,5 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.metro.runtime)
+    implementation(libs.zxing.core)
 }

@@ -23,9 +23,8 @@
  */
 package dev.jasonpearson.android.data.talks
 
-import dev.jasonpearson.android.core.model.ContentPage
 import dev.jasonpearson.android.core.network.NetworkResult
 
 interface TalksRepository {
-    suspend fun talksPage(): NetworkResult<ContentPage>
+    suspend fun talks(): NetworkResult<List<Talk>>
 }

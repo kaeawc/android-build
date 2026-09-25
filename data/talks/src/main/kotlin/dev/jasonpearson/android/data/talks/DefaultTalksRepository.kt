@@ -26,18 +26,36 @@ package dev.jasonpearson.android.data.talks
 import dev.jasonpearson.android.client.ghost.GhostDataSource
 import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.SingleIn
-import dev.jasonpearson.android.core.model.ContentPage
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.core.network.networkResult
+import dev.jasonpearson.android.subsystem.storage.ContentCache
+import dev.jasonpearson.android.subsystem.storage.fetchWithFallback
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 @Inject
-class DefaultTalksRepository(private val ghost: GhostDataSource) : TalksRepository {
+class DefaultTalksRepository(
+    private val ghost: GhostDataSource,
+    private val contentCache: ContentCache,
+    private val json: Json,
+) : TalksRepository {
 
-    override suspend fun talksPage(): NetworkResult<ContentPage> = networkResult {
-        ghost.getPage("talks")
+    override suspend fun talks(): NetworkResult<List<Talk>> = networkResult {
+        contentCache
+            .fetchWithFallback(
+                key = "talks:list",
+                encode = { json.encodeToString(ListSerializer(Talk.serializer()), it) },
+                decode = { json.decodeFromString(ListSerializer(Talk.serializer()), it) },
+            ) {
+                parseTalks(ghost.getPage("talks").html)
+            }
+            .getOrThrow()
+            .value
     }
 }

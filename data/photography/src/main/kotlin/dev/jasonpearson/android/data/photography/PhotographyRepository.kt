@@ -23,9 +23,8 @@
  */
 package dev.jasonpearson.android.data.photography
 
-import dev.jasonpearson.android.core.model.Photo
 import dev.jasonpearson.android.core.network.NetworkResult
 
 interface PhotographyRepository {
-    suspend fun photos(): NetworkResult<List<Photo>>
+    suspend fun photos(): NetworkResult<List<GalleryPhoto>>
 }

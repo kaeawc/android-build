@@ -122,6 +122,9 @@ public class DataProjects internal constructor(private val handler: DependencyHa
     public val projects: ModuleDependency
         get() = handler.swappable(":data:projects")
 
+    public val settings: ModuleDependency
+        get() = handler.swappable(":data:settings")
+
     public val talks: ModuleDependency
         get() = handler.swappable(":data:talks")
 }
@@ -174,6 +177,9 @@ public class FeatureProjects internal constructor(private val handler: Dependenc
 
     public val projects: ModuleDependency
         get() = handler.swappable(":feature:projects")
+
+    public val settings: ModuleDependency
+        get() = handler.swappable(":feature:settings")
 
     public val talks: ModuleDependency
         get() = handler.swappable(":feature:talks")

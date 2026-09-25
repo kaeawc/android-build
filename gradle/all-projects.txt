@@ -1,6 +1,6 @@
 :app
-:client:github
 :client:ghost
+:client:github
 :core:common
 :core:di
 :core:model
@@ -9,11 +9,13 @@
 :data:articles
 :data:photography
 :data:projects
+:data:settings
 :data:talks
 :feature:about
 :feature:articles
 :feature:photography
 :feature:projects
+:feature:settings
 :feature:talks
 :foundation:designassets
 :foundation:designsystem

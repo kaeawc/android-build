@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023 Jason Pearson
+ * Copyright (c) 2026 Jason Pearson
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,14 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.ui.theme
+package dev.jasonpearson.android.automobiletest
 
-import androidx.compose.ui.graphics.Color
+import dev.jasonpearson.automobile.junit.AutoMobilePlan
+import dev.jasonpearson.automobile.junit.AutoMobileRunner
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+/**
+ * AutoMobile JUnit tests for verifying app lifecycle transitions on a real Android device or
+ * emulator. These tests run on the host JVM and communicate with the device via ADB using the
+ * AutoMobile runner.
+ *
+ * Requires an ADB-connected device and the AutoMobile control proxy APK path set via
+ * AUTOMOBILE_CTRL_PROXY_APK_PATH environment variable.
+ */
+@RunWith(AutoMobileRunner::class)
+class SearchAutoMobileTest {
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+    @Test
+    fun `article search opens, accepts a query, and navigates back`() {
+        val result = AutoMobilePlan(planPath = "test-plans/search.yaml").execute()
+
+        assertTrue(result.success)
+    }
+}

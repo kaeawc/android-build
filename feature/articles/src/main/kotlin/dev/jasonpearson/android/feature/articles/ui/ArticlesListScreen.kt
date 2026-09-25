@@ -33,11 +33,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -46,14 +55,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.model.Article
+import dev.jasonpearson.android.core.model.Tag
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.articles.ArticlesRepository
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArticlesListScreen(
     repository: ArticlesRepository,
     onArticleClick: (slug: String) -> Unit,
+    onTagClick: (String) -> Unit = {},
+    onSearchClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val state by
@@ -65,18 +78,89 @@ fun ArticlesListScreen(
                         ArticlesUiState.Error(r.error.message ?: "Failed to load")
                 }
         }
+    val featured by
+        produceState<List<Article>>(emptyList(), repository) {
+            value =
+                when (val result = repository.featured()) {
+                    is NetworkResult.Success -> result.data
+                    is NetworkResult.Failure -> emptyList()
+                }
+        }
+    val tags by
+        produceState<List<Tag>>(emptyList(), repository) {
+            value =
+                when (val result = repository.tags()) {
+                    is NetworkResult.Success -> result.data
+                    is NetworkResult.Failure -> emptyList()
+                }
+        }
 
-    when (val currentState = state) {
-        ArticlesUiState.Loading -> LoadingContent(modifier)
-        is ArticlesUiState.Error -> ErrorContent(currentState.message, modifier)
-        is ArticlesUiState.Content -> {
-            LazyColumn(
-                modifier = modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                items(currentState.articles, key = Article::id) { article ->
-                    ArticleCard(article = article, onClick = { onArticleClick(article.slug) })
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = { Text("Articles") },
+                actions = {
+                    IconButton(onClick = onSearchClick) {
+                        Icon(Icons.Filled.Search, contentDescription = "Search")
+                    }
+                },
+            )
+        },
+    ) { paddingValues ->
+        when (val currentState = state) {
+            ArticlesUiState.Loading -> LoadingContent(Modifier.padding(paddingValues))
+            is ArticlesUiState.Error ->
+                ErrorContent(currentState.message, Modifier.padding(paddingValues))
+            is ArticlesUiState.Content -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    if (featured.isNotEmpty()) {
+                        item(key = "featured") {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                items(featured, key = Article::id) { article ->
+                                    Card(
+                                        modifier =
+                                            Modifier.fillParentMaxWidth().clickable {
+                                                onArticleClick(article.slug)
+                                            }
+                                    ) {
+                                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            NetworkImage(
+                                                url = article.featureImageUrl,
+                                                contentDescription = article.title,
+                                                modifier = Modifier.fillMaxWidth().height(220.dp),
+                                            )
+                                            Text(
+                                                text = article.title,
+                                                style = MaterialTheme.typography.titleLarge,
+                                                modifier = Modifier.padding(16.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (tags.isNotEmpty()) {
+                        item(key = "tags") {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(tags, key = Tag::id) { tag ->
+                                    FilterChip(
+                                        selected = false,
+                                        onClick = { onTagClick(tag.slug) },
+                                        label = { Text("${tag.name} ${tag.postCount}") },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    items(currentState.articles, key = Article::id) { article ->
+                        ArticleCard(article = article, onClick = { onArticleClick(article.slug) })
+                    }
                 }
             }
         }
@@ -98,7 +182,7 @@ private fun ErrorContent(message: String, modifier: Modifier) {
 }
 
 @Composable
-private fun ArticleCard(article: Article, onClick: () -> Unit) {
+internal fun ArticleCard(article: Article, onClick: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Column(
             modifier = Modifier.padding(16.dp),

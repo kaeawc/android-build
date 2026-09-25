@@ -23,12 +23,12 @@
  */
 package dev.jasonpearson.android.feature.photography.ui
 
-import dev.jasonpearson.android.core.model.Photo
+import dev.jasonpearson.android.data.photography.GalleryPhoto
 
 sealed interface PhotographyUiState {
     data object Loading : PhotographyUiState
 
     data class Error(val message: String) : PhotographyUiState
 
-    data class Content(val photos: List<Photo>) : PhotographyUiState
+    data class Content(val photos: List<GalleryPhoto>) : PhotographyUiState
 }

@@ -29,5 +29,11 @@ import dev.jasonpearson.android.core.network.NetworkResult
 interface AboutRepository {
     suspend fun aboutPage(): NetworkResult<ContentPage>
 
+    suspend fun profile(): NetworkResult<AboutProfile>
+
     fun experience(): List<ExperienceEntry>
+
+    fun education(): List<EducationEntry>
+
+    fun talks(): List<TalkEntry>
 }
