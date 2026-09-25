@@ -118,4 +118,32 @@ class ConsentGatedAnalyticsClientTest {
 
         assertEquals((5 until total).map { "$it" }, sent.map { it.params.getValue("index") })
     }
+
+    @Test
+    fun `tracks reentrantly during flush after buffered events`() {
+        val consent = AnalyticsConsent()
+        val sent = mutableListOf<AnalyticsEvent>()
+        val bufferedFirst = AnalyticsEvent("tap", mapOf("index" to "first"))
+        val bufferedSecond = AnalyticsEvent("tap", mapOf("index" to "second"))
+        val trackedDuringFlush = AnalyticsEvent("tap", mapOf("index" to "during-flush"))
+        lateinit var client: ConsentGatedAnalyticsClient
+        var reentered = false
+        client =
+            ConsentGatedAnalyticsClient(
+                AnalyticsSink { event ->
+                    sent.add(event)
+                    if (!reentered) {
+                        reentered = true
+                        client.track(trackedDuringFlush)
+                    }
+                },
+                consent,
+            )
+
+        client.track(bufferedFirst)
+        client.track(bufferedSecond)
+        consent.update(true)
+
+        assertEquals(listOf(bufferedFirst, bufferedSecond, trackedDuringFlush), sent)
+    }
 }
