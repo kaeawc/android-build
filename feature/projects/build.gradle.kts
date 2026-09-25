@@ -40,6 +40,7 @@ dependencies {
     implementation(projects.foundation.designsystem)
     implementation(projects.subsystem.analytics)
     implementation(projects.subsystem.experimentation)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.bundles.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material.icons)
@@ -47,4 +48,5 @@ dependencies {
     implementation(libs.metro.runtime)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

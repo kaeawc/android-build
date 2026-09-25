@@ -36,9 +36,13 @@ dependencies {
     implementation(projects.core.model)
     implementation(projects.data.bookmarks)
     implementation(projects.foundation.designsystem)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.bundles.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material.icons)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.metro.runtime)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

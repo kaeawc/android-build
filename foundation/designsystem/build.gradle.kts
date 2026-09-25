@@ -32,6 +32,7 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.coil.svg)
     implementation(libs.androidx.browser)
     implementation(libs.androidx.core)
     implementation(platform(libs.compose.bom))
