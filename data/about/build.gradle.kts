@@ -27,14 +27,18 @@ import dev.jasonpearson.gradle.projects
 plugins {
     id("androidbuild.kotlin-jvm")
     alias(libs.plugins.metro)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
     implementation(projects.client.ghost)
     implementation(projects.core.di)
+    implementation(projects.subsystem.storage)
     api(projects.core.model)
     api(projects.core.network)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.metro.runtime)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

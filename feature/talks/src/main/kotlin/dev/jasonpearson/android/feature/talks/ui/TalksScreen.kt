@@ -23,16 +23,30 @@
  */
 package dev.jasonpearson.android.feature.talks.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.horizontalScroll
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Slideshow
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -41,10 +55,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.network.NetworkResult
+import dev.jasonpearson.android.data.talks.Talk
+import dev.jasonpearson.android.data.talks.TalkLink
+import dev.jasonpearson.android.data.talks.TalkLinkKind
 import dev.jasonpearson.android.data.talks.TalksRepository
-import dev.jasonpearson.android.foundation.designsystem.components.HtmlText
+import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
+import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +71,7 @@ fun TalksScreen(repository: TalksRepository, modifier: Modifier = Modifier) {
     val state by
         produceState<TalksUiState>(TalksUiState.Loading, repository) {
             value =
-                when (val r = repository.talksPage()) {
+                when (val r = repository.talks()) {
                     is NetworkResult.Success -> TalksUiState.Content(r.data)
                     is NetworkResult.Failure ->
                         TalksUiState.Error(r.error.message ?: "Failed to load")
@@ -64,7 +83,7 @@ fun TalksScreen(repository: TalksRepository, modifier: Modifier = Modifier) {
         when (val currentState = state) {
             TalksUiState.Loading -> LoadingContent(paddingValues)
             is TalksUiState.Error -> ErrorContent(currentState.message, paddingValues)
-            is TalksUiState.Content -> TalksContent(currentState.page.html, paddingValues)
+            is TalksUiState.Content -> TalksContent(currentState.talks, paddingValues)
         }
     }
 }
@@ -90,14 +109,74 @@ private fun ErrorContent(message: String, paddingValues: PaddingValues) {
 }
 
 @Composable
-private fun TalksContent(html: String, paddingValues: PaddingValues) {
-    Column(
-        modifier =
-            Modifier.fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-    ) {
-        HtmlText(html = html, modifier = Modifier.fillMaxWidth())
+private fun TalksContent(talks: List<Talk>, paddingValues: PaddingValues) {
+    if (talks.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("No talks yet.")
+        }
+        return
     }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(paddingValues),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        items(talks) { talk -> TalkCard(talk) }
+    }
+}
+
+@Composable
+private fun TalkCard(talk: Talk) {
+    val context = LocalContext.current
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (talk.imageUrl != null) {
+                NetworkImage(
+                    url = talk.imageUrl,
+                    contentDescription = talk.title,
+                    modifier = Modifier.fillMaxWidth().height(180.dp),
+                )
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(talk.title, style = MaterialTheme.typography.titleMedium)
+                val metadata = listOfNotNull(talk.event, talk.date).joinToString(" · ")
+                if (metadata.isNotBlank()) {
+                    Text(metadata, style = MaterialTheme.typography.bodySmall)
+                }
+                if (talk.links.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        talk.links.forEach { link ->
+                            TalkLinkChip(link = link) { openUrl(context, link.url) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TalkLinkChip(link: TalkLink, onClick: () -> Unit) {
+    val icon =
+        when (link.kind) {
+            TalkLinkKind.WATCH -> Icons.Default.PlayArrow
+            TalkLinkKind.SLIDES -> Icons.Default.Slideshow
+            TalkLinkKind.EVENT -> Icons.Default.Event
+            TalkLinkKind.OTHER -> Icons.Default.Link
+        }
+    AssistChip(
+        onClick = onClick,
+        label = { Text(link.label) },
+        leadingIcon = { Icon(imageVector = icon, contentDescription = null) },
+    )
 }

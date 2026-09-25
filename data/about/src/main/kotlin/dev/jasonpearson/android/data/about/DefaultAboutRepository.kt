@@ -28,18 +28,71 @@ import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.SingleIn
 import dev.jasonpearson.android.core.model.ContentPage
 import dev.jasonpearson.android.core.network.NetworkResult
-import dev.jasonpearson.android.core.network.networkResult
+import dev.jasonpearson.android.subsystem.storage.ContentCache
+import dev.jasonpearson.android.subsystem.storage.fetchWithFallback
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 @Inject
-class DefaultAboutRepository(private val ghost: GhostDataSource) : AboutRepository {
+class DefaultAboutRepository(
+    private val ghost: GhostDataSource,
+    private val contentCache: ContentCache,
+    private val json: Json = Json { ignoreUnknownKeys = true },
+) : AboutRepository {
 
-    override suspend fun aboutPage(): NetworkResult<ContentPage> = networkResult {
-        ghost.getPage("about-me")
+    override suspend fun aboutPage(): NetworkResult<ContentPage> {
+        val result =
+            contentCache.fetchWithFallback<ContentPageCache>(
+                key = "about:page",
+                encode = { json.encodeToString(it) },
+                decode = { json.decodeFromString<ContentPageCache>(it) },
+                fetch = { ghost.getPage("about-me").toCache() },
+            )
+        return result.fold(
+            onSuccess = { NetworkResult.Success(it.value.toDomain()) },
+            onFailure = { NetworkResult.Failure(it) },
+        )
+    }
+
+    override suspend fun profile(): NetworkResult<AboutProfile> {
+        val result =
+            contentCache.fetchWithFallback<SiteSettingsCache>(
+                key = "about:settings",
+                encode = { json.encodeToString(it) },
+                decode = { json.decodeFromString<SiteSettingsCache>(it) },
+                fetch = { ghost.getSettings().toCache() },
+            )
+        val profile =
+            result.fold(
+                onSuccess = { cached ->
+                    val settings = cached.value.toDomain()
+                    AboutProfile(
+                        title = settings.title,
+                        description = settings.description,
+                        iconUrl = settings.iconUrl,
+                        socials = mergeSocials(settings),
+                    )
+                },
+                onFailure = {
+                    AboutProfile(
+                        title = "Jason Pearson",
+                        description = null,
+                        iconUrl = null,
+                        socials = mergeSocials(null),
+                    )
+                },
+            )
+        return NetworkResult.Success(profile)
     }
 
     override fun experience(): List<ExperienceEntry> = experience
+
+    override fun education(): List<EducationEntry> = education
+
+    override fun talks(): List<TalkEntry> = talks
 }

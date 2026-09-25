@@ -24,6 +24,7 @@
 package dev.jasonpearson.android.client.github.api
 
 import dev.jasonpearson.android.client.github.dto.GitHubRepoDto
+import okhttp3.ResponseBody
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Path
@@ -31,7 +32,7 @@ import retrofit2.http.Query
 
 interface GitHubApi {
 
-    @Headers("User-Agent: kaeawc-portfolio-app")
+    @Headers(value = ["User-Agent: kaeawc-portfolio-app", "Accept: application/vnd.github+json"])
     @GET("users/{user}/repos")
     suspend fun getRepos(
         @Path("user") user: String,
@@ -39,4 +40,17 @@ interface GitHubApi {
         @Query("per_page") perPage: Int = 100,
         @Query("type") type: String = "owner",
     ): List<GitHubRepoDto>
+
+    @Headers(value = ["User-Agent: kaeawc-portfolio-app", "Accept: application/vnd.github+json"])
+    @GET("repos/{owner}/{repo}")
+    suspend fun getRepo(@Path("owner") owner: String, @Path("repo") repo: String): GitHubRepoDto
+
+    @Headers(
+        value = ["User-Agent: kaeawc-portfolio-app", "Accept: application/vnd.github.html+json"]
+    )
+    @GET("repos/{owner}/{repo}/readme")
+    suspend fun getReadmeHtml(
+        @Path("owner") owner: String,
+        @Path("repo") repo: String,
+    ): ResponseBody
 }

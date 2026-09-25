@@ -27,21 +27,132 @@ import dev.jasonpearson.android.client.ghost.GhostDataSource
 import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.SingleIn
 import dev.jasonpearson.android.core.model.Article
+import dev.jasonpearson.android.core.model.SearchEntry
+import dev.jasonpearson.android.core.model.Tag
 import dev.jasonpearson.android.core.network.NetworkResult
-import dev.jasonpearson.android.core.network.networkResult
+import dev.jasonpearson.android.subsystem.storage.ContentCache
+import dev.jasonpearson.android.subsystem.storage.fetchWithFallback
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 @Inject
-class DefaultArticlesRepository(private val ghost: GhostDataSource) : ArticlesRepository {
+class DefaultArticlesRepository(
+    private val ghost: GhostDataSource,
+    private val contentCache: ContentCache,
+    private val json: Json,
+) : ArticlesRepository {
+    private val searchIndexMutex = Mutex()
+    private var searchIndex: List<SearchEntry>? = null
 
-    override suspend fun articles(): NetworkResult<List<Article>> = networkResult {
-        ghost.getArticles()
+    override suspend fun articles(): NetworkResult<List<Article>> =
+        cached("articles:all", ::encodeArticles, ::decodeArticles) { ghost.getAllArticles() }
+
+    override suspend fun article(slug: String): NetworkResult<Article> =
+        cached(
+            "articles:detail:$slug",
+            { json.encodeToString(it.toCacheModel()) },
+            { json.decodeFromString<CachedArticle>(it).toArticle() },
+        ) {
+            ghost.getArticle(slug)
+        }
+
+    override suspend fun featured(): NetworkResult<List<Article>> =
+        cached("articles:featured", ::encodeArticles, ::decodeArticles) {
+            ghost.getFeaturedArticles()
+        }
+
+    override suspend fun tags(): NetworkResult<List<Tag>> =
+        when (
+            val result =
+                cached(
+                    "articles:tags",
+                    { json.encodeToString(it.map(Tag::toCacheModel)) },
+                    { json.decodeFromString<List<CachedTag>>(it).map(CachedTag::toTag) },
+                ) {
+                    ghost.getTags()
+                }
+        ) {
+            is NetworkResult.Success ->
+                NetworkResult.Success(
+                    result.data
+                        .filter { it.postCount != null && it.postCount > 0 }
+                        .sortedByDescending { it.postCount }
+                )
+            is NetworkResult.Failure -> result
+        }
+
+    override suspend fun articlesByTag(slug: String): NetworkResult<List<Article>> =
+        cached("articles:tag:$slug", ::encodeArticles, ::decodeArticles) {
+            ghost.getArticlesByTag(slug)
+        }
+
+    override suspend fun related(article: Article): NetworkResult<List<Article>> =
+        cached("articles:related:${article.id}", ::encodeArticles, ::decodeArticles) {
+            ghost.getRelatedArticles(article)
+        }
+
+    override suspend fun search(query: String): NetworkResult<List<SearchEntry>> {
+        if (query.isBlank()) return NetworkResult.Success(emptyList())
+
+        val index = searchIndexMutex.withLock {
+            searchIndex?.let {
+                return@withLock NetworkResult.Success(it)
+            }
+            val result =
+                cached(
+                    "articles:search-index",
+                    { json.encodeToString(it.map(SearchEntry::toCacheModel)) },
+                    {
+                        json
+                            .decodeFromString<List<CachedSearchEntry>>(it)
+                            .map(CachedSearchEntry::toSearchEntry)
+                    },
+                ) {
+                    ghost.getSearchIndex()
+                }
+            if (result is NetworkResult.Success) searchIndex = result.data
+            result
+        }
+        return when (index) {
+            is NetworkResult.Success -> NetworkResult.Success(filterSearchIndex(index.data, query))
+            is NetworkResult.Failure -> index
+        }
     }
 
-    override suspend fun article(slug: String): NetworkResult<Article> = networkResult {
-        ghost.getArticle(slug)
-    }
+    override suspend fun adjacent(slug: String): NetworkResult<Pair<Article?, Article?>> =
+        when (val result = articles()) {
+            is NetworkResult.Success ->
+                if (result.data.none { it.slug == slug }) {
+                    NetworkResult.Failure(NoSuchElementException("Article slug not found: $slug"))
+                } else {
+                    NetworkResult.Success(adjacentArticles(result.data, slug))
+                }
+            is NetworkResult.Failure -> result
+        }
+
+    private fun encodeArticles(articles: List<Article>): String =
+        json.encodeToString(articles.map(Article::toCacheModel))
+
+    private fun decodeArticles(value: String): List<Article> =
+        json.decodeFromString<List<CachedArticle>>(value).map(CachedArticle::toArticle)
+
+    private suspend fun <T : Any> cached(
+        key: String,
+        encode: (T) -> String,
+        decode: (String) -> T,
+        fetch: suspend () -> T,
+    ): NetworkResult<T> =
+        contentCache
+            .fetchWithFallback(key, encode, decode, fetch)
+            .fold(
+                onSuccess = { NetworkResult.Success(it.value) },
+                onFailure = { NetworkResult.Failure(it) },
+            )
 }

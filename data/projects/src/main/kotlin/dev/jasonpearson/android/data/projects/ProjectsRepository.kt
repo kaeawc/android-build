@@ -28,4 +28,10 @@ import dev.jasonpearson.android.core.network.NetworkResult
 
 interface ProjectsRepository {
     suspend fun projects(): NetworkResult<List<Project>>
+
+    suspend fun overview(): NetworkResult<ProjectsOverview>
+
+    suspend fun project(name: String): NetworkResult<Project>
+
+    suspend fun readme(name: String): NetworkResult<String>
 }

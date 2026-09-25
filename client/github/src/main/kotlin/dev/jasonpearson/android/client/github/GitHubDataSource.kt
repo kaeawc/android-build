@@ -37,4 +37,10 @@ class GitHubDataSource(private val api: GitHubApi) {
             .map { it.toProject() }
             .sortedByDescending { it.stars }
             .toList()
+
+    suspend fun getProject(name: String, owner: String = "kaeawc"): Project =
+        api.getRepo(owner, name).toProject()
+
+    suspend fun getReadmeHtml(name: String, owner: String = "kaeawc"): String =
+        api.getReadmeHtml(owner, name).use { it.string() }
 }

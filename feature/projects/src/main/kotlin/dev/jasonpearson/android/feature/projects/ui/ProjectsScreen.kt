@@ -24,6 +24,7 @@
 package dev.jasonpearson.android.feature.projects.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,16 +35,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -57,35 +66,87 @@ import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProjectsScreen(repository: ProjectsRepository, modifier: Modifier = Modifier) {
+fun ProjectsScreen(
+    repository: ProjectsRepository,
+    modifier: Modifier = Modifier,
+    onProjectClick: ((String) -> Unit)? = null,
+) {
     val context = LocalContext.current
+    var selectedLanguage by remember { mutableStateOf<String?>(null) }
     val state by
         produceState<ProjectsUiState>(ProjectsUiState.Loading, repository) {
             value =
-                when (val r = repository.projects()) {
-                    is NetworkResult.Success -> ProjectsUiState.Content(r.data)
+                when (val result = repository.overview()) {
+                    is NetworkResult.Success -> ProjectsUiState.Content(result.data)
                     is NetworkResult.Failure ->
-                        ProjectsUiState.Error(r.error.message ?: "Failed to load")
+                        ProjectsUiState.Error(result.error.message ?: "Failed to load")
                 }
         }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Projects") }) }) { innerPadding ->
+    Scaffold(modifier = modifier, topBar = { TopAppBar(title = { Text("Projects") }) }) {
+        innerPadding ->
         when (val currentState = state) {
-            ProjectsUiState.Loading -> LoadingContent(modifier.padding(innerPadding))
+            ProjectsUiState.Loading -> LoadingContent(Modifier.padding(innerPadding))
             is ProjectsUiState.Error ->
-                ErrorContent(currentState.message, modifier.padding(innerPadding))
-            is ProjectsUiState.Content ->
+                ErrorContent(currentState.message, Modifier.padding(innerPadding))
+            is ProjectsUiState.Content -> {
+                val overview = currentState.overview
+                val pinned =
+                    overview.pinned.filter {
+                        selectedLanguage == null || it.language == selectedLanguage
+                    }
+                val others =
+                    overview.others.filter {
+                        selectedLanguage == null || it.language == selectedLanguage
+                    }
                 LazyColumn(
-                    modifier = modifier.fillMaxSize().padding(innerPadding),
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(currentState.projects, key = Project::id) { project ->
-                        ProjectCard(project = project, onClick = { openUrl(context, project.url) })
+                    item(key = "filters") {
+                        Row(
+                            modifier =
+                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            FilterChip(
+                                selected = selectedLanguage == null,
+                                onClick = { selectedLanguage = null },
+                                label = { Text("All") },
+                            )
+                            overview.languages.forEach { language ->
+                                FilterChip(
+                                    selected = selectedLanguage == language,
+                                    onClick = { selectedLanguage = language },
+                                    label = { Text(language) },
+                                )
+                            }
+                        }
+                    }
+                    item(key = "pinned_header") { SectionHeader("Pinned") }
+                    items(pinned, key = { "pinned_${it.id}" }) { project ->
+                        ProjectCard(project, pinned = true) {
+                            if (onProjectClick != null) onProjectClick(project.name)
+                            else openUrl(context, project.url)
+                        }
+                    }
+                    item(key = "all_header") { SectionHeader("All projects") }
+                    items(others, key = { "other_${it.id}" }) { project ->
+                        ProjectCard(project, pinned = false) {
+                            if (onProjectClick != null) onProjectClick(project.name)
+                            else openUrl(context, project.url)
+                        }
                     }
                 }
+            }
         }
     }
+}
+
+@Composable
+private fun SectionHeader(title: String) {
+    Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 }
 
 @Composable
@@ -103,17 +164,29 @@ private fun ErrorContent(message: String, modifier: Modifier) {
 }
 
 @Composable
-private fun ProjectCard(project: Project, onClick: () -> Unit) {
+private fun ProjectCard(project: Project, pinned: Boolean, onClick: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
-                text = project.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (pinned) {
+                    Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = "Pinned",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                Text(
+                    text = project.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
             project.description?.let { description ->
                 Text(
                     text = description,
@@ -125,17 +198,9 @@ private fun ProjectCard(project: Project, onClick: () -> Unit) {
             val metadata = buildList {
                 add("★ ${project.stars}")
                 project.language?.let(::add)
-                project.topics
-                    .take(3)
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { topics -> add(topics.joinToString()) }
+                project.topics.take(3).takeIf { it.isNotEmpty() }?.let { add(it.joinToString()) }
             }
-            Row {
-                Text(
-                    text = metadata.joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
+            Text(text = metadata.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
         }
     }
 }

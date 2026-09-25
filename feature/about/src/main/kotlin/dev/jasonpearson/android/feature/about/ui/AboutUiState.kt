@@ -24,11 +24,17 @@
 package dev.jasonpearson.android.feature.about.ui
 
 import dev.jasonpearson.android.core.model.ContentPage
+import dev.jasonpearson.android.data.about.AboutProfile
+import dev.jasonpearson.android.data.about.ExperienceEntry
 
 sealed interface AboutUiState {
     data object Loading : AboutUiState
 
     data class Error(val message: String) : AboutUiState
 
-    data class Content(val page: ContentPage) : AboutUiState
+    data class Content(
+        val profile: AboutProfile,
+        val page: ContentPage,
+        val experience: List<ExperienceEntry>,
+    ) : AboutUiState
 }

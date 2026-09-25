@@ -23,10 +23,13 @@
  */
 package dev.jasonpearson.android.feature.articles.ui
 
+import android.content.Intent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +38,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,18 +48,22 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.model.Article
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.articles.ArticlesRepository
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlText
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
+import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +71,7 @@ fun ArticleDetailScreen(
     repository: ArticlesRepository,
     slug: String,
     onBack: () -> Unit,
+    onArticleClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val state by
@@ -73,6 +84,8 @@ fun ArticleDetailScreen(
                 }
         }
     val title = (state as? ArticleDetailUiState.Content)?.article?.title ?: slug
+    val loadedArticle = (state as? ArticleDetailUiState.Content)?.article
+    val context = LocalContext.current
 
     Scaffold(
         modifier = modifier,
@@ -87,13 +100,43 @@ fun ArticleDetailScreen(
                         )
                     }
                 },
+                actions = {
+                    loadedArticle?.let { article ->
+                        IconButton(
+                            onClick = {
+                                val intent =
+                                    Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(
+                                            Intent.EXTRA_TEXT,
+                                            "${article.title}\n${article.url}",
+                                        )
+                                    }
+                                context.startActivity(Intent.createChooser(intent, null))
+                            }
+                        ) {
+                            Icon(Icons.Filled.Share, contentDescription = "Share")
+                        }
+                        article.url?.let { url ->
+                            IconButton(onClick = { openUrl(context, url) }) {
+                                Icon(Icons.Filled.Language, contentDescription = "Open in browser")
+                            }
+                        }
+                    }
+                },
             )
         },
     ) { paddingValues ->
         when (val currentState = state) {
             ArticleDetailUiState.Loading -> LoadingContent(paddingValues)
             is ArticleDetailUiState.Error -> ErrorContent(currentState.message, paddingValues)
-            is ArticleDetailUiState.Content -> ArticleContent(currentState.article, paddingValues)
+            is ArticleDetailUiState.Content ->
+                ArticleContent(
+                    article = currentState.article,
+                    repository = repository,
+                    onArticleClick = onArticleClick,
+                    paddingValues = paddingValues,
+                )
         }
     }
 }
@@ -119,7 +162,29 @@ private fun ErrorContent(message: String, paddingValues: PaddingValues) {
 }
 
 @Composable
-private fun ArticleContent(article: Article, paddingValues: PaddingValues) {
+private fun ArticleContent(
+    article: Article,
+    repository: ArticlesRepository,
+    onArticleClick: (String) -> Unit,
+    paddingValues: PaddingValues,
+) {
+    val adjacent by
+        produceState<Pair<Article?, Article?>?>(null, repository, article.slug) {
+            value =
+                when (val result = repository.adjacent(article.slug)) {
+                    is NetworkResult.Success -> result.data
+                    is NetworkResult.Failure -> null
+                }
+        }
+    val related by
+        produceState<List<Article>>(emptyList(), repository, article.id) {
+            value =
+                when (val result = repository.related(article)) {
+                    is NetworkResult.Success -> result.data
+                    is NetworkResult.Failure -> emptyList()
+                }
+        }
+
     Column(
         modifier =
             Modifier.fillMaxSize()
@@ -140,6 +205,49 @@ private fun ArticleContent(article: Article, paddingValues: PaddingValues) {
             .takeIf { it.isNotEmpty() }
             ?.let { metadata -> Text(text = metadata, style = MaterialTheme.typography.bodyMedium) }
         HtmlText(html = article.html.orEmpty(), modifier = Modifier.fillMaxWidth())
+        adjacent?.let { (previous, next) ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                TextButton(
+                    enabled = previous != null,
+                    onClick = { previous?.let { onArticleClick(it.slug) } },
+                ) {
+                    Text("Previous")
+                }
+                TextButton(
+                    enabled = next != null,
+                    onClick = { next?.let { onArticleClick(it.slug) } },
+                ) {
+                    Text("Next")
+                }
+            }
+        }
+        if (related.isNotEmpty()) {
+            Text("Related", style = MaterialTheme.typography.titleLarge)
+            related.forEach { relatedArticle ->
+                Card(
+                    modifier =
+                        Modifier.fillMaxWidth().clickable { onArticleClick(relatedArticle.slug) }
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(relatedArticle.title, style = MaterialTheme.typography.titleMedium)
+                        relatedArticle.excerpt?.let { excerpt ->
+                            Text(
+                                text = excerpt,
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

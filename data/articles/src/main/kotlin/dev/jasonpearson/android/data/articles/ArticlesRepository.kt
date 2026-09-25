@@ -24,10 +24,24 @@
 package dev.jasonpearson.android.data.articles
 
 import dev.jasonpearson.android.core.model.Article
+import dev.jasonpearson.android.core.model.SearchEntry
+import dev.jasonpearson.android.core.model.Tag
 import dev.jasonpearson.android.core.network.NetworkResult
 
 interface ArticlesRepository {
     suspend fun articles(): NetworkResult<List<Article>>
 
     suspend fun article(slug: String): NetworkResult<Article>
+
+    suspend fun featured(): NetworkResult<List<Article>>
+
+    suspend fun tags(): NetworkResult<List<Tag>>
+
+    suspend fun articlesByTag(slug: String): NetworkResult<List<Article>>
+
+    suspend fun related(article: Article): NetworkResult<List<Article>>
+
+    suspend fun search(query: String): NetworkResult<List<SearchEntry>>
+
+    suspend fun adjacent(slug: String): NetworkResult<Pair<Article?, Article?>>
 }

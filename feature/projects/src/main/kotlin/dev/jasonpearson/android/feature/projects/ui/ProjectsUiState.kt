@@ -23,12 +23,12 @@
  */
 package dev.jasonpearson.android.feature.projects.ui
 
-import dev.jasonpearson.android.core.model.Project
+import dev.jasonpearson.android.data.projects.ProjectsOverview
 
 sealed interface ProjectsUiState {
     data object Loading : ProjectsUiState
 
     data class Error(val message: String) : ProjectsUiState
 
-    data class Content(val projects: List<Project>) : ProjectsUiState
+    data class Content(val overview: ProjectsOverview) : ProjectsUiState
 }

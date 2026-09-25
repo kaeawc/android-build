@@ -26,16 +26,36 @@ package dev.jasonpearson.android.data.photography
 import dev.jasonpearson.android.client.ghost.GhostDataSource
 import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.SingleIn
-import dev.jasonpearson.android.core.model.Photo
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.core.network.networkResult
+import dev.jasonpearson.android.subsystem.storage.ContentCache
+import dev.jasonpearson.android.subsystem.storage.fetchWithFallback
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 @Inject
-class DefaultPhotographyRepository(private val ghost: GhostDataSource) : PhotographyRepository {
+class DefaultPhotographyRepository(
+    private val ghost: GhostDataSource,
+    private val contentCache: ContentCache,
+    private val json: Json = Json { ignoreUnknownKeys = true },
+) : PhotographyRepository {
 
-    override suspend fun photos(): NetworkResult<List<Photo>> = networkResult { ghost.getPhotos() }
+    override suspend fun photos(): NetworkResult<List<GalleryPhoto>> = networkResult {
+        contentCache
+            .fetchWithFallback(
+                key = "photography:gallery",
+                encode = { json.encodeToString(ListSerializer(GalleryPhoto.serializer()), it) },
+                decode = { json.decodeFromString(ListSerializer(GalleryPhoto.serializer()), it) },
+            ) {
+                parseGallery(ghost.getPage("photography").html)
+            }
+            .getOrThrow()
+            .value
+    }
 }
