@@ -121,7 +121,10 @@ private fun AppRoot(
     deepLink: List<AppDestination>?,
     onDeepLinkHandled: () -> Unit,
 ) {
-    // One back stack per tab, so switching tabs preserves where you were in each.
+    // One back stack per tab: switching tabs keeps each tab's stack depth (e.g. the article you
+    // were reading). Scroll position and loaded screen state are not retained across a switch,
+    // since swapping the list NavDisplay renders drops the hidden entries' saveable state; the
+    // Nav3 flattened multi-stack recipe would keep them.
     val stacks = AppDestination.topLevel.associateWith { rememberNavBackStack(it) }
     var currentTabIndex by rememberSaveable { mutableIntStateOf(0) }
     val currentTab = AppDestination.topLevel[currentTabIndex]

@@ -124,7 +124,14 @@ class PhotoOfTheDayWidget : GlanceAppWidget() {
 
     private suspend fun loadBitmap(url: String): Bitmap =
         withContext(Dispatchers.IO) {
-            val bytes = URL(url).openStream().use { it.readBytes() }
+            // Bounded timeouts: provideGlance runs inside the receiver's goAsync window, and a
+            // stalled CDN must not hang it (HttpURLConnection defaults to no timeout).
+            val connection =
+                URL(url).openConnection().apply {
+                    connectTimeout = 10_000
+                    readTimeout = 10_000
+                }
+            val bytes = connection.getInputStream().use { it.readBytes() }
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
             if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
