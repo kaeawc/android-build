@@ -32,4 +32,5 @@ dependencies {
     api(libs.navigation3.runtime)
 
     implementation(libs.kotlinx.serialization.json)
+    testImplementation(libs.junit)
 }

@@ -21,11 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-plugins {
-    id("androidbuild.android-compose")
-    alias(libs.plugins.metro)
-}
+import dev.jasonpearson.gradle.projects
+
+plugins { id("androidbuild.android-compose") }
 
 android { namespace = "dev.jasonpearson.android.feature.widget" }
 
-dependencies { implementation(libs.metro.runtime) }
+dependencies {
+    implementation(platform(libs.compose.bom))
+    implementation(projects.core.model)
+    implementation(projects.core.network)
+    implementation(projects.data.articles)
+    implementation(projects.data.photography)
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
+    implementation(libs.kotlinx.coroutines.core)
+    testImplementation(libs.junit)
+}

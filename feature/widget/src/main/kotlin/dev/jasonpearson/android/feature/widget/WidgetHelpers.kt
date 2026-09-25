@@ -21,30 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package dev.jasonpearson.android.feature.widget
 
-import dev.jasonpearson.gradle.projects
+import kotlin.math.max
 
-plugins {
-    id("androidbuild.android-compose")
-    alias(libs.plugins.metro)
+/**
+ * Returns a zero-based daily index. Throws [IllegalArgumentException] if the day or count is
+ * below 1.
+ */
+internal fun photoIndexFor(dayOfYear: Int, count: Int): Int {
+    require(dayOfYear >= 1)
+    require(count >= 1)
+    return (dayOfYear - 1) % count
 }
 
-android { namespace = "dev.jasonpearson.android.feature.projects" }
-
-dependencies {
-    implementation(platform(libs.compose.bom))
-    implementation(projects.core.di)
-    implementation(projects.core.model)
-    implementation(projects.core.network)
-    implementation(projects.data.projects)
-    implementation(projects.foundation.designsystem)
-    implementation(projects.subsystem.analytics)
-    implementation(projects.subsystem.experimentation)
-    implementation(libs.bundles.compose.ui)
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.material.icons)
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.metro.runtime)
-
-    testImplementation(libs.junit)
+/** Returns a sample size that limits the longest decoded edge to [maxEdge]. */
+internal fun inSampleSizeFor(width: Int, height: Int, maxEdge: Int): Int {
+    require(width > 0 && height > 0 && maxEdge > 0)
+    val required = (max(width, height).toLong() + maxEdge - 1) / maxEdge
+    var sample = 1
+    while (sample < required) {
+        if (sample > Int.MAX_VALUE / 2) return required.toInt()
+        sample *= 2
+    }
+    return sample
 }

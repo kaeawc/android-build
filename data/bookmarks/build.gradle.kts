@@ -21,9 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import dev.jasonpearson.gradle.projects
+
 plugins {
     id("androidbuild.kotlin-jvm")
     alias(libs.plugins.metro)
+    alias(libs.plugins.kotlin.serialization)
 }
 
-dependencies { implementation(libs.metro.runtime) }
+dependencies {
+    implementation(projects.core.di)
+    api(projects.core.model)
+    implementation(projects.subsystem.storage)
+    api(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.metro.runtime)
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+}

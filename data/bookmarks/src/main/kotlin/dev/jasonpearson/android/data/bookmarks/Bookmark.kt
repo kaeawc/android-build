@@ -21,30 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package dev.jasonpearson.android.data.bookmarks
 
-import dev.jasonpearson.gradle.projects
+import kotlinx.serialization.Serializable
 
-plugins {
-    id("androidbuild.android-compose")
-    alias(libs.plugins.metro)
-}
-
-android { namespace = "dev.jasonpearson.android.feature.projects" }
-
-dependencies {
-    implementation(platform(libs.compose.bom))
-    implementation(projects.core.di)
-    implementation(projects.core.model)
-    implementation(projects.core.network)
-    implementation(projects.data.projects)
-    implementation(projects.foundation.designsystem)
-    implementation(projects.subsystem.analytics)
-    implementation(projects.subsystem.experimentation)
-    implementation(libs.bundles.compose.ui)
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.material.icons)
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.metro.runtime)
-
-    testImplementation(libs.junit)
-}
+@Serializable
+data class Bookmark(
+    val slug: String,
+    val title: String,
+    val excerpt: String?,
+    val featureImageUrl: String?,
+    val url: String?,
+    val savedAtEpochMillis: Long,
+)

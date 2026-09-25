@@ -38,6 +38,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
@@ -51,8 +53,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -61,9 +66,12 @@ import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.model.Article
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.articles.ArticlesRepository
+import dev.jasonpearson.android.data.bookmarks.BookmarksRepository
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlText
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,6 +81,7 @@ fun ArticleDetailScreen(
     onBack: () -> Unit,
     onArticleClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
+    bookmarks: BookmarksRepository? = null,
 ) {
     val state by
         produceState<ArticleDetailUiState>(ArticleDetailUiState.Loading, repository, slug) {
@@ -86,6 +95,14 @@ fun ArticleDetailScreen(
     val title = (state as? ArticleDetailUiState.Content)?.article?.title ?: slug
     val loadedArticle = (state as? ArticleDetailUiState.Content)?.article
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val bookmarkFlow =
+        remember(bookmarks, loadedArticle?.slug) {
+            val articleSlug = loadedArticle?.slug
+            if (bookmarks == null || articleSlug == null) flowOf(false)
+            else bookmarks.isBookmarked(articleSlug)
+        }
+    val isBookmarked by bookmarkFlow.collectAsState(initial = false)
 
     Scaffold(
         modifier = modifier,
@@ -102,6 +119,19 @@ fun ArticleDetailScreen(
                 },
                 actions = {
                     loadedArticle?.let { article ->
+                        if (bookmarks != null) {
+                            IconButton(
+                                onClick = { coroutineScope.launch { bookmarks.toggle(article) } }
+                            ) {
+                                Icon(
+                                    imageVector =
+                                        if (isBookmarked) Icons.Filled.Bookmark
+                                        else Icons.Filled.BookmarkBorder,
+                                    contentDescription =
+                                        if (isBookmarked) "Remove from saved" else "Save article",
+                                )
+                            }
+                        }
                         IconButton(
                             onClick = {
                                 val intent =

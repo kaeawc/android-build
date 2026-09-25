@@ -21,6 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import dev.jasonpearson.gradle.projects
+
 plugins {
     id("androidbuild.android-compose")
     alias(libs.plugins.metro)
@@ -28,4 +30,15 @@ plugins {
 
 android { namespace = "dev.jasonpearson.android.feature.saved" }
 
-dependencies { implementation(libs.metro.runtime) }
+dependencies {
+    implementation(platform(libs.compose.bom))
+    implementation(projects.core.di)
+    implementation(projects.core.model)
+    implementation(projects.data.bookmarks)
+    implementation(projects.foundation.designsystem)
+    implementation(libs.bundles.compose.ui)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material.icons)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.metro.runtime)
+}

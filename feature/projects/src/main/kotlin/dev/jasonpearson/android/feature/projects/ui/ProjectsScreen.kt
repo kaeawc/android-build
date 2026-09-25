@@ -48,6 +48,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -62,7 +63,12 @@ import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.model.Project
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.projects.ProjectsRepository
+import dev.jasonpearson.android.feature.projects.ProjectsExperiments
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
+import dev.jasonpearson.android.subsystem.analytics.AnalyticsClient
+import dev.jasonpearson.android.subsystem.analytics.AnalyticsEvent
+import dev.jasonpearson.android.subsystem.experimentation.ExperimentRepository
+import dev.jasonpearson.android.subsystem.experimentation.Treatment
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,8 +76,22 @@ fun ProjectsScreen(
     repository: ProjectsRepository,
     modifier: Modifier = Modifier,
     onProjectClick: ((String) -> Unit)? = null,
+    experiments: ExperimentRepository? = null,
+    analytics: AnalyticsClient? = null,
 ) {
     val context = LocalContext.current
+    val treatment =
+        remember(experiments) {
+            experiments?.treatmentFor(ProjectsExperiments.DefaultSort) ?: Treatment.CONTROL
+        }
+    LaunchedEffect(treatment) {
+        analytics?.track(
+            AnalyticsEvent(
+                "experiment_exposure",
+                mapOf("experiment" to "projects_default_sort", "treatment" to treatment.name),
+            )
+        )
+    }
     var selectedLanguage by remember { mutableStateOf<String?>(null) }
     val state by
         produceState<ProjectsUiState>(ProjectsUiState.Loading, repository) {
@@ -95,10 +115,11 @@ fun ProjectsScreen(
                     overview.pinned.filter {
                         selectedLanguage == null || it.language == selectedLanguage
                     }
-                val others =
+                val filteredOthers =
                     overview.others.filter {
                         selectedLanguage == null || it.language == selectedLanguage
                     }
+                val others = sortOthers(filteredOthers, treatment)
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
                     contentPadding = PaddingValues(16.dp),
@@ -127,13 +148,29 @@ fun ProjectsScreen(
                     item(key = "pinned_header") { SectionHeader("Pinned") }
                     items(pinned, key = { "pinned_${it.id}" }) { project ->
                         ProjectCard(project, pinned = true) {
+                            analytics?.track(
+                                AnalyticsEvent("project_open", mapOf("name" to project.name))
+                            )
                             if (onProjectClick != null) onProjectClick(project.name)
                             else openUrl(context, project.url)
                         }
                     }
-                    item(key = "all_header") { SectionHeader("All projects") }
+                    item(key = "all_header") {
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            SectionHeader("All projects")
+                            Text(
+                                text =
+                                    if (treatment == Treatment.CONTROL) "Sorted by stars"
+                                    else "Sorted by recently updated",
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                        }
+                    }
                     items(others, key = { "other_${it.id}" }) { project ->
                         ProjectCard(project, pinned = false) {
+                            analytics?.track(
+                                AnalyticsEvent("project_open", mapOf("name" to project.name))
+                            )
                             if (onProjectClick != null) onProjectClick(project.name)
                             else openUrl(context, project.url)
                         }
@@ -143,6 +180,17 @@ fun ProjectsScreen(
         }
     }
 }
+
+internal fun sortOthers(others: List<Project>, treatment: Treatment): List<Project> =
+    when (treatment) {
+        Treatment.CONTROL -> others
+        Treatment.VARIANT -> {
+            val recentlyUpdated =
+                others.filter { it.updatedAt != null }.sortedByDescending { it.updatedAt }
+            val withoutUpdateTime = others.filter { it.updatedAt == null }
+            recentlyUpdated + withoutUpdateTime
+        }
+    }
 
 @Composable
 private fun SectionHeader(title: String) {

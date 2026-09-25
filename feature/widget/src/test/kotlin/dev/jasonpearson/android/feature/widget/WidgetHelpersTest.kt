@@ -21,30 +21,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package dev.jasonpearson.android.feature.widget
 
-import dev.jasonpearson.gradle.projects
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Test
 
-plugins {
-    id("androidbuild.android-compose")
-    alias(libs.plugins.metro)
-}
+class WidgetHelpersTest {
+    @Test
+    fun onePhotoAlwaysUsesItsOnlyIndex() {
+        assertEquals(0, photoIndexFor(dayOfYear = 365, count = 1))
+    }
 
-android { namespace = "dev.jasonpearson.android.feature.projects" }
+    @Test
+    fun dayLargerThanCountWrapsAround() {
+        assertEquals(1, photoIndexFor(dayOfYear = 7, count = 5))
+    }
 
-dependencies {
-    implementation(platform(libs.compose.bom))
-    implementation(projects.core.di)
-    implementation(projects.core.model)
-    implementation(projects.core.network)
-    implementation(projects.data.projects)
-    implementation(projects.foundation.designsystem)
-    implementation(projects.subsystem.analytics)
-    implementation(projects.subsystem.experimentation)
-    implementation(libs.bundles.compose.ui)
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.material.icons)
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.metro.runtime)
+    @Test
+    fun invalidCountThrows() {
+        assertThrows(IllegalArgumentException::class.java) { photoIndexFor(1, 0) }
+    }
 
-    testImplementation(libs.junit)
+    @Test
+    fun smallImageNeedsNoDownsampling() {
+        assertEquals(1, inSampleSizeFor(width = 640, height = 480, maxEdge = 720))
+    }
+
+    @Test
+    fun largeImageFitsWithinLongestEdge() {
+        assertEquals(4, inSampleSizeFor(width = 2400, height = 1600, maxEdge = 720))
+    }
 }

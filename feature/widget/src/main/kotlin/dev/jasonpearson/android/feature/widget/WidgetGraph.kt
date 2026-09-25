@@ -21,30 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package dev.jasonpearson.android.feature.widget
 
-import dev.jasonpearson.gradle.projects
+import dev.jasonpearson.android.data.articles.ArticlesRepository
+import dev.jasonpearson.android.data.photography.PhotographyRepository
 
-plugins {
-    id("androidbuild.android-compose")
-    alias(libs.plugins.metro)
+interface WidgetGraph {
+    val articlesRepository: ArticlesRepository
+    val photographyRepository: PhotographyRepository
 }
 
-android { namespace = "dev.jasonpearson.android.feature.projects" }
-
-dependencies {
-    implementation(platform(libs.compose.bom))
-    implementation(projects.core.di)
-    implementation(projects.core.model)
-    implementation(projects.core.network)
-    implementation(projects.data.projects)
-    implementation(projects.foundation.designsystem)
-    implementation(projects.subsystem.analytics)
-    implementation(projects.subsystem.experimentation)
-    implementation(libs.bundles.compose.ui)
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.material.icons)
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.metro.runtime)
-
-    testImplementation(libs.junit)
+interface WidgetGraphProvider {
+    val widgetGraph: WidgetGraph
 }

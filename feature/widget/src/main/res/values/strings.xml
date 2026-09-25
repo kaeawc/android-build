@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="latest_article_widget_label">Latest article</string>
+    <string name="latest_article_widget_description">Jason\'s newest post from jasonpearson.dev</string>
+    <string name="photo_of_the_day_widget_label">Photo of the day</string>
+    <string name="photo_of_the_day_widget_description">A daily photo from Jason\'s gallery</string>
+</resources>

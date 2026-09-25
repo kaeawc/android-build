@@ -23,10 +23,16 @@
  */
 import dev.jasonpearson.gradle.projects
 
-plugins { id("androidbuild.kotlin-jvm") }
+plugins {
+    id("androidbuild.kotlin-jvm")
+    alias(libs.plugins.metro)
+}
 
 dependencies {
     api(projects.core.common)
+
+    implementation(projects.core.di)
+    implementation(libs.metro.runtime)
 
     testImplementation(libs.junit)
 }
