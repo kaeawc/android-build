@@ -32,4 +32,8 @@ data class GalleryPhoto(
     val width: Int?,
     val height: Int?,
     val takenOn: String?,
+    /** The card's visible caption; a gallery card's caption is shared by all of its photos. */
+    val caption: String? = null,
+    /** The image's alt text, for accessibility. */
+    val altText: String? = null,
 )
