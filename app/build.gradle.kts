@@ -207,6 +207,7 @@ dependencies {
     implementation(libs.bundles.compose.ui)
     implementation(libs.bundles.kotlin)
     implementation(libs.compose.foundation)
+    implementation(libs.compose.material.adaptive.navigation.suite)
     implementation(libs.compose.material.icons)
     implementation(libs.lifecycle.viewmodel.navigation3)
     implementation(libs.metro.runtime)

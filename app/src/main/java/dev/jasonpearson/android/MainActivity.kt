@@ -24,13 +24,17 @@
 package dev.jasonpearson.android
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.Code
@@ -38,21 +42,22 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -96,6 +101,19 @@ class MainActivity : ComponentActivity() {
                     ThemeMode.Light -> false
                     ThemeMode.Dark -> true
                 }
+            // Match the system bar icons to the app theme, which can differ from the system's
+            // when the user forces Light or Dark in Settings.
+            DisposableEffect(darkTheme) {
+                enableEdgeToEdge(
+                    statusBarStyle =
+                        SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
+                    navigationBarStyle =
+                        SystemBarStyle.auto(LightNavigationBarScrim, DarkNavigationBarScrim) {
+                            darkTheme
+                        },
+                )
+                onDispose {}
+            }
             AndroidBuildTheme(darkTheme = darkTheme, dynamicColor = settings.dynamicColor) {
                 AppRoot(
                     graph = graph,
@@ -115,17 +133,28 @@ class MainActivity : ComponentActivity() {
         intent?.takeIf { it.action == Intent.ACTION_VIEW }?.dataString?.let(DeepLinkRouter::route)
 }
 
+/** The scrims `enableEdgeToEdge` uses by default for a three-button navigation bar. */
+private val LightNavigationBarScrim = Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
+private val DarkNavigationBarScrim = Color.argb(0x80, 0x1b, 0x1b, 0x1b)
+
 @Composable
 private fun AppRoot(
     graph: AppGraph,
     deepLink: List<AppDestination>?,
     onDeepLinkHandled: () -> Unit,
 ) {
-    // One back stack per tab: switching tabs keeps each tab's stack depth (e.g. the article you
-    // were reading). Scroll position and loaded screen state are not retained across a switch,
-    // since swapping the list NavDisplay renders drops the hidden entries' saveable state; the
-    // Nav3 flattened multi-stack recipe would keep them.
+    // One back stack per tab, each rendered by its own NavDisplay inside a per-tab
+    // SaveableStateProvider. Only the current tab is composed. A hidden tab's NavDisplay leaves
+    // composition without popping anything, so its entry decorators and every entry's saveable
+    // state (LazyList scroll, rememberSaveable) are saved under the tab's key and restored when
+    // the tab returns. Stack depth, scroll position and loaded state therefore survive tab
+    // switches and configuration changes.
     val stacks = AppDestination.topLevel.associateWith { rememberNavBackStack(it) }
+    val tabStates = rememberSaveableStateHolder()
+    // Hoisted out of the per-tab provider: a ViewModelStore provider clears every store when it
+    // leaves composition, so this keeps a hidden tab's entry ViewModels until they are popped.
+    val viewModelDecorators =
+        AppDestination.topLevel.associateWith { rememberViewModelStoreNavEntryDecorator<NavKey>() }
     var currentTabIndex by rememberSaveable { mutableIntStateOf(0) }
     val currentTab = AppDestination.topLevel[currentTabIndex]
     val backStack = stacks.getValue(currentTab)
@@ -136,6 +165,9 @@ private fun AppRoot(
     LaunchedEffect(deepLink) {
         val route = deepLink ?: return@LaunchedEffect
         val tab = DeepLinkRouter.topLevelFor(route.first())
+        // A hidden tab's saved state belongs to the stack being replaced, so drop it and let the
+        // routed stack start fresh. The visible tab's NavDisplay clears popped entries itself.
+        if (tab != currentTab) tabStates.removeState(tabStateKey(tab))
         stacks.getValue(tab).apply {
             clear()
             addAll(route)
@@ -155,115 +187,129 @@ private fun AppRoot(
         currentTabIndex = 0
     }
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                AppDestination.topLevel.forEachIndexed { index, dest ->
-                    NavigationBarItem(
-                        selected = dest == currentTab,
-                        onClick = {
-                            if (dest != currentTab) {
-                                currentTabIndex = index
-                            } else if (backStack.size > 1) {
-                                // Re-tapping the current tab pops back to its root.
-                                backStack.clear()
-                                backStack.add(dest)
-                            }
-                        },
-                        icon = { Icon(tabIcon(dest), contentDescription = null) },
-                        label = { Text(tabLabel(dest)) },
-                    )
-                }
+    val entries =
+        entryProvider<NavKey> {
+            entry<AppDestination.Articles> {
+                ArticlesListScreen(
+                    repository = graph.articlesRepository,
+                    onArticleClick = openArticle,
+                    onTagClick = { slug -> push(AppDestination.Tag(slug)) },
+                    onSearchClick = { push(AppDestination.Search) },
+                    onSavedClick = { push(AppDestination.Saved) },
+                )
+            }
+            entry<AppDestination.ArticleDetail> { key ->
+                ArticleDetailScreen(
+                    repository = graph.articlesRepository,
+                    slug = key.slug,
+                    onBack = pop,
+                    onArticleClick = openArticle,
+                    bookmarks = graph.bookmarksRepository,
+                )
+            }
+            entry<AppDestination.Tag> { key ->
+                TagArticlesScreen(
+                    repository = graph.articlesRepository,
+                    tagSlug = key.slug,
+                    onArticleClick = openArticle,
+                    onBack = pop,
+                )
+            }
+            entry<AppDestination.Search> {
+                ArticleSearchScreen(
+                    repository = graph.articlesRepository,
+                    onArticleClick = openArticle,
+                    onBack = pop,
+                )
+            }
+            entry<AppDestination.Saved> {
+                SavedScreen(
+                    repository = graph.bookmarksRepository,
+                    onArticleClick = openArticle,
+                    onBack = pop,
+                )
+            }
+            entry<AppDestination.Talks> { TalksScreen(repository = graph.talksRepository) }
+            entry<AppDestination.Projects> {
+                ProjectsScreen(
+                    repository = graph.projectsRepository,
+                    onProjectClick = { name -> push(AppDestination.ProjectDetail(name)) },
+                    experiments = graph.experimentRepository,
+                    analytics = graph.analyticsClient,
+                )
+            }
+            entry<AppDestination.ProjectDetail> { key ->
+                ProjectDetailScreen(
+                    repository = graph.projectsRepository,
+                    name = key.name,
+                    onBack = pop,
+                )
+            }
+            entry<AppDestination.Photography> {
+                // The only top-level screen without a Scaffold/TopAppBar, so the shell keeps it
+                // clear of the status bar (and of the gesture bar when the rail is shown).
+                PhotographyScreen(
+                    repository = graph.photographyRepository,
+                    modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
+                )
+            }
+            entry<AppDestination.About> {
+                AboutScreen(
+                    repository = graph.aboutRepository,
+                    onSettingsClick = { push(AppDestination.Settings) },
+                )
+            }
+            entry<AppDestination.Settings> {
+                SettingsScreen(
+                    repository = graph.settingsRepository,
+                    appVersion = BuildConfig.VERSION_NAME,
+                    onBack = pop,
+                )
             }
         }
-    ) { innerPadding ->
-        NavDisplay(
-            modifier = Modifier.padding(innerPadding),
-            backStack = backStack,
-            onBack = pop,
-            entryDecorators =
-                listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberViewModelStoreNavEntryDecorator(),
-                ),
-            entryProvider =
-                entryProvider {
-                    entry<AppDestination.Articles> {
-                        ArticlesListScreen(
-                            repository = graph.articlesRepository,
-                            onArticleClick = openArticle,
-                            onTagClick = { slug -> push(AppDestination.Tag(slug)) },
-                            onSearchClick = { push(AppDestination.Search) },
-                            onSavedClick = { push(AppDestination.Saved) },
-                        )
-                    }
-                    entry<AppDestination.ArticleDetail> { key ->
-                        ArticleDetailScreen(
-                            repository = graph.articlesRepository,
-                            slug = key.slug,
-                            onBack = pop,
-                            onArticleClick = openArticle,
-                            bookmarks = graph.bookmarksRepository,
-                        )
-                    }
-                    entry<AppDestination.Tag> { key ->
-                        TagArticlesScreen(
-                            repository = graph.articlesRepository,
-                            tagSlug = key.slug,
-                            onArticleClick = openArticle,
-                            onBack = pop,
-                        )
-                    }
-                    entry<AppDestination.Search> {
-                        ArticleSearchScreen(
-                            repository = graph.articlesRepository,
-                            onArticleClick = openArticle,
-                            onBack = pop,
-                        )
-                    }
-                    entry<AppDestination.Saved> {
-                        SavedScreen(
-                            repository = graph.bookmarksRepository,
-                            onArticleClick = openArticle,
-                            onBack = pop,
-                        )
-                    }
-                    entry<AppDestination.Talks> { TalksScreen(repository = graph.talksRepository) }
-                    entry<AppDestination.Projects> {
-                        ProjectsScreen(
-                            repository = graph.projectsRepository,
-                            onProjectClick = { name -> push(AppDestination.ProjectDetail(name)) },
-                            experiments = graph.experimentRepository,
-                            analytics = graph.analyticsClient,
-                        )
-                    }
-                    entry<AppDestination.ProjectDetail> { key ->
-                        ProjectDetailScreen(
-                            repository = graph.projectsRepository,
-                            name = key.name,
-                            onBack = pop,
-                        )
-                    }
-                    entry<AppDestination.Photography> {
-                        PhotographyScreen(repository = graph.photographyRepository)
-                    }
-                    entry<AppDestination.About> {
-                        AboutScreen(
-                            repository = graph.aboutRepository,
-                            onSettingsClick = { push(AppDestination.Settings) },
-                        )
-                    }
-                    entry<AppDestination.Settings> {
-                        SettingsScreen(
-                            repository = graph.settingsRepository,
-                            appVersion = BuildConfig.VERSION_NAME,
-                            onBack = pop,
-                        )
-                    }
-                },
-        )
+
+    // A bottom bar on compact windows and a navigation rail on wider ones. The scaffold consumes
+    // the insets its bar or rail already pads for, and each screen's own Scaffold/TopAppBar
+    // handles the rest (status bar, IME), so the content is not padded here and nothing is inset
+    // twice.
+    NavigationSuiteScaffold(
+        navigationSuiteItems = {
+            AppDestination.topLevel.forEachIndexed { index, dest ->
+                item(
+                    selected = dest == currentTab,
+                    onClick = {
+                        if (dest != currentTab) {
+                            currentTabIndex = index
+                        } else if (backStack.size > 1) {
+                            // Re-tapping the current tab pops back to its root.
+                            backStack.clear()
+                            backStack.add(dest)
+                        }
+                    },
+                    icon = { Icon(tabIcon(dest), contentDescription = null) },
+                    label = { Text(tabLabel(dest)) },
+                )
+            }
+        }
+    ) {
+        tabStates.SaveableStateProvider(tabStateKey(currentTab)) {
+            NavDisplay(
+                backStack = backStack,
+                onBack = pop,
+                entryDecorators =
+                    listOf(
+                        // Remembered inside the tab's provider, so it is saved with the tab.
+                        rememberSaveableStateHolderNavEntryDecorator(),
+                        viewModelDecorators.getValue(currentTab),
+                    ),
+                entryProvider = entries,
+            )
+        }
     }
 }
+
+/** A Bundle-safe key for a tab's saved state; the destinations themselves are not Bundle-able. */
+private fun tabStateKey(tab: AppDestination): String = tabLabel(tab)
 
 private fun tabLabel(dest: AppDestination): String =
     when (DeepLinkRouter.topLevelFor(dest)) {
