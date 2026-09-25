@@ -28,6 +28,11 @@ import dev.jasonpearson.android.core.di.SingleIn
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 
+/**
+ * Sends events only with the user's consent. Until the persisted choice has loaded, up to
+ * [MAX_PENDING_EVENTS] events (e.g. the cold-start screen view) wait in a buffer; they are sent in
+ * order once consent resolves to enabled and discarded if it resolves to disabled.
+ */
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 @Inject
@@ -35,7 +40,37 @@ public class ConsentGatedAnalyticsClient(
     private val sink: AnalyticsSink,
     private val consent: AnalyticsConsent,
 ) : AnalyticsClient {
+    private val lock = Any()
+    private val pending = ArrayDeque<AnalyticsEvent>()
+
+    init {
+        consent.addListener { enabled -> synchronized(lock) { drainPending(enabled) } }
+    }
+
     override fun track(event: AnalyticsEvent) {
-        if (consent.isEnabled()) sink.send(event)
+        synchronized(lock) {
+            when (val enabled = consent.current) {
+                null -> {
+                    if (pending.size == MAX_PENDING_EVENTS) pending.removeFirst()
+                    pending.addLast(event)
+                }
+                else -> {
+                    drainPending(enabled)
+                    if (enabled) sink.send(event)
+                }
+            }
+        }
+    }
+
+    private fun drainPending(enabled: Boolean) {
+        while (pending.isNotEmpty()) {
+            val event = pending.removeFirst()
+            if (enabled) sink.send(event)
+        }
+    }
+
+    internal companion object {
+        /** Bounds the cold-start buffer; the oldest events are dropped beyond this. */
+        const val MAX_PENDING_EVENTS: Int = 32
     }
 }

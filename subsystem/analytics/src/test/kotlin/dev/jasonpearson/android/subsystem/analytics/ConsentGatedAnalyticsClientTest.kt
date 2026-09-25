@@ -28,11 +28,14 @@ import org.junit.Test
 
 class ConsentGatedAnalyticsClientTest {
 
+    private val sent = mutableListOf<AnalyticsEvent>()
+
+    private fun client(consent: AnalyticsConsent) =
+        ConsentGatedAnalyticsClient(AnalyticsSink(sent::add), consent)
+
     @Test
     fun `does not send events when consent is disabled`() {
-        val sent = mutableListOf<AnalyticsEvent>()
-        val client =
-            ConsentGatedAnalyticsClient(AnalyticsSink(sent::add), AnalyticsConsent { false })
+        val client = client(AnalyticsConsent(initial = false))
 
         client.track(AnalyticsEvent("tap", mapOf("target" to "project")))
 
@@ -41,13 +44,78 @@ class ConsentGatedAnalyticsClientTest {
 
     @Test
     fun `forwards the exact event when consent is enabled`() {
-        val sent = mutableListOf<AnalyticsEvent>()
-        val client =
-            ConsentGatedAnalyticsClient(AnalyticsSink(sent::add), AnalyticsConsent { true })
+        val client = client(AnalyticsConsent(initial = true))
         val event = AnalyticsEvent("tap", mapOf("target" to "project"))
 
         client.track(event)
 
         assertEquals(listOf(event), sent)
+    }
+
+    @Test
+    fun `holds events until consent loads, then sends them in order when enabled`() {
+        val consent = AnalyticsConsent()
+        val client = client(consent)
+        val first = AnalyticsEvent("screen_view", mapOf("screen" to "Articles"))
+        val second = AnalyticsEvent("tap", mapOf("target" to "article"))
+
+        client.track(first)
+        client.track(second)
+        assertEquals(emptyList<AnalyticsEvent>(), sent)
+
+        consent.update(true)
+
+        assertEquals(listOf(first, second), sent)
+    }
+
+    @Test
+    fun `discards held events when consent loads as disabled`() {
+        val consent = AnalyticsConsent()
+        val client = client(consent)
+
+        client.track(AnalyticsEvent("screen_view", mapOf("screen" to "Articles")))
+        consent.update(false)
+        consent.update(true)
+
+        assertEquals(emptyList<AnalyticsEvent>(), sent)
+    }
+
+    @Test
+    fun `sends later events directly once consent has loaded`() {
+        val consent = AnalyticsConsent()
+        val client = client(consent)
+        val held = AnalyticsEvent("screen_view", mapOf("screen" to "Articles"))
+        val later = AnalyticsEvent("screen_view", mapOf("screen" to "Talks"))
+
+        client.track(held)
+        consent.update(true)
+        client.track(later)
+
+        assertEquals(listOf(held, later), sent)
+    }
+
+    @Test
+    fun `stops sending once consent is withdrawn`() {
+        val consent = AnalyticsConsent(initial = true)
+        val client = client(consent)
+        val before = AnalyticsEvent("tap", mapOf("target" to "before"))
+
+        client.track(before)
+        consent.update(false)
+        client.track(AnalyticsEvent("tap", mapOf("target" to "after")))
+
+        assertEquals(listOf(before), sent)
+    }
+
+    @Test
+    fun `keeps only the newest events while consent is unknown`() {
+        val consent = AnalyticsConsent()
+        val client = client(consent)
+        val total = ConsentGatedAnalyticsClient.MAX_PENDING_EVENTS + 5
+
+        repeat(total) { client.track(AnalyticsEvent("tap", mapOf("index" to "$it"))) }
+        consent.update(true)
+
+        assertEquals((5 until total).map { "$it" }, sent.map { it.params.getValue("index") })
     }
 }

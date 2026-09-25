@@ -56,4 +56,28 @@ class ScreenTrackerTest {
             client.events.map { it.params.getValue("screen") },
         )
     }
+
+    @Test
+    fun `cold-start screen view is sent once consent loads as enabled`() {
+        val sent = mutableListOf<AnalyticsEvent>()
+        val consent = AnalyticsConsent()
+        val tracker = ScreenTracker(ConsentGatedAnalyticsClient(AnalyticsSink(sent::add), consent))
+
+        tracker.trackScreen("Articles")
+        consent.update(true)
+
+        assertEquals(listOf(AnalyticsEvent("screen_view", mapOf("screen" to "Articles"))), sent)
+    }
+
+    @Test
+    fun `cold-start screen view is dropped when consent loads as disabled`() {
+        val sent = mutableListOf<AnalyticsEvent>()
+        val consent = AnalyticsConsent()
+        val tracker = ScreenTracker(ConsentGatedAnalyticsClient(AnalyticsSink(sent::add), consent))
+
+        tracker.trackScreen("Articles")
+        consent.update(false)
+
+        assertEquals(emptyList<AnalyticsEvent>(), sent)
+    }
 }

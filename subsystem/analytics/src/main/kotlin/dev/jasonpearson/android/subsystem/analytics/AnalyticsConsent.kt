@@ -23,7 +23,29 @@
  */
 package dev.jasonpearson.android.subsystem.analytics
 
-/** The app backs this consent check with the persisted analytics opt-out setting. */
-fun interface AnalyticsConsent {
-    fun isEnabled(): Boolean
+import java.util.concurrent.CopyOnWriteArrayList
+
+/**
+ * The user's analytics choice. It is unknown until the app publishes the persisted opt-out with
+ * [update], so events tracked at cold start can wait for the real value instead of being dropped
+ * (or sent without consent).
+ */
+public class AnalyticsConsent(initial: Boolean? = null) {
+    private val listeners = CopyOnWriteArrayList<(Boolean) -> Unit>()
+    @Volatile private var value: Boolean? = initial
+
+    /** The user's latest choice, or null while it has not loaded yet. */
+    public val current: Boolean?
+        get() = value
+
+    /** Publishes the user's latest choice and notifies every listener. */
+    public fun update(enabled: Boolean) {
+        value = enabled
+        listeners.forEach { it(enabled) }
+    }
+
+    /** Calls [listener] with every later [update]. */
+    public fun addListener(listener: (Boolean) -> Unit) {
+        listeners += listener
+    }
 }

@@ -43,9 +43,10 @@ import java.util.UUID
 import kotlin.annotation.AnnotationRetention.BINARY
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.onEach
 
 @ContributesTo(AppScope::class)
 interface ApplicationModule {
@@ -72,21 +73,22 @@ interface ApplicationModule {
         fun provideStorageDirectory(application: Application): File = application.filesDir
 
         /**
-         * Backs analytics consent with the persisted opt-out. Starts disabled so no event is sent
-         * before the user's choice has loaded.
+         * Backs analytics consent with the persisted opt-out. Consent stays unknown until the first
+         * persisted value loads, so cold-start events wait for it instead of being dropped.
          */
         @Provides
         @SingleIn(AppScope::class)
         fun provideAnalyticsConsent(
             settings: SettingsRepository,
             scope: BackgroundAppCoroutineScope,
-        ): AnalyticsConsent {
-            val enabled =
+        ): AnalyticsConsent =
+            AnalyticsConsent().also { consent ->
                 settings.settings
                     .map { it.analyticsEnabled }
-                    .stateIn(scope, SharingStarted.Eagerly, false)
-            return AnalyticsConsent { enabled.value }
-        }
+                    .distinctUntilChanged()
+                    .onEach(consent::update)
+                    .launchIn(scope)
+            }
 
         @Provides
         fun provideAnalyticsSink(): AnalyticsSink = AnalyticsSink { event ->
