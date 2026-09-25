@@ -25,14 +25,6 @@ package dev.jasonpearson.android.feature.articles.ui
 
 import dev.jasonpearson.android.core.model.Article
 
-sealed interface ArticlesUiState {
-    data object Loading : ArticlesUiState
-
-    data class Error(val message: String) : ArticlesUiState
-
-    data class Content(val articles: List<Article>) : ArticlesUiState
-}
-
 sealed interface ArticleDetailUiState {
     data object Loading : ArticleDetailUiState
 
