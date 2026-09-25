@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.jasonpearson.android.data.articles.ArticlesRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,13 +48,10 @@ fun TagArticlesScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val paginator =
-        rememberArticlesPaginator(repository, tagSlug) { page, refresh ->
-            repository.articlesPage(page, tagSlug = tagSlug, refresh = refresh)
-        }
-    val state by paginator.state.collectAsState()
+    val model = viewModel { TagArticlesViewModel(repository, tagSlug) }
+    val state by model.state.collectAsState()
     val title =
-        state.articles.firstOrNull()?.tags?.firstOrNull { it.slug == tagSlug }?.name ?: tagSlug
+        state.page.articles.firstOrNull()?.tags?.firstOrNull { it.slug == tagSlug }?.name ?: tagSlug
 
     Scaffold(
         modifier = modifier,
@@ -69,10 +67,13 @@ fun TagArticlesScreen(
         },
     ) { paddingValues ->
         PagedArticles(
-            paginator = paginator,
+            paginator = model.paginator,
             onArticleClick = onArticleClick,
             emptyMessage = "No articles with this tag yet",
             modifier = Modifier.padding(paddingValues),
+            onRefresh = model::refresh,
+            onRetry = model::retry,
+            onLoadMore = model::loadMore,
         )
     }
 }

@@ -46,13 +46,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.model.Article
-import dev.jasonpearson.android.core.network.NetworkResult
-import dev.jasonpearson.android.data.articles.ArticlesPage
 import dev.jasonpearson.android.data.articles.ArticlesPaginator
 import dev.jasonpearson.android.data.articles.PagedArticlesState
 import dev.jasonpearson.android.foundation.designsystem.components.EmptyContent
@@ -61,18 +58,6 @@ import dev.jasonpearson.android.foundation.designsystem.components.LoadingConten
 
 /** Start fetching the next page once the last visible item is this close to the end. */
 private const val LOAD_MORE_THRESHOLD = 4
-
-/** A paginator scoped to the calling composable, started on first composition. */
-@Composable
-internal fun rememberArticlesPaginator(
-    vararg keys: Any?,
-    loadPage: suspend (page: Int, refresh: Boolean) -> NetworkResult<ArticlesPage>,
-): ArticlesPaginator {
-    val scope = rememberCoroutineScope()
-    val paginator = remember(scope, *keys) { ArticlesPaginator(scope, loadPage) }
-    LaunchedEffect(paginator) { paginator.start() }
-    return paginator
-}
 
 /**
  * Pull-to-refresh, paged article list with shared loading/error/empty states. [header] items sit
@@ -86,15 +71,14 @@ internal fun PagedArticles(
     emptyMessage: String,
     modifier: Modifier = Modifier,
     onRefresh: () -> Unit = {},
+    onRetry: () -> Unit = paginator::retry,
+    onLoadMore: () -> Unit = paginator::loadMore,
     header: LazyListScope.() -> Unit = {},
 ) {
     val state by paginator.state.collectAsState()
     PullToRefreshBox(
         isRefreshing = state.isRefreshing,
-        onRefresh = {
-            onRefresh()
-            paginator.refresh()
-        },
+        onRefresh = { onRefresh() },
         modifier = modifier.fillMaxSize(),
     ) {
         when {
@@ -102,18 +86,15 @@ internal fun PagedArticles(
                 ArticleList(
                     state = state,
                     onArticleClick = onArticleClick,
-                    onLoadMore = paginator::loadMore,
-                    onRetry = paginator::retry,
+                    onLoadMore = onLoadMore,
+                    onRetry = onRetry,
                     emptyMessage = emptyMessage,
                     header = header,
                 )
             state.error != null ->
                 ErrorContent(
                     message = state.error?.message ?: "Failed to load",
-                    onRetry = {
-                        onRefresh()
-                        paginator.retry()
-                    },
+                    onRetry = { onRetry() },
                 )
             else -> LoadingContent()
         }

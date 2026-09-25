@@ -53,17 +53,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.jasonpearson.android.core.model.Article
-import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.articles.ArticlesRepository
 import dev.jasonpearson.android.data.bookmarks.BookmarksRepository
 import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
@@ -71,8 +66,6 @@ import dev.jasonpearson.android.foundation.designsystem.components.HtmlText
 import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,33 +77,12 @@ fun ArticleDetailScreen(
     onArticleClick: (String) -> Unit = {},
     bookmarks: BookmarksRepository? = null,
 ) {
-    var attempt by remember { mutableIntStateOf(0) }
-    val state by
-        produceState<ArticleDetailUiState>(
-            ArticleDetailUiState.Loading,
-            repository,
-            slug,
-            attempt,
-        ) {
-            value = ArticleDetailUiState.Loading
-            value =
-                when (val r = repository.article(slug)) {
-                    is NetworkResult.Success -> ArticleDetailUiState.Content(r.data)
-                    is NetworkResult.Failure ->
-                        ArticleDetailUiState.Error(r.error.message ?: "Failed to load")
-                }
-        }
-    val title = (state as? ArticleDetailUiState.Content)?.article?.title ?: slug
-    val loadedArticle = (state as? ArticleDetailUiState.Content)?.article
+    val model = viewModel { ArticleDetailViewModel(repository, slug, bookmarks) }
+    val state by model.state.collectAsState()
+    val title = (state.article as? ArticleDetailUiState.Content)?.article?.title ?: slug
+    val loadedArticle = (state.article as? ArticleDetailUiState.Content)?.article
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val bookmarkFlow =
-        remember(bookmarks, loadedArticle?.slug) {
-            val articleSlug = loadedArticle?.slug
-            if (bookmarks == null || articleSlug == null) flowOf(false)
-            else bookmarks.isBookmarked(articleSlug)
-        }
-    val isBookmarked by bookmarkFlow.collectAsState(initial = false)
+    val isBookmarked = state.isBookmarked
 
     Scaffold(
         modifier = modifier,
@@ -128,9 +100,7 @@ fun ArticleDetailScreen(
                 actions = {
                     loadedArticle?.let { article ->
                         if (bookmarks != null) {
-                            IconButton(
-                                onClick = { coroutineScope.launch { bookmarks.toggle(article) } }
-                            ) {
+                            IconButton(onClick = model::toggleBookmark) {
                                 Icon(
                                     imageVector =
                                         if (isBookmarked) Icons.Filled.Bookmark
@@ -165,18 +135,19 @@ fun ArticleDetailScreen(
             )
         },
     ) { paddingValues ->
-        when (val currentState = state) {
+        when (val currentState = state.article) {
             ArticleDetailUiState.Loading -> LoadingContent(Modifier.padding(paddingValues))
             is ArticleDetailUiState.Error ->
                 ErrorContent(
                     message = currentState.message,
                     modifier = Modifier.padding(paddingValues),
-                    onRetry = { attempt++ },
+                    onRetry = model::retry,
                 )
             is ArticleDetailUiState.Content ->
                 ArticleContent(
                     article = currentState.article,
-                    repository = repository,
+                    adjacent = state.adjacent,
+                    related = state.related,
                     onArticleClick = onArticleClick,
                     paddingValues = paddingValues,
                 )
@@ -187,27 +158,11 @@ fun ArticleDetailScreen(
 @Composable
 private fun ArticleContent(
     article: Article,
-    repository: ArticlesRepository,
+    adjacent: Pair<Article?, Article?>?,
+    related: List<Article>,
     onArticleClick: (String) -> Unit,
     paddingValues: PaddingValues,
 ) {
-    val adjacent by
-        produceState<Pair<Article?, Article?>?>(null, repository, article.slug) {
-            value =
-                when (val result = repository.adjacent(article.slug)) {
-                    is NetworkResult.Success -> result.data
-                    is NetworkResult.Failure -> null
-                }
-        }
-    val related by
-        produceState<List<Article>>(emptyList(), repository, article.id) {
-            value =
-                when (val result = repository.related(article)) {
-                    is NetworkResult.Success -> result.data
-                    is NetworkResult.Failure -> emptyList()
-                }
-        }
-
     Column(
         modifier =
             Modifier.fillMaxSize()
