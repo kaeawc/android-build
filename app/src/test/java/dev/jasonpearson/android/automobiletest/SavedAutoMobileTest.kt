@@ -44,6 +44,9 @@ class SavedAutoMobileTest {
     fun `saved screen opens empty on a fresh install and navigates back`() {
         val result = AutoMobilePlan(planPath = "test-plans/saved.yaml").execute()
 
-        assertTrue(result.success)
+        assertTrue(
+            "Plan failed: ${result.errorMessage}\n${result.output.take(4000)}",
+            result.success,
+        )
     }
 }

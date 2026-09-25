@@ -45,6 +45,9 @@ class AppLifecycleAutoMobileTest {
         val result =
             AutoMobilePlan(planPath = "test-plans/app-background-foreground.yaml").execute()
 
-        assertTrue(result.success)
+        assertTrue(
+            "Plan failed: ${result.errorMessage}\n${result.output.take(4000)}",
+            result.success,
+        )
     }
 }

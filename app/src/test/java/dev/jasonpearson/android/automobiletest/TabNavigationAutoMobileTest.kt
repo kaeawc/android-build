@@ -44,6 +44,9 @@ class TabNavigationAutoMobileTest {
     fun `every bottom navigation tab renders without crashing`() {
         val result = AutoMobilePlan(planPath = "test-plans/tab-navigation.yaml").execute()
 
-        assertTrue(result.success)
+        assertTrue(
+            "Plan failed: ${result.errorMessage}\n${result.output.take(4000)}",
+            result.success,
+        )
     }
 }

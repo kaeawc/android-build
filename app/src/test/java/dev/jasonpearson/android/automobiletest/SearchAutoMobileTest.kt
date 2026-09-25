@@ -44,6 +44,9 @@ class SearchAutoMobileTest {
     fun `article search opens, accepts a query, and navigates back`() {
         val result = AutoMobilePlan(planPath = "test-plans/search.yaml").execute()
 
-        assertTrue(result.success)
+        assertTrue(
+            "Plan failed: ${result.errorMessage}\n${result.output.take(4000)}",
+            result.success,
+        )
     }
 }
