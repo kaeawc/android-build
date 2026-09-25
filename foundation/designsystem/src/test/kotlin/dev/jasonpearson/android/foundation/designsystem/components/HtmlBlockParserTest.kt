@@ -27,6 +27,7 @@ import dev.jasonpearson.android.foundation.designsystem.components.HtmlBlock.Cod
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlBlock.Divider
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlBlock.Heading
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlBlock.Image
+import dev.jasonpearson.android.foundation.designsystem.components.HtmlBlock.InlineImageGroup
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlBlock.ListBlock
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlBlock.Paragraph
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlBlock.Quote
@@ -135,7 +136,7 @@ class HtmlBlockParserTest {
         assertEquals(
             listOf(
                 Paragraph("Before"),
-                Image("https://x.dev/a.png", "A &amp; B"),
+                InlineImageGroup(listOf(InlineImageRef("https://x.dev/a.png", "A &amp; B"))),
                 Paragraph("after"),
             ),
             parseHtmlBlocks(
@@ -143,6 +144,30 @@ class HtmlBlockParserTest {
             ),
         )
         assertEquals(emptyList<HtmlBlock>(), parseHtmlBlocks("<img alt=\"no src\">"))
+    }
+
+    @Test
+    fun badgeRowBecomesOneInlineImageGroup() {
+        val html =
+            "<p><a href=\"https://x.dev/a\"><img src=\"a.svg\" alt=\"A\"></a> " +
+                "<a href=\"https://x.dev/b\"><img src=\"b.svg\" alt=\"B\" width=\"20\" height=\"20\"></a></p>"
+        assertEquals(
+            listOf(
+                InlineImageGroup(
+                    listOf(
+                        InlineImageRef("a.svg", "A", href = "https://x.dev/a"),
+                        InlineImageRef(
+                            "b.svg",
+                            "B",
+                            href = "https://x.dev/b",
+                            width = 20,
+                            height = 20,
+                        ),
+                    )
+                )
+            ),
+            parseHtmlBlocks(html),
+        )
     }
 
     @Test

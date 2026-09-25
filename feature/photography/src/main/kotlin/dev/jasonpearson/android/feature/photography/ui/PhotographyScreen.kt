@@ -63,10 +63,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,47 +81,25 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import dev.jasonpearson.android.core.network.NetworkResult
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.jasonpearson.android.data.photography.GalleryPhoto
 import dev.jasonpearson.android.data.photography.PhotographyRepository
 import dev.jasonpearson.android.foundation.designsystem.components.EmptyContent
 import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
 import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhotographyScreen(repository: PhotographyRepository, modifier: Modifier = Modifier) {
-    val scope = rememberCoroutineScope()
+    val viewModel: PhotographyViewModel = viewModel { PhotographyViewModel(repository) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    var state by
-        remember(repository) { mutableStateOf<PhotographyUiState>(PhotographyUiState.Loading) }
-    var isRefreshing by remember(repository) { mutableStateOf(false) }
-    // Bumped by Retry to re-run the initial (cache-backed) load.
-    var loadAttempt by remember(repository) { mutableIntStateOf(0) }
     var selectedPhotoIndex by remember { mutableStateOf<Int?>(null) }
-
-    LaunchedEffect(repository, loadAttempt) { state = repository.load(forceRefresh = false) }
-
-    val onRetry: () -> Unit = {
-        state = PhotographyUiState.Loading
-        loadAttempt++
-    }
-    val onRefresh: () -> Unit = {
-        if (!isRefreshing) {
-            scope.launch {
-                isRefreshing = true
-                val refreshed = repository.load(forceRefresh = true)
-                isRefreshing = false
-                if (refreshed is PhotographyUiState.Error && state is PhotographyUiState.Content) {
-                    // Keep what's on screen; just say the refresh didn't work.
-                    snackbarHostState.showSnackbar("Couldn't refresh photos")
-                } else {
-                    state = refreshed
-                }
-            }
-        }
+    LaunchedEffect(viewModel) {
+        viewModel.messageFlow.collect { message -> snackbarHostState.showSnackbar(message) }
     }
 
     Box(modifier.fillMaxSize()) {
@@ -133,7 +109,7 @@ fun PhotographyScreen(repository: PhotographyRepository, modifier: Modifier = Mo
             is PhotographyUiState.Content ->
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
-                    onRefresh = onRefresh,
+                    onRefresh = viewModel::refresh,
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     when {
@@ -150,7 +126,7 @@ fun PhotographyScreen(repository: PhotographyRepository, modifier: Modifier = Mo
                                     ErrorContent(
                                         message = currentState.message,
                                         modifier = Modifier.fillParentMaxSize(),
-                                        onRetry = onRetry,
+                                        onRetry = viewModel::retry,
                                     )
                                 }
                             }
@@ -177,13 +153,6 @@ fun PhotographyScreen(repository: PhotographyRepository, modifier: Modifier = Mo
             )
         }
 }
-
-private suspend fun PhotographyRepository.load(forceRefresh: Boolean): PhotographyUiState =
-    when (val result = photos(forceRefresh)) {
-        is NetworkResult.Success -> PhotographyUiState.Content(result.data)
-        is NetworkResult.Failure ->
-            PhotographyUiState.Error(result.error.message ?: "Failed to load")
-    }
 
 private val GalleryPhoto.description: String?
     get() = altText ?: caption ?: takenOn

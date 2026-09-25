@@ -21,28 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package dev.jasonpearson.android.foundation.designsystem.components
 
-package dev.jasonpearson.android.data.talks
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
 
-import dev.jasonpearson.android.subsystem.storage.ContentCache
-import kotlin.coroutines.cancellation.CancellationException
+class InlineImageSizeTest {
 
-/**
- * Cache-bypassing read for an explicit refresh: always fetches, never falls back to the cached copy
- * (so a failure surfaces), and stores a successful result best-effort, like `fetchWithFallback`.
- */
-internal suspend fun <T : Any> ContentCache.fetchFresh(
-    key: String,
-    encode: (T) -> String,
-    fetch: suspend () -> T,
-): T {
-    val fresh = fetch()
-    try {
-        put(key, encode(fresh))
-    } catch (e: CancellationException) {
-        throw e
-    } catch (_: Exception) {
-        // Best-effort: a failed cache write must not fail a successful refresh.
+    @Test
+    fun `uses intrinsic badge dimensions as dp when attributes are absent`() {
+        val size = resolveInlineImageSize(104f, 20f, null, null, maxWidthDp = 300f)
+
+        assertEquals(InlineImageSize(104f, 20f), size)
     }
-    return fresh
+
+    @Test
+    fun `explicit attributes override intrinsic dimensions`() {
+        val size = resolveInlineImageSize(104f, 20f, 50, 50, maxWidthDp = 300f)
+
+        assertEquals(InlineImageSize(50f, 50f), size)
+    }
+
+    @Test
+    fun `clamps width and preserves aspect ratio`() {
+        val size = resolveInlineImageSize(200f, 50f, null, null, maxWidthDp = 100f)
+
+        assertEquals(InlineImageSize(100f, 25f), size)
+    }
+
+    @Test
+    fun `returns no size until intrinsic dimensions are known`() {
+        assertNull(resolveInlineImageSize(null, null, null, null, maxWidthDp = 300f))
+    }
 }

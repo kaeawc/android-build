@@ -57,8 +57,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -70,19 +70,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import dev.jasonpearson.android.core.network.NetworkResult
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.jasonpearson.android.data.about.AboutProfile
 import dev.jasonpearson.android.data.about.AboutRepository
 import dev.jasonpearson.android.data.about.ExperienceEntry
-import dev.jasonpearson.android.data.about.SocialLinks
 import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlText
 import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,20 +91,13 @@ fun AboutScreen(
     onSettingsClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    var state by remember(repository) { mutableStateOf<AboutUiState>(AboutUiState.Loading) }
-    var loadRequest by remember(repository) { mutableIntStateOf(0) }
-    var isRefreshing by remember(repository) { mutableStateOf(false) }
+    val viewModel = viewModel { AboutViewModel(repository) }
+    val state by viewModel.state.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(repository, loadRequest) {
-        val loaded = loadAbout(repository)
-        isRefreshing = false
-        // A failed refresh keeps the page already on screen.
-        if (loaded is AboutUiState.Error && state is AboutUiState.Content) {
-            snackbarHostState.showSnackbar(loaded.message)
-        } else {
-            state = loaded
-        }
+    LaunchedEffect(viewModel, snackbarHostState) {
+        viewModel.refreshErrors.collect { snackbarHostState.showSnackbar(it) }
     }
 
     Scaffold(
@@ -129,18 +120,12 @@ fun AboutScreen(
                 ErrorContent(
                     message = currentState.message,
                     modifier = Modifier.padding(innerPadding),
-                    onRetry = {
-                        state = AboutUiState.Loading
-                        loadRequest++
-                    },
+                    onRetry = viewModel::retry,
                 )
             is AboutUiState.Content ->
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
-                    onRefresh = {
-                        isRefreshing = true
-                        loadRequest++
-                    },
+                    onRefresh = viewModel::refresh,
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
                 ) {
                     AboutContent(currentState, onOpenUrl = { openUrl(context, it) })
@@ -148,41 +133,6 @@ fun AboutScreen(
         }
     }
 }
-
-/** Profile and page load in parallel; only the page is required, the profile has a fallback. */
-private suspend fun loadAbout(repository: AboutRepository): AboutUiState = coroutineScope {
-    val profileResult = async { repository.profile() }
-    val pageResult = async { repository.aboutPage() }
-    when (val page = pageResult.await()) {
-        is NetworkResult.Success -> {
-            val profile =
-                when (val result = profileResult.await()) {
-                    is NetworkResult.Success -> result.data
-                    is NetworkResult.Failure -> fallbackProfile()
-                }
-            AboutUiState.Content(
-                profile = profile,
-                page = page.data,
-                experience = repository.experience(),
-            )
-        }
-        is NetworkResult.Failure -> AboutUiState.Error(page.error.message ?: "Failed to load")
-    }
-}
-
-private fun fallbackProfile() =
-    AboutProfile(
-        title = "Jason Pearson",
-        description = null,
-        iconUrl = null,
-        socials =
-            SocialLinks(
-                github = "https://github.com/kaeawc",
-                linkedin = "https://www.linkedin.com/in/jasondpearson/",
-                x = "https://x.com/kaeawc",
-                website = null,
-            ),
-    )
 
 @Composable
 private fun AboutContent(content: AboutUiState.Content, onOpenUrl: (String) -> Unit) {

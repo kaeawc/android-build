@@ -191,4 +191,6 @@ private fun PhotoOfTheDayContent(state: WidgetState<PhotoSnapshot>, intent: Inte
 }
 
 private fun WidgetSnapshotFile.Snapshot.toPhotoSnapshot(): PhotoSnapshot? =
-    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.let { PhotoSnapshot(it, label) }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.let { bitmap ->
+        PhotoSnapshot(bitmap, label)
+    }

@@ -42,30 +42,64 @@ public class ConsentGatedAnalyticsClient(
 ) : AnalyticsClient {
     private val lock = Any()
     private val pending = ArrayDeque<AnalyticsEvent>()
+    private var flushing = false
 
     init {
-        consent.addListener { enabled -> synchronized(lock) { drainPending(enabled) } }
-    }
-
-    override fun track(event: AnalyticsEvent) {
-        synchronized(lock) {
-            when (val enabled = consent.current) {
-                null -> {
-                    if (pending.size == MAX_PENDING_EVENTS) pending.removeFirst()
-                    pending.addLast(event)
+        consent.addListener { enabled ->
+            val shouldFlush =
+                synchronized(lock) {
+                    if (!enabled) pending.clear()
+                    startFlushingIfNeeded(enabled)
                 }
-                else -> {
-                    drainPending(enabled)
-                    if (enabled) sink.send(event)
-                }
-            }
+            if (shouldFlush) flushPending()
         }
     }
 
-    private fun drainPending(enabled: Boolean) {
-        while (pending.isNotEmpty()) {
-            val event = pending.removeFirst()
-            if (enabled) sink.send(event)
+    override fun track(event: AnalyticsEvent) {
+        val shouldFlush =
+            synchronized(lock) {
+                when (val enabled = consent.current) {
+                    null -> {
+                        if (pending.size == MAX_PENDING_EVENTS) pending.removeFirst()
+                        pending.addLast(event)
+                        false
+                    }
+                    false -> {
+                        pending.clear()
+                        false
+                    }
+                    true -> {
+                        pending.addLast(event)
+                        startFlushingIfNeeded(enabled)
+                    }
+                }
+            }
+        if (shouldFlush) flushPending()
+    }
+
+    /** Must be called under [lock]. */
+    private fun startFlushingIfNeeded(enabled: Boolean): Boolean {
+        if (!enabled || flushing || pending.isEmpty()) return false
+        flushing = true
+        return true
+    }
+
+    private fun flushPending() {
+        while (true) {
+            val event =
+                synchronized(lock) {
+                    if (pending.isEmpty()) {
+                        flushing = false
+                        return
+                    }
+                    pending.removeFirst()
+                }
+            try {
+                sink.send(event)
+            } catch (failure: Throwable) {
+                synchronized(lock) { flushing = false }
+                throw failure
+            }
         }
     }
 

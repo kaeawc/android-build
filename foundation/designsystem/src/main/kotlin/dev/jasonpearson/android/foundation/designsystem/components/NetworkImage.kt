@@ -23,10 +23,16 @@
  */
 package dev.jasonpearson.android.foundation.designsystem.components
 
+import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
+import coil3.size.Size
+import coil3.svg.SvgDecoder
 
 /** Renders a remote image from the provided URL. */
 @Composable
@@ -37,10 +43,22 @@ fun NetworkImage(
     contentScale: ContentScale = ContentScale.Crop,
 ) {
     if (url.isNullOrBlank()) return
+    val context = LocalPlatformContext.current
+    val request = remember(url, context) { buildNetworkImageRequest(context, url) }
     AsyncImage(
-        model = url,
+        model = request,
         contentDescription = contentDescription,
         modifier = modifier,
         contentScale = contentScale,
     )
+}
+
+internal fun buildNetworkImageRequest(
+    context: Context,
+    url: String,
+    size: Size? = null,
+): ImageRequest {
+    val builder = ImageRequest.Builder(context).data(url).decoderFactory(SvgDecoder.Factory())
+    if (size != null) builder.size(size)
+    return builder.build()
 }

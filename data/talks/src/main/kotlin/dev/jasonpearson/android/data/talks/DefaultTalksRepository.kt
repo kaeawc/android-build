@@ -29,6 +29,7 @@ import dev.jasonpearson.android.core.di.SingleIn
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.core.network.networkResult
 import dev.jasonpearson.android.subsystem.storage.ContentCache
+import dev.jasonpearson.android.subsystem.storage.fetchFresh
 import dev.jasonpearson.android.subsystem.storage.fetchWithFallback
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -48,11 +49,14 @@ class DefaultTalksRepository(
 
     override suspend fun talks(forceRefresh: Boolean): NetworkResult<List<Talk>> = networkResult {
         if (forceRefresh) {
-            contentCache.fetchFresh(
-                key = CACHE_KEY,
-                encode = { json.encodeToString(serializer, it) },
-                fetch = ::fetchTalks,
-            )
+            contentCache
+                .fetchFresh(
+                    key = CACHE_KEY,
+                    encode = { json.encodeToString(serializer, it) },
+                    fetch = ::fetchTalks,
+                )
+                .getOrThrow()
+                .value
         } else {
             contentCache
                 .fetchWithFallback(

@@ -35,10 +35,10 @@ import dev.jasonpearson.android.core.model.Tag
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.subsystem.storage.ContentCache
 import dev.jasonpearson.android.subsystem.storage.Fetched
+import dev.jasonpearson.android.subsystem.storage.fetchFresh
 import dev.jasonpearson.android.subsystem.storage.fetchWithFallback
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
-import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.decodeFromString
@@ -215,21 +215,10 @@ class DefaultArticlesRepository(
         refresh: Boolean,
         fetch: suspend () -> T,
     ): Result<Fetched<T>> {
-        if (!refresh) return contentCache.fetchWithFallback(key, encode, decode, fetch)
-        return try {
-            val fresh = fetch()
-            try {
-                contentCache.put(key, encode(fresh))
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                // Best-effort, as in fetchWithFallback: a failed write must not fail the refresh.
-            }
-            Result.success(Fetched(fresh, fromCache = false))
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Result.failure(e)
+        return if (refresh) {
+            contentCache.fetchFresh(key, encode, fetch)
+        } else {
+            contentCache.fetchWithFallback(key, encode, decode, fetch)
         }
     }
 

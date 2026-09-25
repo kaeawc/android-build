@@ -50,6 +50,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,21 +62,17 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.jasonpearson.android.core.model.Project
-import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.projects.ProjectsRepository
-import dev.jasonpearson.android.feature.projects.ProjectsExperiments
 import dev.jasonpearson.android.foundation.designsystem.components.EmptyContent
 import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
 import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 import dev.jasonpearson.android.subsystem.analytics.AnalyticsClient
-import dev.jasonpearson.android.subsystem.analytics.AnalyticsEvent
 import dev.jasonpearson.android.subsystem.experimentation.ExperimentRepository
 import dev.jasonpearson.android.subsystem.experimentation.Treatment
-
-/** Each new value re-runs the load; [forceRefresh] bypasses the ETag-revalidated cache. */
-private data class LoadRequest(val id: Int = 0, val forceRefresh: Boolean = false)
+import kotlinx.coroutines.flow.collect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,36 +84,15 @@ fun ProjectsScreen(
     analytics: AnalyticsClient? = null,
 ) {
     val context = LocalContext.current
-    val treatment =
-        remember(experiments) {
-            experiments?.treatmentFor(ProjectsExperiments.DefaultSort) ?: Treatment.CONTROL
-        }
-    LaunchedEffect(treatment) {
-        analytics?.track(
-            AnalyticsEvent(
-                "experiment_exposure",
-                mapOf("experiment" to "projects_default_sort", "treatment" to treatment.name),
-            )
-        )
-    }
+    val viewModel = viewModel { ProjectsViewModel(repository, experiments, analytics) }
+    val state by viewModel.state.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val treatment = viewModel.treatment
     var selectedLanguage by remember { mutableStateOf<String?>(null) }
-    var state by remember(repository) { mutableStateOf<ProjectsUiState>(ProjectsUiState.Loading) }
-    var request by remember(repository) { mutableStateOf(LoadRequest()) }
-    var isRefreshing by remember(repository) { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(repository, request) {
-        val result = repository.overview(forceRefresh = request.forceRefresh)
-        isRefreshing = false
-        when (result) {
-            is NetworkResult.Success -> state = ProjectsUiState.Content(result.data)
-            is NetworkResult.Failure -> {
-                val message = result.error.message ?: "Failed to load"
-                // A failed refresh keeps the projects already on screen.
-                if (state is ProjectsUiState.Content) snackbarHostState.showSnackbar(message)
-                else state = ProjectsUiState.Error(message)
-            }
-        }
+    LaunchedEffect(viewModel, snackbarHostState) {
+        viewModel.refreshErrors.collect { snackbarHostState.showSnackbar(it) }
     }
 
     Scaffold(
@@ -130,18 +106,12 @@ fun ProjectsScreen(
                 ErrorContent(
                     message = currentState.message,
                     modifier = Modifier.padding(innerPadding),
-                    onRetry = {
-                        state = ProjectsUiState.Loading
-                        request = LoadRequest(request.id + 1)
-                    },
+                    onRetry = viewModel::retry,
                 )
             is ProjectsUiState.Content ->
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
-                    onRefresh = {
-                        isRefreshing = true
-                        request = LoadRequest(request.id + 1, forceRefresh = true)
-                    },
+                    onRefresh = viewModel::refresh,
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
                 ) {
                     ProjectsContent(
@@ -150,9 +120,7 @@ fun ProjectsScreen(
                         onSelectLanguage = { selectedLanguage = it },
                         treatment = treatment,
                         onOpen = { project ->
-                            analytics?.track(
-                                AnalyticsEvent("project_open", mapOf("name" to project.name))
-                            )
+                            viewModel.onProjectOpened(project)
                             if (onProjectClick != null) onProjectClick(project.name)
                             else openUrl(context, project.url)
                         },
