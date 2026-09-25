@@ -23,12 +23,17 @@
  */
 package dev.jasonpearson.android.foundation.designsystem.components
 
+import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
@@ -125,6 +130,7 @@ private fun HtmlBlockContent(block: HtmlBlock, styles: HtmlStyles) {
         is HtmlBlock.Quote -> Quote(block.children, styles)
         is HtmlBlock.ListBlock -> ListItems(block.items, styles)
         is HtmlBlock.Image -> Figure(block, styles)
+        is HtmlBlock.InlineImageGroup -> InlineImages(block)
         HtmlBlock.Divider -> HorizontalDivider(Modifier.padding(vertical = 8.dp))
     }
 }
@@ -243,6 +249,31 @@ private fun Figure(image: HtmlBlock.Image, styles: HtmlStyles) {
     }
 }
 
+@Composable
+private fun InlineImages(group: HtmlBlock.InlineImageGroup) {
+    val context = LocalContext.current
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        group.images.forEach { image -> InlineImage(image, context) }
+    }
+}
+
+@Composable
+private fun InlineImage(image: InlineImageRef, context: Context) {
+    var sizeModifier: Modifier = Modifier
+    image.width?.let { sizeModifier = sizeModifier.width(it.dp) }
+    image.height?.let { sizeModifier = sizeModifier.height(it.dp) }
+    image.href?.let { href -> sizeModifier = sizeModifier.clickable { openUrl(context, href) } }
+    NetworkImage(
+        url = image.src,
+        contentDescription = image.alt,
+        modifier = sizeModifier,
+        contentScale = ContentScale.Fit,
+    )
+}
+
 // ---------------------------------------------------------------------------------------------
 // Block parsing: pure Kotlin, no Android dependencies, so it can be unit tested on the JVM.
 // ---------------------------------------------------------------------------------------------
@@ -263,10 +294,20 @@ internal sealed interface HtmlBlock {
 
     data class Image(val src: String, val alt: String?, val captionHtml: String? = null) : HtmlBlock
 
+    data class InlineImageGroup(val images: List<InlineImageRef>) : HtmlBlock
+
     data object Divider : HtmlBlock
 }
 
 internal data class HtmlListItem(val html: String, val depth: Int, val marker: String)
+
+internal data class InlineImageRef(
+    val src: String,
+    val alt: String?,
+    val href: String? = null,
+    val width: Int? = null,
+    val height: Int? = null,
+)
 
 internal fun parseHtmlBlocks(html: String): List<HtmlBlock> {
     val tokens = tokenizeHtml(html)
@@ -424,10 +465,19 @@ private class HtmlBlockParser(private val tokens: List<HtmlToken>) {
                 }
                 is HtmlToken.Open -> {
                     val name = token.name
-                    val end = if (token.selfClosing) i else findClose(i, to)
+                    if (name == "img" || name == "a") {
+                        val run = inlineImageRun(i, to)
+                        if (run != null) {
+                            flush()
+                            blocks += HtmlBlock.InlineImageGroup(run.first)
+                            i = run.second
+                            continue
+                        }
+                    }
                     when {
                         name in headings -> {
                             flush()
+                            val end = if (token.selfClosing) i else findClose(i, to)
                             val text = inlineHtml(i + 1, end).trim()
                             if (hasVisibleText(text)) {
                                 blocks += HtmlBlock.Heading(headings.getValue(name), text)
@@ -436,17 +486,20 @@ private class HtmlBlockParser(private val tokens: List<HtmlToken>) {
                         }
                         name == "pre" -> {
                             flush()
+                            val end = if (token.selfClosing) i else findClose(i, to)
                             codeBlock(i + 1, end)?.let(blocks::add)
                             i = end + 1
                         }
                         name == "blockquote" -> {
                             flush()
+                            val end = if (token.selfClosing) i else findClose(i, to)
                             val children = parse(i + 1, end)
                             if (children.isNotEmpty()) blocks += HtmlBlock.Quote(children)
                             i = end + 1
                         }
                         name == "ul" || name == "ol" -> {
                             flush()
+                            val end = if (token.selfClosing) i else findClose(i, to)
                             val items =
                                 listItems(i + 1, end, ordered = name == "ol", depth = 0, token)
                             if (items.isNotEmpty()) blocks += HtmlBlock.ListBlock(items)
@@ -454,11 +507,11 @@ private class HtmlBlockParser(private val tokens: List<HtmlToken>) {
                         }
                         name == "img" -> {
                             flush()
-                            image(token)?.let(blocks::add)
                             i++
                         }
                         name == "figure" -> {
                             flush()
+                            val end = if (token.selfClosing) i else findClose(i, to)
                             blocks += figure(i + 1, end)
                             i = end + 1
                         }
@@ -467,7 +520,10 @@ private class HtmlBlockParser(private val tokens: List<HtmlToken>) {
                             blocks += HtmlBlock.Divider
                             i++
                         }
-                        name in skippedElements -> i = end + 1
+                        name in skippedElements -> {
+                            val end = if (token.selfClosing) i else findClose(i, to)
+                            i = end + 1
+                        }
                         name in blockContainers -> {
                             flush()
                             i++
@@ -482,6 +538,55 @@ private class HtmlBlockParser(private val tokens: List<HtmlToken>) {
         }
         flush()
         return blocks
+    }
+
+    /** Finds a whitespace-separated run of bare images and links containing one image each. */
+    private fun inlineImageRun(i: Int, to: Int): Pair<List<InlineImageRef>, Int>? {
+        val images = mutableListOf<InlineImageRef>()
+        var cursor = i
+        while (cursor < to) {
+            val atom = inlineImageAtom(cursor, to) ?: break
+            images += atom.first
+            cursor = atom.second
+            while (cursor < to) {
+                val next = tokens[cursor]
+                if (next is HtmlToken.Text && next.raw.isBlank()) cursor++ else break
+            }
+        }
+        return if (images.isEmpty()) null else images to cursor
+    }
+
+    /** Recognizes a bare image or an anchor containing exactly one image and whitespace. */
+    private fun inlineImageAtom(i: Int, to: Int): Pair<InlineImageRef, Int>? {
+        val open = tokens.getOrNull(i) as? HtmlToken.Open ?: return null
+        return when (open.name) {
+            "img" -> imageRef(open, href = null)?.let { it to i + 1 }
+            "a" -> {
+                if (open.selfClosing) return null
+                val end = findClose(i, to)
+                var j = i + 1
+                while (j < end && (tokens[j] as? HtmlToken.Text)?.raw?.isBlank() == true) j++
+                val imgOpen =
+                    (tokens.getOrNull(j) as? HtmlToken.Open)?.takeIf { it.name == "img" }
+                        ?: return null
+                var k = j + 1
+                while (k < end && (tokens[k] as? HtmlToken.Text)?.raw?.isBlank() == true) k++
+                if (k != end) return null
+                imageRef(imgOpen, href = open.attributes["href"])?.let { it to end + 1 }
+            }
+            else -> null
+        }
+    }
+
+    private fun imageRef(token: HtmlToken.Open, href: String?): InlineImageRef? {
+        val src = token.attributes["src"]?.takeIf(String::isNotBlank) ?: return null
+        return InlineImageRef(
+            src = src,
+            alt = token.attributes["alt"]?.takeIf(String::isNotBlank),
+            href = href?.takeIf(String::isNotBlank),
+            width = token.attributes["width"]?.trim()?.removeSuffix("px")?.toIntOrNull(),
+            height = token.attributes["height"]?.trim()?.removeSuffix("px")?.toIntOrNull(),
+        )
     }
 
     /**
