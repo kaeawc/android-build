@@ -67,7 +67,9 @@ public class FileContentCache(@StorageDirectory directory: File, private val clo
             Files.createDirectories(cacheDirectory.toPath())
             val temporary = Files.createTempFile(cacheDirectory.toPath(), "entry-", ".tmp")
             try {
-                Files.writeString(temporary, "${clock.now().toEpochMilliseconds()}\n$value")
+                // Not Files.writeString: it's a Java 11 API that Android (minSdk 27) lacks, so it
+                // crashed the first cache write on devices while passing JVM unit tests.
+                temporary.toFile().writeText("${clock.now().toEpochMilliseconds()}\n$value")
                 Files.move(
                     temporary,
                     fileFor(key).toPath(),
