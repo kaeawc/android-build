@@ -62,6 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.network.NetworkResult
@@ -72,6 +73,8 @@ import dev.jasonpearson.android.data.about.SocialLinks
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlText
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun AboutScreen(
@@ -269,12 +272,23 @@ private fun ConnectSection(profile: AboutProfile, onOpenUrl: (String) -> Unit) {
 
 @Composable
 private fun QrCodeImage(text: String) {
-    val image = remember(text) { generateQrCodeBitmap(text, 512) }
+    val sizePx = 512
+    val image by
+        produceState<ImageBitmap?>(initialValue = null, key1 = text) {
+            value = withContext(Dispatchers.Default) { generateQrCodeBitmap(text, sizePx) }
+        }
     Surface(color = Color.White, modifier = Modifier.padding(8.dp)) {
-        Image(
-            bitmap = image,
-            contentDescription = "QR code for $text",
-            modifier = Modifier.size(240.dp).padding(8.dp),
-        )
+        Box(modifier = Modifier.size(240.dp).padding(8.dp), contentAlignment = Alignment.Center) {
+            val bitmap = image
+            if (bitmap == null) {
+                CircularProgressIndicator()
+            } else {
+                Image(
+                    bitmap = bitmap,
+                    contentDescription = "QR code for $text",
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
     }
 }

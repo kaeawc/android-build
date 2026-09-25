@@ -24,7 +24,6 @@
 package dev.jasonpearson.android.feature.about.ui
 
 import android.graphics.Bitmap
-import android.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.google.zxing.BarcodeFormat
@@ -42,10 +41,13 @@ fun generateQrCodeBitmap(text: String, sizePx: Int): ImageBitmap {
             mapOf(EncodeHintType.MARGIN to 1),
         )
     val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.RGB_565)
-    for (x in 0 until sizePx) {
-        for (y in 0 until sizePx) {
-            bitmap.setPixel(x, y, if (bitMatrix.get(x, y)) Color.BLACK else Color.WHITE)
+    val pixels = IntArray(sizePx * sizePx)
+    for (y in 0 until sizePx) {
+        for (x in 0 until sizePx) {
+            pixels[y * sizePx + x] =
+                if (bitMatrix.get(x, y)) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
         }
     }
+    bitmap.setPixels(pixels, 0, sizePx, 0, 0, sizePx, sizePx)
     return bitmap.asImageBitmap()
 }

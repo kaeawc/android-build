@@ -27,8 +27,11 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -60,8 +63,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -118,6 +124,7 @@ private fun GalleryViewer(photos: List<GalleryPhoto>, initialPage: Int, onDismis
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { photos.size })
     var scale by remember { mutableFloatStateOf(1f) }
     var translation by remember { mutableStateOf(Offset.Zero) }
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
     val context = LocalContext.current
 
     LaunchedEffect(pagerState.currentPage) {
@@ -140,10 +147,32 @@ private fun GalleryViewer(photos: List<GalleryPhoto>, initialPage: Int, onDismis
                 Box(
                     Modifier.fillMaxSize()
                         .background(Color.Black)
+                        .onSizeChanged { containerSize = it }
                         .pointerInput(Unit) {
-                            detectTransformGestures { _, pan, zoom, _ ->
-                                scale = (scale * zoom).coerceIn(1f, 5f)
-                                translation = if (scale > 1f) translation + pan else Offset.Zero
+                            awaitEachGesture {
+                                awaitFirstDown(requireUnconsumed = false)
+                                do {
+                                    val event = awaitPointerEvent()
+                                    val multiTouch = event.changes.count { it.pressed } > 1
+                                    if (multiTouch || scale > 1f) {
+                                        val newScale =
+                                            (scale * event.calculateZoom()).coerceIn(1f, 5f)
+                                        scale = newScale
+                                        translation =
+                                            if (newScale > 1f) {
+                                                clampOffset(
+                                                    translation + event.calculatePan(),
+                                                    newScale,
+                                                    containerSize,
+                                                )
+                                            } else {
+                                                Offset.Zero
+                                            }
+                                        event.changes.forEach {
+                                            if (it.positionChanged()) it.consume()
+                                        }
+                                    }
+                                } while (event.changes.any { it.pressed })
                             }
                         }
                         .pointerInput(Unit) {
@@ -232,4 +261,10 @@ private fun ErrorContent(message: String, modifier: Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(text = message)
     }
+}
+
+private fun clampOffset(offset: Offset, scale: Float, containerSize: IntSize): Offset {
+    val maxX = containerSize.width * (scale - 1) / 2
+    val maxY = containerSize.height * (scale - 1) / 2
+    return Offset(x = offset.x.coerceIn(-maxX, maxX), y = offset.y.coerceIn(-maxY, maxY))
 }

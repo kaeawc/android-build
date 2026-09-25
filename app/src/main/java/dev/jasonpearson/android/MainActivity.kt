@@ -103,7 +103,10 @@ private fun AppRoot(graph: AppGraph) {
                     NavigationBarItem(
                         selected = backStack.firstOrNull() == dest,
                         onClick = {
-                            if (backStack.firstOrNull() != dest) {
+                            // Switching tabs resets to that tab's root; re-tapping the current
+                            // tab while on a pushed screen pops back to its root. Re-tapping at
+                            // the root is a no-op (no refetch).
+                            if (backStack.firstOrNull() != dest || backStack.size > 1) {
                                 backStack.clear()
                                 backStack.add(dest)
                             }
