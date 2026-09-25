@@ -137,7 +137,9 @@ The [Spotlight](https://github.com/joshfriend/spotlight) Gradle plugin moves the
 [gradle/all-projects.txt](gradle/all-projects.txt) and computes the dependency graph by parsing
 build scripts. To load only the projects you're working on into the IDE, list them in
 `gradle/ide-projects.txt` (git-ignored, per-developer) and re-sync — Spotlight resolves their
-transitive dependencies for you, so the IDE configures a focused subset instead of all 17 projects.
+transitive dependencies for you, so the IDE configures a focused subset instead of all 28 projects
+(focusing `:feature:talks` brings in its 10-project closure; a simulated-sync cold configuration
+drops from 1.5–2.3 s for the full graph to 0.85 s, best of three).
 Install the companion [IDE plugin](https://plugins.jetbrains.com/plugin/27451-spotlight) to manage
 the focus set from the UI. `./gradlew :checkAllProjectsList` guards that no stray `include`s creep
 back into the settings file.
@@ -161,20 +163,27 @@ Command-line builds and CI are byte-identical — nothing keys off anything but 
 Simulate a sync from the terminal with `-Didea.sync.active=true`; opt out for a session with
 `-Pfastsync.enabled=false` (Compose previews and the debugger use the runtime classpath, so if one
 of those stops finding a transitively-provided class, that is the switch). Measured on this repo
-(17 modules, normal clone, simulated sync, best-of-three; "cold" is `--no-configuration-cache`):
+(normal clone, simulated sync, best of three; "cold" is `--no-configuration-cache`):
 
-| Simulated sync (`./gradlew help -Didea.sync.active=true`) | Fastsync on | Fastsync off |
-|---|---|---|
-| Cold configuration | 1.5 s | 1.5 s |
-| Warm (configuration-cache hit) | 0.9 s | 0.9 s |
-| `:app:dependencies --configuration debugRuntimeClasspath`, warm | 0.9 s | 0.9 s |
-| `:app` `debugRuntimeClasspath` report, lines | 80 | 909 |
+| Simulated sync (`-Didea.sync.active=true`) | 17 modules: on | off | 28 modules: on | off |
+|---|---|---|---|---|
+| Cold configuration (`help`) | 1.5 s | 1.5 s | 1.50 s | 1.65 s |
+| Warm (configuration-cache hit) | 0.9 s | 0.9 s | 1.15 s | 0.78 s |
+| Every module's `:dependencies` (resolves all configurations) | — | — | 4.59 s | 3.92 s |
+| `:app` `debugRuntimeClasspath` report, lines | 80 | 909 | 164 | 1,670 |
+| All-modules dependency report, lines | — | — | 89,616 | 132,943 |
 
-The graph shrinks exactly as intended (and stays fully resolved — zero `FAILED` entries, including
-under an Artifact-Swap-active sync where swapped modules resolve to content-hash artifacts), but
-the wall-clock win is zero here: with 17 small modules and a warm dependency cache, resolution is
-not where sync time goes. Block's 94% came from thousands of modules where it is. This repo is the
-reference implementation of the mechanism; the honest numbers are the point.
+The graph shrinks exactly as intended: at 28 modules the whole-build report is a third smaller and
+`:app`'s runtime classpath is a tenth the size. It stays fully resolved too, with zero `FAILED`
+entries, including under an Artifact-Swap-active sync where swapped modules resolve to
+content-hash artifacts. The 28-module run is what caught the androidTest case:
+[#444](https://github.com/kaeawc/android-build/pull/444) fixed a test-only BOM-managed dependency
+that AGP had left unresolved. The wall-clock win is still zero. The warm and all-modules rows are
+sub-second noise in both directions, and with a warm dependency cache, resolution is not where
+sync time goes at this size. Block's 94% came from thousands of modules where it is. This repo is
+the reference implementation of the mechanism; the honest numbers are the point. (These local
+runs had Isolated Projects off via a machine-wide `~/.gradle/gradle.properties` override; the
+repo's own setting is on.)
 
 #### Dependency pre-fetching
 
@@ -198,14 +207,16 @@ a schedule, so the sync finds everything already on disk. This repo's version:
 Measured on this repo (fresh `GRADLE_USER_HOME`, wrapper and plugins already downloaded, so the
 numbers isolate `modules-2`):
 
-| Fresh `modules-2`, then… | Without prefetch | With prefetch |
-|---|---|---|
-| `prefetchDependencies` (background, cold) | — | 60.8 s (+134 MB) |
-| First `:app:dependencies` on the branch (resolves every `:app` configuration) | 92.7 s | 24.4 s |
-| Second, warm run | 1.1 s | 1.1 s |
+| Fresh `modules-2`, then… | 17 modules: without | with | 28 modules: without | with |
+|---|---|---|---|---|
+| `prefetchDependencies` (background, cold) | — | 60.8 s (+134 MB) | — | 78.7 s (+126 MB) |
+| First `:app:dependencies` on the branch (resolves every `:app` configuration) | 92.7 s | 24.4 s | 131.2 s | 35.6 s |
+| Warm re-run | 1.1 s | 1.1 s | 3–18 s | 3–19 s |
 
-A 74% cut in the first-resolve wait, in the same ballpark as Block's 83% (theirs is Develocity
-telemetry across a fleet; this is one machine, one run). The 24 s that remains is what the proxy
+A 74% cut in the first-resolve wait at 17 modules and 73% at 28, in the same ballpark as Block's
+83% (theirs is Develocity telemetry across a fleet; each of these is one machine, one run). At 28
+modules the warm re-runs vary with daemon start-up and are the same with or without prefetch. The
+28-module runs had Isolated Projects off, to match the other local measurements. The ~30 s that remains is what the proxy
 resolves beyond the compile/runtime classpaths: lint and Kotlin-compiler classpaths, annotation
 processors, and the report's own metadata fetches. On this repo the dependency set is small and CI
 already restores its cache, so the value here is the pattern: the task, the lock-guarded script, and
