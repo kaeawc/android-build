@@ -110,6 +110,9 @@ public class ClientProjects internal constructor(private val handler: Dependency
 }
 
 public class DataProjects internal constructor(private val handler: DependencyHandler) {
+    public val bookmarks: ModuleDependency
+        get() = handler.swappable(":data:bookmarks")
+
     public val about: ModuleDependency
         get() = handler.swappable(":data:about")
 
@@ -178,11 +181,17 @@ public class FeatureProjects internal constructor(private val handler: Dependenc
     public val projects: ModuleDependency
         get() = handler.swappable(":feature:projects")
 
+    public val saved: ModuleDependency
+        get() = handler.swappable(":feature:saved")
+
     public val settings: ModuleDependency
         get() = handler.swappable(":feature:settings")
 
     public val talks: ModuleDependency
         get() = handler.swappable(":feature:talks")
+
+    public val widget: ModuleDependency
+        get() = handler.swappable(":feature:widget")
 }
 
 private fun DependencyHandler.swappable(path: String): ModuleDependency {
