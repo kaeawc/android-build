@@ -47,7 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.model.Article
 import dev.jasonpearson.android.core.network.NetworkResult
-import dev.jasonpearson.android.feature.articles.data.ArticlesRepository
+import dev.jasonpearson.android.data.articles.ArticlesRepository
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 
 @Composable

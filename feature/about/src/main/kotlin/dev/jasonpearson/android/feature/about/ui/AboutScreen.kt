@@ -49,7 +49,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.model.ContentPage
 import dev.jasonpearson.android.core.network.NetworkResult
-import dev.jasonpearson.android.feature.about.data.AboutRepository
+import dev.jasonpearson.android.data.about.AboutRepository
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlText
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 

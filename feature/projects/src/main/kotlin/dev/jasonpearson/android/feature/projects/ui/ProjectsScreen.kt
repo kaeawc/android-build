@@ -52,7 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.model.Project
 import dev.jasonpearson.android.core.network.NetworkResult
-import dev.jasonpearson.android.feature.projects.data.ProjectsRepository
+import dev.jasonpearson.android.data.projects.ProjectsRepository
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 
 @OptIn(ExperimentalMaterial3Api::class)

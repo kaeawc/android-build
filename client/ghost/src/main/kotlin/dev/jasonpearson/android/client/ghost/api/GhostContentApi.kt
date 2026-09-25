@@ -25,6 +25,9 @@ package dev.jasonpearson.android.client.ghost.api
 
 import dev.jasonpearson.android.client.ghost.dto.GhostPagesResponse
 import dev.jasonpearson.android.client.ghost.dto.GhostPostsResponse
+import dev.jasonpearson.android.client.ghost.dto.GhostSearchIndexResponse
+import dev.jasonpearson.android.client.ghost.dto.GhostSettingsResponse
+import dev.jasonpearson.android.client.ghost.dto.GhostTagsResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -53,4 +56,27 @@ interface GhostContentApi {
         @Query("key") key: String,
         @Query("formats") formats: String = "html",
     ): GhostPagesResponse
+
+    @GET("posts/")
+    suspend fun getPostsPage(
+        @Query("key") key: String,
+        @Query("filter") filter: String? = null,
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 100,
+        @Query("include") include: String = "tags,authors",
+        @Query("formats") formats: String = "html",
+    ): GhostPostsResponse
+
+    @GET("tags/")
+    suspend fun getTags(
+        @Query("key") key: String,
+        @Query("include") include: String = "count.posts",
+        @Query("limit") limit: Int = 100,
+        @Query("filter") filter: String = "visibility:public",
+    ): GhostTagsResponse
+
+    @GET("settings/") suspend fun getSettings(@Query("key") key: String): GhostSettingsResponse
+
+    @GET("search-index/posts/")
+    suspend fun getSearchIndexPosts(@Query("key") key: String): GhostSearchIndexResponse
 }

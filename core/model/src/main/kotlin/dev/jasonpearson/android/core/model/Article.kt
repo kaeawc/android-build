@@ -36,4 +36,7 @@ data class Article(
     val readingTimeMinutes: Int?,
     val tags: List<Tag>,
     val author: Author?,
+    val featured: Boolean = false,
+    val primaryTag: Tag? = null,
+    val url: String? = null,
 )

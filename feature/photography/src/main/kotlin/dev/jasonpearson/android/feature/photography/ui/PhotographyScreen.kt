@@ -39,7 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.network.NetworkResult
-import dev.jasonpearson.android.feature.photography.data.PhotographyRepository
+import dev.jasonpearson.android.data.photography.PhotographyRepository
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 
 @Composable

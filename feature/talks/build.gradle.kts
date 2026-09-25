@@ -33,10 +33,10 @@ android { namespace = "dev.jasonpearson.android.feature.talks" }
 
 dependencies {
     implementation(platform(libs.compose.bom))
-    implementation(projects.client.ghost)
     implementation(projects.core.di)
     implementation(projects.core.model)
     implementation(projects.core.network)
+    implementation(projects.data.talks)
     implementation(projects.foundation.designsystem)
     implementation(libs.bundles.compose.ui)
     implementation(libs.compose.foundation)
