@@ -57,17 +57,14 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import dev.jasonpearson.android.core.network.NetworkResult
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.jasonpearson.android.data.talks.Talk
 import dev.jasonpearson.android.data.talks.TalkLink
 import dev.jasonpearson.android.data.talks.TalkLinkKind
@@ -79,38 +76,16 @@ import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
 import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TalksScreen(repository: TalksRepository, modifier: Modifier = Modifier) {
-    val scope = rememberCoroutineScope()
+    val viewModel: TalksViewModel = viewModel { TalksViewModel(repository) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    var state by remember(repository) { mutableStateOf<TalksUiState>(TalksUiState.Loading) }
-    var isRefreshing by remember(repository) { mutableStateOf(false) }
-    // Bumped by Retry to re-run the initial (cache-backed) load.
-    var loadAttempt by remember(repository) { mutableIntStateOf(0) }
-
-    LaunchedEffect(repository, loadAttempt) { state = repository.load(forceRefresh = false) }
-
-    val onRetry: () -> Unit = {
-        state = TalksUiState.Loading
-        loadAttempt++
-    }
-    val onRefresh: () -> Unit = {
-        if (!isRefreshing) {
-            scope.launch {
-                isRefreshing = true
-                val refreshed = repository.load(forceRefresh = true)
-                isRefreshing = false
-                if (refreshed is TalksUiState.Error && state is TalksUiState.Content) {
-                    // Keep what's on screen; just say the refresh didn't work.
-                    snackbarHostState.showSnackbar("Couldn't refresh talks")
-                } else {
-                    state = refreshed
-                }
-            }
-        }
+    LaunchedEffect(viewModel) {
+        viewModel.messageFlow.collect { message -> snackbarHostState.showSnackbar(message) }
     }
 
     Scaffold(
@@ -124,7 +99,7 @@ fun TalksScreen(repository: TalksRepository, modifier: Modifier = Modifier) {
             is TalksUiState.Content ->
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
-                    onRefresh = onRefresh,
+                    onRefresh = viewModel::refresh,
                     modifier = Modifier.fillMaxSize().padding(paddingValues),
                 ) {
                     if (currentState is TalksUiState.Content) {
@@ -136,7 +111,7 @@ fun TalksScreen(repository: TalksRepository, modifier: Modifier = Modifier) {
                                 ErrorContent(
                                     message = currentState.message,
                                     modifier = Modifier.fillParentMaxSize(),
-                                    onRetry = onRetry,
+                                    onRetry = viewModel::retry,
                                 )
                             }
                         }
@@ -145,12 +120,6 @@ fun TalksScreen(repository: TalksRepository, modifier: Modifier = Modifier) {
         }
     }
 }
-
-private suspend fun TalksRepository.load(forceRefresh: Boolean): TalksUiState =
-    when (val r = talks(forceRefresh)) {
-        is NetworkResult.Success -> TalksUiState.Content(r.data)
-        is NetworkResult.Failure -> TalksUiState.Error(r.error.message ?: "Failed to load")
-    }
 
 @Composable
 private fun TalksContent(talks: List<Talk>) {
