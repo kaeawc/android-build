@@ -23,42 +23,35 @@
  */
 package dev.jasonpearson.android.foundation.designsystem.components
 
-import android.content.Context
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
-import coil3.request.ImageRequest
-import coil3.size.Size
-import coil3.svg.SvgDecoder
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
 
-/** Renders a remote image from the provided URL. */
-@Composable
-fun NetworkImage(
-    url: String?,
-    contentDescription: String?,
-    modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.Crop,
-) {
-    if (url.isNullOrBlank()) return
-    val context = LocalPlatformContext.current
-    val request = remember(url, context) { buildNetworkImageRequest(context, url) }
-    AsyncImage(
-        model = request,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        contentScale = contentScale,
-    )
-}
+class InlineImageSizeTest {
 
-internal fun buildNetworkImageRequest(
-    context: Context,
-    url: String,
-    size: Size? = null,
-): ImageRequest {
-    val builder = ImageRequest.Builder(context).data(url).decoderFactory(SvgDecoder.Factory())
-    if (size != null) builder.size(size)
-    return builder.build()
+    @Test
+    fun `uses intrinsic badge dimensions as dp when attributes are absent`() {
+        val size = resolveInlineImageSize(104f, 20f, null, null, maxWidthDp = 300f)
+
+        assertEquals(InlineImageSize(104f, 20f), size)
+    }
+
+    @Test
+    fun `explicit attributes override intrinsic dimensions`() {
+        val size = resolveInlineImageSize(104f, 20f, 50, 50, maxWidthDp = 300f)
+
+        assertEquals(InlineImageSize(50f, 50f), size)
+    }
+
+    @Test
+    fun `clamps width and preserves aspect ratio`() {
+        val size = resolveInlineImageSize(200f, 50f, null, null, maxWidthDp = 100f)
+
+        assertEquals(InlineImageSize(100f, 25f), size)
+    }
+
+    @Test
+    fun `returns no size until intrinsic dimensions are known`() {
+        assertNull(resolveInlineImageSize(null, null, null, null, maxWidthDp = 300f))
+    }
 }

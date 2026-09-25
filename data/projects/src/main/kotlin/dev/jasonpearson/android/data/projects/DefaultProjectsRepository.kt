@@ -24,6 +24,7 @@
 package dev.jasonpearson.android.data.projects
 
 import dev.jasonpearson.android.client.github.GitHubDataSource
+import dev.jasonpearson.android.client.github.GitHubRateLimitException
 import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.SingleIn
 import dev.jasonpearson.android.core.model.Project
@@ -37,6 +38,9 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 internal const val GITHUB_OWNER = "kaeawc"
+
+/** Friendly rate-limit failure exposed without requiring UI modules to depend on client/github. */
+class ProjectsRateLimitedException(message: String) : Exception(message)
 
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
@@ -121,5 +125,16 @@ class DefaultProjectsRepository(
             .toNetworkResult()
 }
 
-private fun <T> Result<Fetched<T>>.toNetworkResult(): NetworkResult<T> =
-    fold(onSuccess = { NetworkResult.Success(it.value) }, onFailure = { NetworkResult.Failure(it) })
+internal fun <T> Result<Fetched<T>>.toNetworkResult(): NetworkResult<T> =
+    fold(
+        onSuccess = { NetworkResult.Success(it.value) },
+        onFailure = {
+            NetworkResult.Failure(
+                if (it is GitHubRateLimitException) {
+                    ProjectsRateLimitedException(checkNotNull(it.message))
+                } else {
+                    it
+                }
+            )
+        },
+    )

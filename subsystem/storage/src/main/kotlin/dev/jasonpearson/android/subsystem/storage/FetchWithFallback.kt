@@ -76,7 +76,6 @@ public suspend fun <T : Any> ContentCache.fetchWithFallback(
 public suspend fun <T : Any> ContentCache.fetchFresh(
     key: String,
     encode: (T) -> String,
-    decode: (String) -> T,
     fetch: suspend () -> T,
 ): Result<Fetched<T>> =
     try {

@@ -24,12 +24,14 @@
 package dev.jasonpearson.android.foundation.designsystem.components
 
 import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -47,8 +49,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -61,6 +65,8 @@ import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.rememberAsyncImagePainter
+import coil3.size.Size
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 
 /**
@@ -262,16 +268,74 @@ private fun InlineImages(group: HtmlBlock.InlineImageGroup) {
 
 @Composable
 private fun InlineImage(image: InlineImageRef, context: Context) {
-    var sizeModifier: Modifier = Modifier
-    image.width?.let { sizeModifier = sizeModifier.width(it.dp) }
-    image.height?.let { sizeModifier = sizeModifier.height(it.dp) }
-    image.href?.let { href -> sizeModifier = sizeModifier.clickable { openUrl(context, href) } }
-    NetworkImage(
-        url = image.src,
+    val request =
+        remember(image.src, context) { buildNetworkImageRequest(context, image.src, Size.ORIGINAL) }
+    val painter = rememberAsyncImagePainter(request)
+    val intrinsicSize = painter.intrinsicSize
+    val knownIntrinsicSize = intrinsicSize.takeIf {
+        it.isSpecified && it.width > 0f && it.height > 0f
+    }
+    val configuration = LocalConfiguration.current
+    val resolvedSize =
+        resolveInlineImageSize(
+            intrinsicWidth = knownIntrinsicSize?.width,
+            intrinsicHeight = knownIntrinsicSize?.height,
+            attributeWidth = image.width,
+            attributeHeight = image.height,
+            maxWidthDp = configuration.screenWidthDp.toFloat(),
+        )
+    var modifier: Modifier =
+        resolvedSize?.let { size ->
+            Modifier.widthIn(max = size.widthDp.dp).aspectRatio(size.widthDp / size.heightDp)
+        } ?: Modifier.height(20.dp).widthIn(min = 20.dp)
+    image.href?.let { href -> modifier = modifier.clickable { openUrl(context, href) } }
+    Image(
+        painter = painter,
         contentDescription = image.alt,
-        modifier = sizeModifier,
+        modifier = modifier,
         contentScale = ContentScale.Fit,
     )
+}
+
+internal data class InlineImageSize(val widthDp: Float, val heightDp: Float)
+
+internal fun resolveInlineImageSize(
+    intrinsicWidth: Float?,
+    intrinsicHeight: Float?,
+    attributeWidth: Int?,
+    attributeHeight: Int?,
+    maxWidthDp: Float,
+): InlineImageSize? {
+    val validIntrinsicWidth = intrinsicWidth?.takeIf { it > 0f }
+    val validIntrinsicHeight = intrinsicHeight?.takeIf { it > 0f }
+    val size =
+        when {
+            attributeWidth != null && attributeHeight != null ->
+                InlineImageSize(attributeWidth.toFloat(), attributeHeight.toFloat())
+            attributeWidth != null && validIntrinsicWidth != null && validIntrinsicHeight != null ->
+                InlineImageSize(
+                    attributeWidth.toFloat(),
+                    attributeWidth * validIntrinsicHeight / validIntrinsicWidth,
+                )
+            attributeHeight != null &&
+                validIntrinsicWidth != null &&
+                validIntrinsicHeight != null ->
+                InlineImageSize(
+                    attributeHeight * validIntrinsicWidth / validIntrinsicHeight,
+                    attributeHeight.toFloat(),
+                )
+            attributeWidth == null &&
+                attributeHeight == null &&
+                validIntrinsicWidth != null &&
+                validIntrinsicHeight != null ->
+                InlineImageSize(validIntrinsicWidth, validIntrinsicHeight)
+            else -> return null
+        }
+    if (size.widthDp > maxWidthDp) {
+        val scale = maxWidthDp / size.widthDp
+        return InlineImageSize(maxWidthDp, size.heightDp * scale)
+    }
+    return size
 }
 
 // ---------------------------------------------------------------------------------------------

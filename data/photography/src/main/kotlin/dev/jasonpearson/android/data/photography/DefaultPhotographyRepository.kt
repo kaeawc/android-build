@@ -54,7 +54,6 @@ class DefaultPhotographyRepository(
                     .fetchFresh(
                         key = CACHE_KEY,
                         encode = { json.encodeToString(serializer, it) },
-                        decode = { json.decodeFromString(serializer, it) },
                         fetch = ::fetchPhotos,
                     )
                     .getOrThrow()

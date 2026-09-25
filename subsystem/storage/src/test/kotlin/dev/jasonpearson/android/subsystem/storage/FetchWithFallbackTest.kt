@@ -105,7 +105,7 @@ class FetchWithFallbackTest {
     @Test
     fun `fresh refresh is returned and cached`() = runTest {
         val cache = MapCache()
-        val result = cache.fetchFresh("k", { it }, { it }) { "fresh" }.getOrThrow()
+        val result = cache.fetchFresh("k", { it }) { "fresh" }.getOrThrow()
         assertEquals("fresh", result.value)
         assertFalse(result.fromCache)
         assertEquals("fresh", cache.entries["k"]?.value)
@@ -118,7 +118,7 @@ class FetchWithFallbackTest {
         val cache =
             MapCache().apply { entries["k"] = CachedEntry("old", Instant.fromEpochMilliseconds(7)) }
         val failure = IOException("offline")
-        val result = cache.fetchFresh<String>("k", { it }, { it }) { throw failure }
+        val result = cache.fetchFresh<String>("k", { it }) { throw failure }
         assertTrue(result.exceptionOrNull() === failure)
         assertEquals("old", cache.entries["k"]?.value)
         assertEquals(0, cache.reads)
@@ -127,7 +127,7 @@ class FetchWithFallbackTest {
 
     @Test
     fun `cache write failure does not fail successful refresh`() = runTest {
-        val result = MapCache(failWrites = true).fetchFresh("k", { it }, { it }) { "fresh" }
+        val result = MapCache(failWrites = true).fetchFresh("k", { it }) { "fresh" }
         assertEquals("fresh", result.getOrThrow().value)
     }
 }

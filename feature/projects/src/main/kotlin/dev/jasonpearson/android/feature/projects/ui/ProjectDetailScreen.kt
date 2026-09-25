@@ -43,18 +43,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.jasonpearson.android.core.model.Project
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.projects.ProjectsRepository
@@ -62,6 +65,7 @@ import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlText
 import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
+import kotlinx.coroutines.flow.collect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,18 +76,14 @@ fun ProjectDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    var projectAttempt by remember(repository, name) { mutableIntStateOf(0) }
-    var readmeAttempt by remember(repository, name) { mutableIntStateOf(0) }
-    val projectResult by
-        produceState<NetworkResult<Project>?>(null, repository, name, projectAttempt) {
-            value = null
-            value = repository.project(name)
-        }
-    val readmeResult by
-        produceState<NetworkResult<String>?>(null, repository, name, readmeAttempt) {
-            value = null
-            value = repository.readme(name)
-        }
+    val viewModel = viewModel(key = name) { ProjectDetailViewModel(repository, name) }
+    val projectResult by viewModel.project.collectAsState()
+    val readmeResult by viewModel.readme.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(viewModel, snackbarHostState) {
+        viewModel.refreshErrors.collect { snackbarHostState.showSnackbar(it) }
+    }
     val project =
         when (val result = projectResult) {
             is NetworkResult.Success -> result.data
@@ -92,6 +92,7 @@ fun ProjectDetailScreen(
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(name) },
@@ -117,36 +118,41 @@ fun ProjectDetailScreen(
             null -> LoadingContent(Modifier.padding(innerPadding))
             is NetworkResult.Failure ->
                 ErrorContent(
-                    message = "Couldn't load this project",
+                    message =
+                        projectFailureMessage(currentProject.error, "Couldn't load this project"),
                     modifier = Modifier.padding(innerPadding),
-                    onRetry = {
-                        projectAttempt++
-                        if (readmeResult is NetworkResult.Failure) readmeAttempt++
-                    },
+                    onRetry = viewModel::retryProject,
                 )
             is NetworkResult.Success ->
-                Column(
-                    modifier =
-                        Modifier.fillMaxSize()
-                            .padding(innerPadding)
-                            .verticalScroll(rememberScrollState())
-                            .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = viewModel::refresh,
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
                 ) {
-                    val loadedProject = currentProject.data
-                    ProjectHeader(loadedProject)
-                    Text("README", style = MaterialTheme.typography.titleLarge)
-                    when (val readme = readmeResult) {
-                        null -> CircularProgressIndicator()
-                        is NetworkResult.Success ->
-                            HtmlText(html = readme.data, modifier = Modifier.fillMaxWidth())
-                        is NetworkResult.Failure -> {
-                            Text("Couldn't load the README")
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = { openUrl(context, loadedProject.url) }) {
-                                    Text("Open on GitHub")
+                    Column(
+                        modifier =
+                            Modifier.fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        val loadedProject = currentProject.data
+                        ProjectHeader(loadedProject)
+                        Text("README", style = MaterialTheme.typography.titleLarge)
+                        when (val readme = readmeResult) {
+                            null -> CircularProgressIndicator()
+                            is NetworkResult.Success ->
+                                HtmlText(html = readme.data, modifier = Modifier.fillMaxWidth())
+                            is NetworkResult.Failure -> {
+                                Text(
+                                    projectFailureMessage(readme.error, "Couldn't load the README")
+                                )
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(onClick = { openUrl(context, loadedProject.url) }) {
+                                        Text("Open on GitHub")
+                                    }
+                                    TextButton(onClick = viewModel::retryReadme) { Text("Retry") }
                                 }
-                                TextButton(onClick = { readmeAttempt++ }) { Text("Retry") }
                             }
                         }
                     }

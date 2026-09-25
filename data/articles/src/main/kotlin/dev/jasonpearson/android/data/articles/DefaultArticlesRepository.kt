@@ -216,7 +216,7 @@ class DefaultArticlesRepository(
         fetch: suspend () -> T,
     ): Result<Fetched<T>> {
         return if (refresh) {
-            contentCache.fetchFresh(key, encode, decode, fetch)
+            contentCache.fetchFresh(key, encode, fetch)
         } else {
             contentCache.fetchWithFallback(key, encode, decode, fetch)
         }
