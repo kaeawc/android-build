@@ -26,5 +26,10 @@ package dev.jasonpearson.android.data.talks
 import dev.jasonpearson.android.core.network.NetworkResult
 
 interface TalksRepository {
-    suspend fun talks(): NetworkResult<List<Talk>>
+    /**
+     * Loads the talks page. By default this is network-first with a fallback to the last cached
+     * copy. With [forceRefresh] (pull-to-refresh) the cache is bypassed: a failed fetch surfaces
+     * its error instead of returning stale data, and a successful one replaces the cached copy.
+     */
+    suspend fun talks(forceRefresh: Boolean = false): NetworkResult<List<Talk>>
 }

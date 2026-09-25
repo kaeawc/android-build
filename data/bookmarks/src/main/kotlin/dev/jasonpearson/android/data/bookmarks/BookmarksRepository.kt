@@ -34,4 +34,10 @@ interface BookmarksRepository {
     suspend fun toggle(article: Article)
 
     suspend fun remove(slug: String)
+
+    /**
+     * Re-adds a previously removed [bookmark] with its original saved time, so it returns to the
+     * same position in the newest-first list. A no-op if the slug is already bookmarked.
+     */
+    suspend fun restore(bookmark: Bookmark)
 }

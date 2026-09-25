@@ -94,6 +94,46 @@ class DefaultBookmarksRepositoryTest {
         assertEquals(setOf("one", "two"), repository.bookmarks.first().map(Bookmark::slug).toSet())
     }
 
+    @Test
+    fun `restore after remove returns the bookmark to its original position`() = runTest {
+        val clock = FakeClock(Instant.fromEpochMilliseconds(100))
+        val repository = repository(clock = clock)
+        repository.toggle(article("oldest"))
+        clock.instant = Instant.fromEpochMilliseconds(200)
+        repository.toggle(article("middle"))
+        clock.instant = Instant.fromEpochMilliseconds(300)
+        repository.toggle(article("newest"))
+        val removed = repository.bookmarks.first().single { it.slug == "middle" }
+
+        repository.remove("middle")
+        assertEquals(listOf("newest", "oldest"), repository.bookmarks.first().map(Bookmark::slug))
+
+        // Undo happens later than every save; the original timestamp must win over "now".
+        clock.instant = Instant.fromEpochMilliseconds(10_000)
+        repository.restore(removed)
+
+        val restored = repository.bookmarks.first()
+        assertEquals(listOf("newest", "middle", "oldest"), restored.map(Bookmark::slug))
+        assertEquals(removed, restored[1])
+    }
+
+    @Test
+    fun `restore keeps a bookmark that was re-saved before undo`() = runTest {
+        val clock = FakeClock(Instant.fromEpochMilliseconds(100))
+        val repository = repository(clock = clock)
+        repository.toggle(article("one"))
+        val removed = repository.bookmarks.first().single()
+        repository.remove("one")
+        clock.instant = Instant.fromEpochMilliseconds(500)
+        repository.toggle(article("one"))
+
+        repository.restore(removed)
+
+        val bookmarks = repository.bookmarks.first()
+        assertEquals(1, bookmarks.size)
+        assertEquals(500L, bookmarks.single().savedAtEpochMillis)
+    }
+
     private fun repository(
         store: InMemoryKeyValueStore = InMemoryKeyValueStore(),
         clock: FakeClock = FakeClock(Instant.fromEpochMilliseconds(1_000)),

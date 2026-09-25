@@ -25,11 +25,18 @@ package dev.jasonpearson.android.client.github.api
 
 import dev.jasonpearson.android.client.github.dto.GitHubRepoDto
 import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.Path
 import retrofit2.http.Query
 
+/**
+ * Every call returns the raw [Response] so callers can read `ETag` and rate-limit headers, and so a
+ * `304 Not Modified` (which doesn't count against the unauthenticated 60/hour limit) isn't thrown
+ * as an error. Pass the cached ETag as `ifNoneMatch`; `null` omits the header.
+ */
 interface GitHubApi {
 
     @Headers(value = ["User-Agent: kaeawc-portfolio-app", "Accept: application/vnd.github+json"])
@@ -39,11 +46,16 @@ interface GitHubApi {
         @Query("sort") sort: String = "updated",
         @Query("per_page") perPage: Int = 100,
         @Query("type") type: String = "owner",
-    ): List<GitHubRepoDto>
+        @Header("If-None-Match") ifNoneMatch: String? = null,
+    ): Response<List<GitHubRepoDto>>
 
     @Headers(value = ["User-Agent: kaeawc-portfolio-app", "Accept: application/vnd.github+json"])
     @GET("repos/{owner}/{repo}")
-    suspend fun getRepo(@Path("owner") owner: String, @Path("repo") repo: String): GitHubRepoDto
+    suspend fun getRepo(
+        @Path("owner") owner: String,
+        @Path("repo") repo: String,
+        @Header("If-None-Match") ifNoneMatch: String? = null,
+    ): Response<GitHubRepoDto>
 
     @Headers(
         value = ["User-Agent: kaeawc-portfolio-app", "Accept: application/vnd.github.html+json"]
@@ -52,5 +64,6 @@ interface GitHubApi {
     suspend fun getReadmeHtml(
         @Path("owner") owner: String,
         @Path("repo") repo: String,
-    ): ResponseBody
+        @Header("If-None-Match") ifNoneMatch: String? = null,
+    ): Response<ResponseBody>
 }

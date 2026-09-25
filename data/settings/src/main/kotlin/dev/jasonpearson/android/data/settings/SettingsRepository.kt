@@ -33,4 +33,10 @@ interface SettingsRepository {
     suspend fun setDynamicColor(enabled: Boolean)
 
     suspend fun setAnalyticsEnabled(enabled: Boolean)
+
+    /** Bytes held by the offline content cache, or null when the size can't be determined. */
+    suspend fun cacheSizeBytes(): Long?
+
+    /** Clears the offline content cache. Bookmarks and settings are kept. */
+    suspend fun clearCache()
 }

@@ -25,7 +25,6 @@ package dev.jasonpearson.android.feature.articles.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,7 +34,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,11 +45,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -60,6 +58,9 @@ import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.model.SearchEntry
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.articles.ArticlesRepository
+import dev.jasonpearson.android.foundation.designsystem.components.EmptyContent
+import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
+import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -85,14 +86,16 @@ fun ArticleSearchScreen(
 ) {
     var query by remember { mutableStateOf("") }
     var state by remember { mutableStateOf<SearchUiState>(SearchUiState.Idle) }
+    // Bumped by Retry to re-run the current query.
+    var attempt by remember { mutableIntStateOf(0) }
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
     LaunchedEffect(repository) {
-        snapshotFlow { query }
+        snapshotFlow { query to attempt }
             .distinctUntilChanged()
             .debounce(250)
-            .collectLatest { currentQuery ->
+            .collectLatest { (currentQuery, _) ->
                 if (currentQuery.isBlank()) {
                     state = SearchUiState.Idle
                 } else {
@@ -130,20 +133,12 @@ fun ArticleSearchScreen(
             )
             when (val currentState = state) {
                 SearchUiState.Idle -> Unit
-                SearchUiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is SearchUiState.Error -> {
-                    Text(
-                        text = currentState.message,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                }
+                SearchUiState.Loading -> LoadingContent()
+                is SearchUiState.Error ->
+                    ErrorContent(message = currentState.message, onRetry = { attempt++ })
                 is SearchUiState.Results -> {
                     if (currentState.entries.isEmpty()) {
-                        Text("No articles found", modifier = Modifier.padding(16.dp))
+                        EmptyContent("No articles found")
                     } else {
                         LazyColumn(
                             contentPadding = PaddingValues(16.dp),

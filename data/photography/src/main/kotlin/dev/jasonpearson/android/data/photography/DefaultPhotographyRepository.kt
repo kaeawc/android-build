@@ -33,8 +33,6 @@ import dev.jasonpearson.android.subsystem.storage.fetchWithFallback
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @ContributesBinding(AppScope::class)
@@ -46,16 +44,33 @@ class DefaultPhotographyRepository(
     private val json: Json = Json { ignoreUnknownKeys = true },
 ) : PhotographyRepository {
 
-    override suspend fun photos(): NetworkResult<List<GalleryPhoto>> = networkResult {
-        contentCache
-            .fetchWithFallback(
-                key = "photography:gallery",
-                encode = { json.encodeToString(ListSerializer(GalleryPhoto.serializer()), it) },
-                decode = { json.decodeFromString(ListSerializer(GalleryPhoto.serializer()), it) },
-            ) {
-                parseGallery(ghost.getPage("photography").html)
+    private val serializer = ListSerializer(GalleryPhoto.serializer())
+
+    override suspend fun photos(forceRefresh: Boolean): NetworkResult<List<GalleryPhoto>> =
+        networkResult {
+            if (forceRefresh) {
+                contentCache.fetchFresh(
+                    key = CACHE_KEY,
+                    encode = { json.encodeToString(serializer, it) },
+                    fetch = ::fetchPhotos,
+                )
+            } else {
+                contentCache
+                    .fetchWithFallback(
+                        key = CACHE_KEY,
+                        encode = { json.encodeToString(serializer, it) },
+                        decode = { json.decodeFromString(serializer, it) },
+                        fetch = ::fetchPhotos,
+                    )
+                    .getOrThrow()
+                    .value
             }
-            .getOrThrow()
-            .value
+        }
+
+    private suspend fun fetchPhotos(): List<GalleryPhoto> =
+        parseGallery(ghost.getPage("photography").html)
+
+    private companion object {
+        const val CACHE_KEY = "photography:gallery"
     }
 }

@@ -48,12 +48,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -70,45 +75,98 @@ import dev.jasonpearson.android.data.about.AboutProfile
 import dev.jasonpearson.android.data.about.AboutRepository
 import dev.jasonpearson.android.data.about.ExperienceEntry
 import dev.jasonpearson.android.data.about.SocialLinks
+import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlText
+import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
     repository: AboutRepository,
     modifier: Modifier = Modifier,
     onSettingsClick: () -> Unit = {},
 ) {
-    val state by
-        produceState<AboutUiState>(AboutUiState.Loading, repository) {
-            val profileResult = repository.profile()
-            val pageResult = repository.aboutPage()
-            value =
-                when (pageResult) {
-                    is NetworkResult.Success -> {
-                        val profile =
-                            when (profileResult) {
-                                is NetworkResult.Success -> profileResult.data
-                                is NetworkResult.Failure -> fallbackProfile()
-                            }
-                        AboutUiState.Content(
-                            profile = profile,
-                            page = pageResult.data,
-                            experience = repository.experience(),
-                        )
+    val context = LocalContext.current
+    var state by remember(repository) { mutableStateOf<AboutUiState>(AboutUiState.Loading) }
+    var loadRequest by remember(repository) { mutableIntStateOf(0) }
+    var isRefreshing by remember(repository) { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(repository, loadRequest) {
+        val loaded = loadAbout(repository)
+        isRefreshing = false
+        // A failed refresh keeps the page already on screen.
+        if (loaded is AboutUiState.Error && state is AboutUiState.Content) {
+            snackbarHostState.showSnackbar(loaded.message)
+        } else {
+            state = loaded
+        }
+    }
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { Text("About") },
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
-                    is NetworkResult.Failure ->
-                        AboutUiState.Error(pageResult.error.message ?: "Failed to load")
+                },
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { innerPadding ->
+        when (val currentState = state) {
+            AboutUiState.Loading -> LoadingContent(Modifier.padding(innerPadding))
+            is AboutUiState.Error ->
+                ErrorContent(
+                    message = currentState.message,
+                    modifier = Modifier.padding(innerPadding),
+                    onRetry = {
+                        state = AboutUiState.Loading
+                        loadRequest++
+                    },
+                )
+            is AboutUiState.Content ->
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        isRefreshing = true
+                        loadRequest++
+                    },
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
+                ) {
+                    AboutContent(currentState, onOpenUrl = { openUrl(context, it) })
                 }
         }
+    }
+}
 
-    when (val currentState = state) {
-        AboutUiState.Loading -> LoadingContent(modifier)
-        is AboutUiState.Error -> ErrorContent(currentState.message, modifier)
-        is AboutUiState.Content -> AboutContent(currentState, modifier, onSettingsClick)
+/** Profile and page load in parallel; only the page is required, the profile has a fallback. */
+private suspend fun loadAbout(repository: AboutRepository): AboutUiState = coroutineScope {
+    val profileResult = async { repository.profile() }
+    val pageResult = async { repository.aboutPage() }
+    when (val page = pageResult.await()) {
+        is NetworkResult.Success -> {
+            val profile =
+                when (val result = profileResult.await()) {
+                    is NetworkResult.Success -> result.data
+                    is NetworkResult.Failure -> fallbackProfile()
+                }
+            AboutUiState.Content(
+                profile = profile,
+                page = page.data,
+                experience = repository.experience(),
+            )
+        }
+        is NetworkResult.Failure -> AboutUiState.Error(page.error.message ?: "Failed to load")
     }
 }
 
@@ -127,55 +185,19 @@ private fun fallbackProfile() =
     )
 
 @Composable
-private fun LoadingContent(modifier: Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
-private fun ErrorContent(message: String, modifier: Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = message)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AboutContent(
-    content: AboutUiState.Content,
-    modifier: Modifier,
-    onSettingsClick: () -> Unit,
-) {
-    val context = LocalContext.current
-
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text("About") },
-                actions = {
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                },
-            )
-        },
-    ) { innerPadding ->
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            ProfileHeader(content.profile)
-            HtmlText(html = content.page.html)
-            ExperienceSection(content.experience)
-            ConnectSection(content.profile, onOpenUrl = { openUrl(context, it) })
-            Spacer(modifier = Modifier.height(8.dp))
-        }
+private fun AboutContent(content: AboutUiState.Content, onOpenUrl: (String) -> Unit) {
+    Column(
+        modifier =
+            Modifier.fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        ProfileHeader(content.profile)
+        HtmlText(html = content.page.html)
+        ExperienceSection(content.experience)
+        ConnectSection(content.profile, onOpenUrl = onOpenUrl)
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 

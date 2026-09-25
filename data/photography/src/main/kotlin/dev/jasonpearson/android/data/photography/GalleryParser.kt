@@ -25,6 +25,7 @@ package dev.jasonpearson.android.data.photography
 
 import java.net.URI
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
 
 internal fun parseGallery(html: String): List<GalleryPhoto> {
     val seenSources = mutableSetOf<String>()
@@ -47,9 +48,20 @@ internal fun parseGallery(html: String): List<GalleryPhoto> {
                 width = image.attr("width").toIntOrNull(),
                 height = image.attr("height").toIntOrNull(),
                 takenOn = source.takenOn(),
+                caption = image.cardCaption(),
+                altText = image.attr("alt").trim().takeIf(String::isNotBlank),
             )
         }
 }
+
+/** The `<figcaption>` of the card holding this image, if it has a non-blank one. */
+private fun Element.cardCaption(): String? =
+    closest("figure")
+        ?.children()
+        ?.firstOrNull { it.normalName() == "figcaption" }
+        ?.text()
+        ?.trim()
+        ?.takeIf(String::isNotBlank)
 
 private data class SrcSetCandidate(val url: String, val width: Int)
 

@@ -28,19 +28,39 @@ import dev.jasonpearson.android.client.github.mapper.toProject
 import dev.jasonpearson.android.core.model.Project
 import dev.zacsweers.metro.Inject
 
+/**
+ * GitHub REST reads. Each call takes the ETag of the caller's cached copy: GitHub answers
+ * [Conditional.NotModified] (free against the rate limit) when nothing changed. Throws
+ * [GitHubRateLimitException] when the unauthenticated quota is exhausted.
+ */
 @Inject
 class GitHubDataSource(private val api: GitHubApi) {
-    suspend fun getProjects(user: String = "kaeawc"): List<Project> =
-        api.getRepos(user)
-            .asSequence()
-            .filterNot { it.fork || it.archived }
-            .map { it.toProject() }
-            .sortedByDescending { it.stars }
-            .toList()
+    suspend fun getProjects(
+        etag: String? = null,
+        user: String = "kaeawc",
+    ): Conditional<List<Project>> =
+        api.getRepos(user, ifNoneMatch = etag).toConditional { repos ->
+            repos
+                .asSequence()
+                .filterNot { it.fork || it.archived }
+                .map { it.toProject() }
+                .sortedByDescending { it.stars }
+                .toList()
+        }
 
-    suspend fun getProject(name: String, owner: String = "kaeawc"): Project =
-        api.getRepo(owner, name).toProject()
+    suspend fun getProject(
+        name: String,
+        etag: String? = null,
+        owner: String = "kaeawc",
+    ): Conditional<Project> =
+        api.getRepo(owner, name, ifNoneMatch = etag).toConditional { it.toProject() }
 
-    suspend fun getReadmeHtml(name: String, owner: String = "kaeawc"): String =
-        api.getReadmeHtml(owner, name).use { it.string() }
+    suspend fun getReadmeHtml(
+        name: String,
+        etag: String? = null,
+        owner: String = "kaeawc",
+    ): Conditional<String> =
+        api.getReadmeHtml(owner, name, ifNoneMatch = etag).toConditional { body ->
+            body.use { it.string() }
+        }
 }

@@ -26,5 +26,11 @@ package dev.jasonpearson.android.data.photography
 import dev.jasonpearson.android.core.network.NetworkResult
 
 interface PhotographyRepository {
-    suspend fun photos(): NetworkResult<List<GalleryPhoto>>
+    /**
+     * Loads the photography gallery. By default this is network-first with a fallback to the last
+     * cached copy. With [forceRefresh] (pull-to-refresh) the cache is bypassed: a failed fetch
+     * surfaces its error instead of returning stale data, and a successful one replaces the cached
+     * copy.
+     */
+    suspend fun photos(forceRefresh: Boolean = false): NetworkResult<List<GalleryPhoto>>
 }

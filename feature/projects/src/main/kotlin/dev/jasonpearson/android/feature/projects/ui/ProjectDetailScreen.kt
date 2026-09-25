@@ -25,7 +25,6 @@ package dev.jasonpearson.android.feature.projects.ui
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,15 +48,19 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.core.model.Project
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.projects.ProjectsRepository
+import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
 import dev.jasonpearson.android.foundation.designsystem.components.HtmlText
+import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,12 +72,16 @@ fun ProjectDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    var projectAttempt by remember(repository, name) { mutableIntStateOf(0) }
+    var readmeAttempt by remember(repository, name) { mutableIntStateOf(0) }
     val projectResult by
-        produceState<NetworkResult<Project>?>(null, repository, name) {
+        produceState<NetworkResult<Project>?>(null, repository, name, projectAttempt) {
+            value = null
             value = repository.project(name)
         }
     val readmeResult by
-        produceState<NetworkResult<String>?>(null, repository, name) {
+        produceState<NetworkResult<String>?>(null, repository, name, readmeAttempt) {
+            value = null
             value = repository.readme(name)
         }
     val project =
@@ -107,20 +114,16 @@ fun ProjectDetailScreen(
         },
     ) { innerPadding ->
         when (val currentProject = projectResult) {
-            null ->
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
+            null -> LoadingContent(Modifier.padding(innerPadding))
             is NetworkResult.Failure ->
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text("Couldn't load this project")
-                }
+                ErrorContent(
+                    message = "Couldn't load this project",
+                    modifier = Modifier.padding(innerPadding),
+                    onRetry = {
+                        projectAttempt++
+                        if (readmeResult is NetworkResult.Failure) readmeAttempt++
+                    },
+                )
             is NetworkResult.Success ->
                 Column(
                     modifier =
@@ -139,8 +142,11 @@ fun ProjectDetailScreen(
                             HtmlText(html = readme.data, modifier = Modifier.fillMaxWidth())
                         is NetworkResult.Failure -> {
                             Text("Couldn't load the README")
-                            Button(onClick = { openUrl(context, loadedProject.url) }) {
-                                Text("Open on GitHub")
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(onClick = { openUrl(context, loadedProject.url) }) {
+                                    Text("Open on GitHub")
+                                }
+                                TextButton(onClick = { readmeAttempt++ }) { Text("Retry") }
                             }
                         }
                     }
@@ -157,12 +163,13 @@ private fun ProjectHeader(project: Project) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             project.description?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
-            val metadata = buildList {
-                add("★ ${project.stars}")
-                project.language?.let(::add)
-                project.updatedAt?.let { add("Updated ${it.toString().take(10)}") }
+            ProjectMetadata(project, topicLimit = 0, style = MaterialTheme.typography.bodyMedium)
+            project.updatedAt?.let {
+                Text(
+                    "Updated ${it.toString().take(10)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             }
-            Text(metadata.joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
             if (project.topics.isNotEmpty()) {
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),

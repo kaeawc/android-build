@@ -88,5 +88,66 @@ class GalleryParserTest {
         assertEquals(1200, photos[2].width)
         assertEquals(1800, photos[2].height)
         assertNull(photos[2].takenOn)
+        assertNull(photos[2].caption)
+        assertNull(photos[2].altText)
+    }
+
+    @Test
+    fun `captions come from the card and alt text from the image`() {
+        val html =
+            """
+            <figure class="kg-card kg-gallery-card kg-card-hascaption">
+              <div class="kg-gallery-container"><div class="kg-gallery-row">
+                <div class="kg-gallery-image"><img src="https://example.com/a.jpg" alt="Harbor at dusk"></div>
+                <div class="kg-gallery-image"><img src="https://example.com/b.jpg" alt=" "></div>
+              </div></div>
+              <figcaption><span style="white-space: pre-wrap;">Trip to </span><b>Maine</b></figcaption>
+            </figure>
+            <figure class="kg-card kg-image-card kg-card-hascaption">
+              <img src="https://example.com/c.jpg" alt="">
+              <figcaption>   </figcaption>
+            </figure>
+            <figure class="kg-card kg-image-card">
+              <a href="https://example.com/c-large.jpg"><img src="https://example.com/d.jpg" alt="Linked"></a>
+              <figcaption>Single shot</figcaption>
+            </figure>
+            """
+                .trimIndent()
+
+        val photos = parseGallery(html)
+
+        assertEquals(
+            listOf("Trip to Maine", "Trip to Maine", null, "Single shot"),
+            photos.map { it.caption },
+        )
+        assertEquals(listOf("Harbor at dusk", null, null, "Linked"), photos.map { it.altText })
+    }
+
+    @Test
+    fun `images without a usable source are skipped`() {
+        val html =
+            """
+            <figure class="kg-card kg-image-card"><img alt="no src"></figure>
+            <figure class="kg-card kg-image-card"><img src="" alt="blank"></figure>
+            <figure class="kg-card kg-image-card"><img src="/content/images/relative.jpg"></figure>
+            <figure class="kg-card kg-image-card">
+              <img src="https://example.com/ok.jpg" width="wide" height="" srcset="not a srcset, https://example.com/x.jpg 0w">
+            </figure>
+            <p><img src="https://example.com/not-a-card.jpg"></p>
+            """
+                .trimIndent()
+
+        val photos = parseGallery(html)
+
+        assertEquals(1, photos.size)
+        assertEquals("https://example.com/ok.jpg", photos[0].thumbUrl)
+        assertEquals("https://example.com/ok.jpg", photos[0].fullUrl)
+        assertNull(photos[0].width)
+        assertNull(photos[0].height)
+    }
+
+    @Test
+    fun `empty page has no photos`() {
+        assertEquals(emptyList<GalleryPhoto>(), parseGallery(""))
     }
 }

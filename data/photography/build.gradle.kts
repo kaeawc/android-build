@@ -42,4 +42,5 @@ dependencies {
     implementation(libs.metro.runtime)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

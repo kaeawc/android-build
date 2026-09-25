@@ -25,21 +25,16 @@ package dev.jasonpearson.android.feature.articles.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -50,8 +45,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -71,30 +68,20 @@ fun ArticlesListScreen(
     onSearchClick: () -> Unit = {},
     onSavedClick: () -> Unit = {},
 ) {
-    val state by
-        produceState<ArticlesUiState>(ArticlesUiState.Loading, repository) {
-            value =
-                when (val r = repository.articles()) {
-                    is NetworkResult.Success -> ArticlesUiState.Content(r.data)
-                    is NetworkResult.Failure ->
-                        ArticlesUiState.Error(r.error.message ?: "Failed to load")
-                }
+    val paginator =
+        rememberArticlesPaginator(repository) { page, refresh ->
+            repository.articlesPage(page, refresh = refresh)
         }
+    // Bumped by pull-to-refresh and Retry so the featured row and tag chips reload too.
+    var headerGeneration by remember { mutableIntStateOf(0) }
     val featured by
-        produceState<List<Article>>(emptyList(), repository) {
-            value =
-                when (val result = repository.featured()) {
-                    is NetworkResult.Success -> result.data
-                    is NetworkResult.Failure -> emptyList()
-                }
+        produceState<List<Article>>(emptyList(), repository, headerGeneration) {
+            // A failed reload keeps whatever was already showing.
+            (repository.featured() as? NetworkResult.Success)?.let { value = it.data }
         }
     val tags by
-        produceState<List<Tag>>(emptyList(), repository) {
-            value =
-                when (val result = repository.tags()) {
-                    is NetworkResult.Success -> result.data
-                    is NetworkResult.Failure -> emptyList()
-                }
+        produceState<List<Tag>>(emptyList(), repository, headerGeneration) {
+            (repository.tags() as? NetworkResult.Success)?.let { value = it.data }
         }
 
     Scaffold(
@@ -113,36 +100,41 @@ fun ArticlesListScreen(
             )
         },
     ) { paddingValues ->
-        when (val currentState = state) {
-            ArticlesUiState.Loading -> LoadingContent(Modifier.padding(paddingValues))
-            is ArticlesUiState.Error ->
-                ErrorContent(currentState.message, Modifier.padding(paddingValues))
-            is ArticlesUiState.Content -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    if (featured.isNotEmpty()) {
-                        item(key = "featured") {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                items(featured, key = Article::id) { article ->
-                                    Card(
-                                        modifier =
-                                            Modifier.fillParentMaxWidth().clickable {
-                                                onArticleClick(article.slug)
-                                            }
+        PagedArticles(
+            paginator = paginator,
+            onArticleClick = onArticleClick,
+            emptyMessage = "No articles yet",
+            modifier = Modifier.padding(paddingValues),
+            onRefresh = { headerGeneration++ },
+        ) {
+            if (featured.isNotEmpty()) {
+                item(key = "featured") {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        items(featured, key = Article::id) { article ->
+                            Card(
+                                modifier =
+                                    Modifier.fillParentMaxWidth().clickable {
+                                        onArticleClick(article.slug)
+                                    }
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    NetworkImage(
+                                        url = article.featureImageUrl,
+                                        contentDescription = article.title,
+                                        modifier = Modifier.fillMaxWidth().height(220.dp),
+                                    )
+                                    Column(
+                                        modifier = Modifier.padding(16.dp),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
-                                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            NetworkImage(
-                                                url = article.featureImageUrl,
-                                                contentDescription = article.title,
-                                                modifier = Modifier.fillMaxWidth().height(220.dp),
-                                            )
+                                        Text(
+                                            text = article.title,
+                                            style = MaterialTheme.typography.titleLarge,
+                                        )
+                                        article.readingTimeMinutes?.let { minutes ->
                                             Text(
-                                                text = article.title,
-                                                style = MaterialTheme.typography.titleLarge,
-                                                modifier = Modifier.padding(16.dp),
+                                                text = readingTimeLabel(minutes),
+                                                style = MaterialTheme.typography.bodySmall,
                                             )
                                         }
                                     }
@@ -150,21 +142,18 @@ fun ArticlesListScreen(
                             }
                         }
                     }
-                    if (tags.isNotEmpty()) {
-                        item(key = "tags") {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(tags, key = Tag::id) { tag ->
-                                    FilterChip(
-                                        selected = false,
-                                        onClick = { onTagClick(tag.slug) },
-                                        label = { Text("${tag.name} ${tag.postCount}") },
-                                    )
-                                }
-                            }
+                }
+            }
+            if (tags.isNotEmpty()) {
+                item(key = "tags") {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(tags, key = Tag::id) { tag ->
+                            FilterChip(
+                                selected = false,
+                                onClick = { onTagClick(tag.slug) },
+                                label = { Text("${tag.name} ${tag.postCount}") },
+                            )
                         }
-                    }
-                    items(currentState.articles, key = Article::id) { article ->
-                        ArticleCard(article = article, onClick = { onArticleClick(article.slug) })
                     }
                 }
             }
@@ -172,19 +161,7 @@ fun ArticlesListScreen(
     }
 }
 
-@Composable
-private fun LoadingContent(modifier: Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
-private fun ErrorContent(message: String, modifier: Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = message)
-    }
-}
+internal fun readingTimeLabel(minutes: Int): String = "$minutes min read"
 
 @Composable
 internal fun ArticleCard(article: Article, onClick: () -> Unit) {
@@ -213,7 +190,7 @@ internal fun ArticleCard(article: Article, onClick: () -> Unit) {
                 article.tags
                     .takeIf { it.isNotEmpty() }
                     ?.let { tags -> add(tags.joinToString { it.name }) }
-                article.readingTimeMinutes?.let { minutes -> add("$minutes min read") }
+                article.readingTimeMinutes?.let { minutes -> add(readingTimeLabel(minutes)) }
             }
             if (metadata.isNotEmpty()) {
                 Text(

@@ -44,4 +44,23 @@ interface ArticlesRepository {
     suspend fun search(query: String): NetworkResult<List<SearchEntry>>
 
     suspend fun adjacent(slug: String): NetworkResult<Pair<Article?, Article?>>
+
+    /**
+     * One page (1-based) of the newest-first article list, narrowed to [tagSlug] when given. A
+     * [refresh] goes straight to the network and reports its failure instead of serving the offline
+     * cache.
+     *
+     * The default serves everything as a single page, for implementations without paging.
+     */
+    suspend fun articlesPage(
+        page: Int,
+        tagSlug: String? = null,
+        refresh: Boolean = false,
+    ): NetworkResult<ArticlesPage> {
+        if (page > FIRST_PAGE) return NetworkResult.Success(ArticlesPage(emptyList(), page, null))
+        return when (val result = if (tagSlug == null) articles() else articlesByTag(tagSlug)) {
+            is NetworkResult.Success -> NetworkResult.Success(ArticlesPage(result.data, page, null))
+            is NetworkResult.Failure -> result
+        }
+    }
 }

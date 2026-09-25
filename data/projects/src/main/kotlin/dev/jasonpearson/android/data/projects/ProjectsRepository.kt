@@ -26,12 +26,17 @@ package dev.jasonpearson.android.data.projects
 import dev.jasonpearson.android.core.model.Project
 import dev.jasonpearson.android.core.network.NetworkResult
 
+/**
+ * GitHub-backed projects. Reads revalidate the offline cache with ETags; [forceRefresh] (e.g.
+ * pull-to-refresh) skips revalidation and always downloads a fresh copy.
+ */
 interface ProjectsRepository {
-    suspend fun projects(): NetworkResult<List<Project>>
+    suspend fun projects(forceRefresh: Boolean = false): NetworkResult<List<Project>>
 
-    suspend fun overview(): NetworkResult<ProjectsOverview>
+    suspend fun overview(forceRefresh: Boolean = false): NetworkResult<ProjectsOverview>
 
-    suspend fun project(name: String): NetworkResult<Project>
+    suspend fun project(name: String, forceRefresh: Boolean = false): NetworkResult<Project>
 
-    suspend fun readme(name: String): NetworkResult<String>
+    /** README HTML with relative image and link URLs resolved against the repo. */
+    suspend fun readme(name: String, forceRefresh: Boolean = false): NetworkResult<String>
 }

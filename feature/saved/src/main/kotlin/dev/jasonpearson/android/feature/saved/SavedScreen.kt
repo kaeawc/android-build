@@ -23,8 +23,10 @@
  */
 package dev.jasonpearson.android.feature.saved
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -38,27 +40,52 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxState
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.data.bookmarks.Bookmark
 import dev.jasonpearson.android.data.bookmarks.BookmarksRepository
+import dev.jasonpearson.android.foundation.designsystem.components.EmptyContent
+import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
+import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 import java.time.Instant
 import java.time.ZoneId
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+
+private sealed interface SavedUiState {
+    data object Loading : SavedUiState
+
+    data class Loaded(val bookmarks: List<Bookmark>) : SavedUiState
+
+    data object Error : SavedUiState
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,8 +95,31 @@ fun SavedScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val bookmarks by repository.bookmarks.collectAsState(initial = emptyList())
+    var reloadKey by remember { mutableIntStateOf(0) }
+    // Starts in Loading (not an empty list) so the empty state never flashes before the first read.
+    val state by
+        produceState<SavedUiState>(SavedUiState.Loading, repository, reloadKey) {
+            value = SavedUiState.Loading
+            repository.bookmarks
+                .catch { value = SavedUiState.Error }
+                .collect { bookmarks -> value = SavedUiState.Loaded(bookmarks) }
+        }
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val removeWithUndo: (Bookmark) -> Unit = { bookmark ->
+        coroutineScope.launch {
+            repository.remove(bookmark.slug)
+            // A newer removal replaces the pending Undo; the replaced one resolves as Dismissed.
+            snackbarHostState.currentSnackbarData?.dismiss()
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = "Removed from saved",
+                    actionLabel = "Undo",
+                    duration = SnackbarDuration.Short,
+                )
+            if (result == SnackbarResult.ActionPerformed) repository.restore(bookmark)
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -83,35 +133,84 @@ fun SavedScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { contentPadding ->
-        if (bookmarks.isEmpty()) {
-            Column(
-                modifier =
-                    Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text("No saved articles yet", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Save an article to read it here later.",
-                    style = MaterialTheme.typography.bodyMedium,
+        when (val current = state) {
+            SavedUiState.Loading -> LoadingContent(Modifier.padding(contentPadding))
+            SavedUiState.Error ->
+                ErrorContent(
+                    message = "Couldn't load saved articles",
+                    modifier = Modifier.padding(contentPadding),
+                    onRetry = { reloadKey++ },
                 )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(contentPadding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(bookmarks, key = Bookmark::slug) { bookmark ->
-                    SavedBookmarkCard(
-                        bookmark = bookmark,
-                        onClick = { onArticleClick(bookmark.slug) },
-                        onRemove = { coroutineScope.launch { repository.remove(bookmark.slug) } },
+            is SavedUiState.Loaded ->
+                if (current.bookmarks.isEmpty()) {
+                    // The saved AutoMobile plan asserts this exact text.
+                    EmptyContent("No saved articles yet", Modifier.padding(contentPadding))
+                } else {
+                    SavedList(
+                        bookmarks = current.bookmarks,
+                        contentPadding = contentPadding,
+                        onArticleClick = onArticleClick,
+                        onRemove = removeWithUndo,
                     )
                 }
+        }
+    }
+}
+
+@Composable
+private fun SavedList(
+    bookmarks: List<Bookmark>,
+    contentPadding: PaddingValues,
+    onArticleClick: (String) -> Unit,
+    onRemove: (Bookmark) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(contentPadding),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        // The repository emits newest-saved first.
+        items(bookmarks, key = Bookmark::slug) { bookmark ->
+            // Keyed by slug, so an undone item comes back with a fresh, un-swiped state.
+            val dismissState = rememberSwipeToDismissBoxState()
+            SwipeToDismissBox(
+                state = dismissState,
+                backgroundContent = { DismissBackground(dismissState) },
+                modifier = Modifier.animateItem(),
+                onDismiss = { onRemove(bookmark) },
+            ) {
+                SavedBookmarkCard(
+                    bookmark = bookmark,
+                    onClick = { onArticleClick(bookmark.slug) },
+                    onRemove = { onRemove(bookmark) },
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun DismissBackground(state: SwipeToDismissBoxState) {
+    val alignment =
+        when (state.dismissDirection) {
+            SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+            else -> Alignment.CenterEnd
+        }
+    Box(
+        modifier =
+            Modifier.fillMaxSize()
+                .clip(CardDefaults.shape)
+                .background(MaterialTheme.colorScheme.errorContainer)
+                .padding(horizontal = 24.dp),
+        contentAlignment = alignment,
+    ) {
+        Icon(
+            Icons.Filled.Delete,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onErrorContainer,
+        )
     }
 }
 

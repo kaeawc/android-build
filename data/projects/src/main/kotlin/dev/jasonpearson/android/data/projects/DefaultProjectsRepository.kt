@@ -30,12 +30,13 @@ import dev.jasonpearson.android.core.model.Project
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.subsystem.storage.ContentCache
 import dev.jasonpearson.android.subsystem.storage.Fetched
-import dev.jasonpearson.android.subsystem.storage.fetchWithFallback
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
+
+internal const val GITHUB_OWNER = "kaeawc"
 
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
@@ -48,10 +49,12 @@ class DefaultProjectsRepository(
 
     private val projectListSerializer = ListSerializer(CachedProject.serializer())
 
-    override suspend fun projects(): NetworkResult<List<Project>> =
+    override suspend fun projects(forceRefresh: Boolean): NetworkResult<List<Project>> =
         contentCache
-            .fetchWithFallback(
+            .fetchConditional(
                 key = "projects:list",
+                json = json,
+                forceRefresh = forceRefresh,
                 encode = { projects: List<Project> ->
                     json.encodeToString(
                         projectListSerializer,
@@ -63,19 +66,19 @@ class DefaultProjectsRepository(
                         .decodeFromString(projectListSerializer, cached)
                         .map(CachedProject::toProject)
                 },
-                fetch = { github.getProjects() },
+                fetch = { etag -> github.getProjects(etag = etag, user = GITHUB_OWNER) },
             )
             .toNetworkResult()
 
-    override suspend fun overview(): NetworkResult<ProjectsOverview> =
-        when (val all = projects()) {
+    override suspend fun overview(forceRefresh: Boolean): NetworkResult<ProjectsOverview> =
+        when (val all = projects(forceRefresh)) {
             is NetworkResult.Failure -> all
             is NetworkResult.Success -> {
                 val namesInList = all.data.map(Project::name).toSet()
                 val extraPinned =
                     PINNED.filterNot { it in namesInList }
                         .mapNotNull { name ->
-                            when (val result = project(name)) {
+                            when (val result = project(name, forceRefresh)) {
                                 is NetworkResult.Success -> result.data
                                 is NetworkResult.Failure -> null
                             }
@@ -84,29 +87,37 @@ class DefaultProjectsRepository(
             }
         }
 
-    override suspend fun project(name: String): NetworkResult<Project> =
+    override suspend fun project(name: String, forceRefresh: Boolean): NetworkResult<Project> =
         contentCache
-            .fetchWithFallback(
+            .fetchConditional(
                 key = "projects:repo:$name",
+                json = json,
+                forceRefresh = forceRefresh,
                 encode = { project: Project ->
                     json.encodeToString(CachedProject.serializer(), project.toCachedProject())
                 },
                 decode = { cached ->
                     json.decodeFromString(CachedProject.serializer(), cached).toProject()
                 },
-                fetch = { github.getProject(name) },
+                fetch = { etag -> github.getProject(name, etag = etag, owner = GITHUB_OWNER) },
             )
             .toNetworkResult()
 
-    override suspend fun readme(name: String): NetworkResult<String> =
+    override suspend fun readme(name: String, forceRefresh: Boolean): NetworkResult<String> =
         contentCache
-            .fetchWithFallback(
+            .fetchConditional(
                 key = "projects:readme:$name",
+                json = json,
+                forceRefresh = forceRefresh,
                 // The HTML is a plain JSON string so quotes and line breaks round-trip safely.
                 encode = { html: String -> json.encodeToString(String.serializer(), html) },
                 decode = { cached -> json.decodeFromString(String.serializer(), cached) },
-                fetch = { github.getReadmeHtml(name) },
+                fetch = { etag -> github.getReadmeHtml(name, etag = etag, owner = GITHUB_OWNER) },
             )
+            // Resolved on read (not before caching) so copies cached by older builds are fixed too.
+            .map { fetched ->
+                fetched.copy(value = resolveReadmeUrls(fetched.value, GITHUB_OWNER, name))
+            }
             .toNetworkResult()
 }
 

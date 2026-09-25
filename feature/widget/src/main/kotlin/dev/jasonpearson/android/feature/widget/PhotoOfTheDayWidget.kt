@@ -27,7 +27,12 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.glance.ExperimentalGlanceApi
 import androidx.glance.GlanceId
@@ -36,16 +41,22 @@ import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.CircularProgressIndicator
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.provideContent
+import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.text.Text
+import androidx.glance.text.TextStyle
 import dev.jasonpearson.android.core.network.NetworkResult
+import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import java.net.URL
 import java.time.LocalDate
@@ -53,72 +64,69 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+internal class PhotoSnapshot(val bitmap: Bitmap, val takenOn: String?)
+
 @OptIn(ExperimentalGlanceApi::class)
 class PhotoOfTheDayWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val photo =
-            try {
-                val graph = (context.applicationContext as? WidgetGraphProvider)?.widgetGraph
-                when (val result = graph?.photographyRepository?.photos()) {
-                    is NetworkResult.Success ->
-                        result.data
-                            .takeIf { it.isNotEmpty() }
-                            ?.let { photos ->
-                                photos[photoIndexFor(LocalDate.now().dayOfYear, photos.size)]
-                            }
-                    else -> null
-                }
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Exception) {
-                null
-            }
-        val bitmap = photo?.let {
-            try {
-                loadBitmap(it.thumbUrl)
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Exception) {
-                null
-            }
-        }
-        val photographyIntent =
-            Intent(Intent.ACTION_VIEW, Uri.parse("jasonpearsondev://photography"))
-                .setPackage(context.packageName)
+        // Shared by every instance: they all show the same daily photo.
+        val snapshotFile =
+            WidgetSnapshotFile(File(context.cacheDir, "widgets/photo_of_the_day.snapshot"))
+        val lastGood = withContext(Dispatchers.IO) { snapshotFile.read()?.toPhotoSnapshot() }
+        val photographyIntent = deepLinkIntent(context, "photography")
 
         provideContent {
-            GlanceTheme {
-                if (bitmap != null) {
-                    Box(
-                        modifier =
-                            GlanceModifier.fillMaxSize()
-                                .clickable(actionStartActivity(photographyIntent)),
-                        contentAlignment = Alignment.BottomStart,
-                    ) {
-                        Image(
-                            provider = ImageProvider(bitmap),
-                            contentDescription = "Photo by Jason Pearson",
-                            contentScale = ContentScale.Crop,
-                            modifier = GlanceModifier.fillMaxSize(),
-                        )
-                        photo?.takenOn?.let { date ->
-                            Text(date, modifier = GlanceModifier.padding(8.dp), maxLines = 1)
-                        }
-                    }
-                } else {
-                    val modifier =
-                        if (photo != null) {
-                            GlanceModifier.fillMaxSize()
-                                .clickable(actionStartActivity(photographyIntent))
-                                .padding(12.dp)
-                        } else {
-                            GlanceModifier.fillMaxSize().padding(12.dp)
-                        }
-                    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-                        Text("Photo unavailable")
+            // Show the last good photo immediately; only a first-ever load shows a spinner.
+            var state by remember {
+                mutableStateOf(lastGood?.let { WidgetState.Content(it) } ?: WidgetState.Loading)
+            }
+            LaunchedEffect(Unit) {
+                state = nextWidgetState(fetchPhoto(context, snapshotFile), lastGood)
+            }
+            GlanceTheme { PhotoOfTheDayContent(state, photographyIntent) }
+        }
+    }
+
+    private suspend fun fetchPhoto(
+        context: Context,
+        snapshotFile: WidgetSnapshotFile,
+    ): Result<PhotoSnapshot?> =
+        try {
+            val graph =
+                (context.applicationContext as? WidgetGraphProvider)?.widgetGraph
+                    ?: throw IOException("Widget graph unavailable")
+            when (val result = graph.photographyRepository.photos()) {
+                is NetworkResult.Success -> {
+                    val photos = result.data
+                    if (photos.isEmpty()) {
+                        Result.success(null)
+                    } else {
+                        val photo = photos[photoIndexFor(LocalDate.now().dayOfYear, photos.size)]
+                        val bitmap = loadBitmap(photo.thumbUrl)
+                        saveSnapshot(snapshotFile, bitmap, photo.takenOn)
+                        Result.success(PhotoSnapshot(bitmap, photo.takenOn))
                     }
                 }
+                is NetworkResult.Failure -> Result.failure(IOException("Photos unavailable"))
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    private suspend fun saveSnapshot(file: WidgetSnapshotFile, bitmap: Bitmap, takenOn: String?) {
+        try {
+            withContext(Dispatchers.IO) {
+                val bytes = ByteArrayOutputStream()
+                if (bitmap.compress(Bitmap.CompressFormat.JPEG, 90, bytes)) {
+                    file.write(takenOn, bytes.toByteArray())
+                }
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            // Best-effort: failing to persist must not hide the fresh photo.
         }
     }
 
@@ -145,3 +153,42 @@ class PhotoOfTheDayWidget : GlanceAppWidget() {
                 ?: throw IOException("Unable to decode photo")
         }
 }
+
+@Composable
+private fun PhotoOfTheDayContent(state: WidgetState<PhotoSnapshot>, intent: Intent) {
+    val modifier =
+        GlanceModifier.fillMaxSize()
+            .appWidgetBackground()
+            .background(GlanceTheme.colors.widgetBackground)
+            .clickable(actionStartActivity(intent))
+    val textStyle = TextStyle(color = GlanceTheme.colors.onSurface)
+    when (state) {
+        is WidgetState.Content ->
+            Box(modifier = modifier, contentAlignment = Alignment.BottomStart) {
+                Image(
+                    provider = ImageProvider(state.value.bitmap),
+                    contentDescription = "Photo by Jason Pearson",
+                    contentScale = ContentScale.Crop,
+                    modifier = GlanceModifier.fillMaxSize(),
+                )
+                state.value.takenOn?.let { date ->
+                    Text(date, modifier = GlanceModifier.padding(8.dp), maxLines = 1)
+                }
+            }
+        WidgetState.Loading ->
+            Box(modifier = modifier, contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        WidgetState.Empty ->
+            Box(modifier = modifier.padding(12.dp), contentAlignment = Alignment.Center) {
+                Text("No photos yet", style = textStyle)
+            }
+        WidgetState.Error ->
+            Box(modifier = modifier.padding(12.dp), contentAlignment = Alignment.Center) {
+                Text("Photo unavailable", style = textStyle)
+            }
+    }
+}
+
+private fun WidgetSnapshotFile.Snapshot.toPhotoSnapshot(): PhotoSnapshot? =
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.let { PhotoSnapshot(it, label) }

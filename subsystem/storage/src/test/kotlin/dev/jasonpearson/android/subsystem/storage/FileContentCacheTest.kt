@@ -91,4 +91,60 @@ class FileContentCacheTest {
         assertNull(cache.get("two"))
         assertTrue(File(directory, "cache").isDirectory)
     }
+
+    @Test
+    fun `sizeBytes is zero before first put and after clear`() = runTest {
+        val cache =
+            FileContentCache(
+                temporaryFolder.newFolder(),
+                FakeClock(Instant.parse("2025-01-02T03:04:05Z")),
+            )
+        assertEquals(0L, cache.sizeBytes())
+
+        cache.put("one", "first")
+        cache.clear()
+
+        assertEquals(0L, cache.sizeBytes())
+    }
+
+    @Test
+    fun `sizeBytes sums every cached entry`() = runTest {
+        val directory = temporaryFolder.newFolder()
+        val cache = FileContentCache(directory, FakeClock(Instant.parse("2025-01-02T03:04:05Z")))
+
+        cache.put("one", "first")
+        cache.put("two", "second-value")
+
+        val expected = File(directory, "cache").listFiles()!!.sumOf(File::length)
+        assertTrue(expected > 0)
+        assertEquals(expected, cache.sizeBytes())
+    }
+
+    @Test
+    fun `clear leaves the key value store in the same storage directory intact`() = runTest {
+        val directory = temporaryFolder.newFolder()
+        val cache = FileContentCache(directory, FakeClock(Instant.parse("2025-01-02T03:04:05Z")))
+        val store = DataStoreKeyValueStore(directory)
+        try {
+            store.put("bookmarks.v1", "[]")
+            store.put("settings.theme_mode", "Dark")
+            cache.put("articles:all", "cached")
+
+            cache.clear()
+
+            assertNull(cache.get("articles:all"))
+            assertEquals("[]", store.get("bookmarks.v1"))
+            assertEquals("Dark", store.get("settings.theme_mode"))
+        } finally {
+            store.close()
+        }
+
+        // The persisted preferences file survives too, not just the in-memory DataStore snapshot.
+        val reopened = DataStoreKeyValueStore(directory)
+        try {
+            assertEquals("Dark", reopened.get("settings.theme_mode"))
+        } finally {
+            reopened.close()
+        }
+    }
 }

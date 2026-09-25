@@ -32,5 +32,9 @@ public interface ContentCache {
 
     public suspend fun put(key: String, value: String)
 
+    /** Removes every cached entry. Must not touch the [KeyValueStore] (bookmarks, settings). */
     public suspend fun clear()
+
+    /** Total bytes currently held by the cache, or null when the implementation can't tell. */
+    public suspend fun sizeBytes(): Long? = null
 }

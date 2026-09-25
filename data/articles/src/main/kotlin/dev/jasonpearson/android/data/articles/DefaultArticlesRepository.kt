@@ -24,16 +24,21 @@
 package dev.jasonpearson.android.data.articles
 
 import dev.jasonpearson.android.client.ghost.GhostDataSource
+import dev.jasonpearson.android.client.ghost.api.GhostContentApi
+import dev.jasonpearson.android.client.ghost.mapper.toArticle
 import dev.jasonpearson.android.core.di.AppScope
+import dev.jasonpearson.android.core.di.GhostContentKey
 import dev.jasonpearson.android.core.di.SingleIn
 import dev.jasonpearson.android.core.model.Article
 import dev.jasonpearson.android.core.model.SearchEntry
 import dev.jasonpearson.android.core.model.Tag
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.subsystem.storage.ContentCache
+import dev.jasonpearson.android.subsystem.storage.Fetched
 import dev.jasonpearson.android.subsystem.storage.fetchWithFallback
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.decodeFromString
@@ -45,6 +50,8 @@ import kotlinx.serialization.json.Json
 @Inject
 class DefaultArticlesRepository(
     private val ghost: GhostDataSource,
+    private val api: GhostContentApi,
+    @GhostContentKey private val contentKey: String,
     private val contentCache: ContentCache,
     private val json: Json,
 ) : ArticlesRepository {
@@ -52,21 +59,62 @@ class DefaultArticlesRepository(
     private var searchIndex: List<SearchEntry>? = null
 
     override suspend fun articles(): NetworkResult<List<Article>> =
-        cached("articles:all", ::encodeArticles, ::decodeArticles) { ghost.getAllArticles() }
+        cached("articles:all", ::encodeArticles, ::decodeArticles) {
+            ghost.getAllArticles().map(Article::withReadingTime)
+        }
 
     override suspend fun article(slug: String): NetworkResult<Article> =
         cached(
             "articles:detail:$slug",
             { json.encodeToString(it.toCacheModel()) },
-            { json.decodeFromString<CachedArticle>(it).toArticle() },
+            { json.decodeFromString<CachedArticle>(it).toArticle().withReadingTime() },
         ) {
-            ghost.getArticle(slug)
+            ghost.getArticle(slug).withReadingTime()
         }
 
     override suspend fun featured(): NetworkResult<List<Article>> =
         cached("articles:featured", ::encodeArticles, ::decodeArticles) {
-            ghost.getFeaturedArticles()
+            ghost.getFeaturedArticles().map(Article::withReadingTime)
         }
+
+    override suspend fun articlesPage(
+        page: Int,
+        tagSlug: String?,
+        refresh: Boolean,
+    ): NetworkResult<ArticlesPage> {
+        require(page >= FIRST_PAGE) { "Pages are 1-based: $page" }
+        // New posts should become searchable after a pull-to-refresh, not only after a restart.
+        if (refresh) searchIndexMutex.withLock { searchIndex = null }
+        return fetched(
+                key = "articles:page:${tagSlug ?: "all"}:$PAGE_SIZE:$page",
+                encode = { json.encodeToString(it.toCacheModel()) },
+                decode = { value ->
+                    val cachedPage =
+                        json.decodeFromString<CachedArticlesPage>(value).toArticlesPage()
+                    cachedPage.copy(articles = cachedPage.articles.map(Article::withReadingTime))
+                },
+                refresh = refresh,
+            ) {
+                val response =
+                    api.getPostsPage(
+                        key = contentKey,
+                        filter = tagSlug?.let { "tag:$it" },
+                        page = page,
+                        limit = PAGE_SIZE,
+                    )
+                val pagination = response.meta?.pagination
+                ArticlesPage(
+                    articles = response.posts.map { it.toArticle().withReadingTime() },
+                    page = page,
+                    nextPage = pagination?.next,
+                    total = pagination?.total,
+                )
+            }
+            .fold(
+                onSuccess = { NetworkResult.Success(it.value.copy(fromCache = it.fromCache)) },
+                onFailure = { NetworkResult.Failure(it) },
+            )
+    }
 
     override suspend fun tags(): NetworkResult<List<Tag>> =
         when (
@@ -90,12 +138,12 @@ class DefaultArticlesRepository(
 
     override suspend fun articlesByTag(slug: String): NetworkResult<List<Article>> =
         cached("articles:tag:$slug", ::encodeArticles, ::decodeArticles) {
-            ghost.getArticlesByTag(slug)
+            ghost.getArticlesByTag(slug).map(Article::withReadingTime)
         }
 
     override suspend fun related(article: Article): NetworkResult<List<Article>> =
         cached("articles:related:${article.id}", ::encodeArticles, ::decodeArticles) {
-            ghost.getRelatedArticles(article)
+            ghost.getRelatedArticles(article).map(Article::withReadingTime)
         }
 
     override suspend fun search(query: String): NetworkResult<List<SearchEntry>> {
@@ -141,7 +189,7 @@ class DefaultArticlesRepository(
         json.encodeToString(articles.map(Article::toCacheModel))
 
     private fun decodeArticles(value: String): List<Article> =
-        json.decodeFromString<List<CachedArticle>>(value).map(CachedArticle::toArticle)
+        json.decodeFromString<List<CachedArticle>>(value).map { it.toArticle().withReadingTime() }
 
     private suspend fun <T : Any> cached(
         key: String,
@@ -149,10 +197,44 @@ class DefaultArticlesRepository(
         decode: (String) -> T,
         fetch: suspend () -> T,
     ): NetworkResult<T> =
-        contentCache
-            .fetchWithFallback(key, encode, decode, fetch)
+        fetched(key, encode, decode, refresh = false, fetch)
             .fold(
                 onSuccess = { NetworkResult.Success(it.value) },
                 onFailure = { NetworkResult.Failure(it) },
             )
+
+    /**
+     * Network-first with offline fallback; a [refresh] is network-only, so a failed pull-to-refresh
+     * surfaces its error rather than quietly re-serving the cached copy. Either way a fresh value
+     * replaces the cached one.
+     */
+    private suspend fun <T : Any> fetched(
+        key: String,
+        encode: (T) -> String,
+        decode: (String) -> T,
+        refresh: Boolean,
+        fetch: suspend () -> T,
+    ): Result<Fetched<T>> {
+        if (!refresh) return contentCache.fetchWithFallback(key, encode, decode, fetch)
+        return try {
+            val fresh = fetch()
+            try {
+                contentCache.put(key, encode(fresh))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Best-effort, as in fetchWithFallback: a failed write must not fail the refresh.
+            }
+            Result.success(Fetched(fresh, fromCache = false))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    companion object {
+        /** Posts per page; small enough that the first page renders quickly on a slow network. */
+        const val PAGE_SIZE = 15
+    }
 }
