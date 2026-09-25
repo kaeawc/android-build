@@ -88,6 +88,9 @@ public class RootProjects internal constructor(private val handler: DependencyHa
     public val core: CoreProjects
         get() = CoreProjects(handler)
 
+    public val data: DataProjects
+        get() = DataProjects(handler)
+
     public val foundation: FoundationProjects
         get() = FoundationProjects(handler)
 
@@ -104,6 +107,23 @@ public class ClientProjects internal constructor(private val handler: Dependency
 
     public val ghost: ModuleDependency
         get() = handler.swappable(":client:ghost")
+}
+
+public class DataProjects internal constructor(private val handler: DependencyHandler) {
+    public val about: ModuleDependency
+        get() = handler.swappable(":data:about")
+
+    public val articles: ModuleDependency
+        get() = handler.swappable(":data:articles")
+
+    public val photography: ModuleDependency
+        get() = handler.swappable(":data:photography")
+
+    public val projects: ModuleDependency
+        get() = handler.swappable(":data:projects")
+
+    public val talks: ModuleDependency
+        get() = handler.swappable(":data:talks")
 }
 
 public class CoreProjects internal constructor(private val handler: DependencyHandler) {

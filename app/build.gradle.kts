@@ -41,6 +41,10 @@ moduleGraphAssert {
         arrayOf(
             ":app -> :.*",
             ":client:.* -> :core:.*",
+            ":data:.* -> :client:.*",
+            ":data:.* -> :core:.*",
+            ":data:.* -> :subsystem:.*",
+            ":feature:.* -> :data:.*",
             ":feature:.* -> :client:.*",
             ":feature:.* -> :core:.*",
             ":feature:.* -> :subsystem:.*",
