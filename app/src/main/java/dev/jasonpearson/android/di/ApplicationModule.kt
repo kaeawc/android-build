@@ -24,19 +24,28 @@
 package dev.jasonpearson.android.di
 
 import android.app.Application
+import android.util.Log
 import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.GhostApiUrl
 import dev.jasonpearson.android.core.di.GhostContentKey
 import dev.jasonpearson.android.core.di.SingleIn
 import dev.jasonpearson.android.core.di.StorageDirectory
 import dev.jasonpearson.android.core.network.DebugBuild
+import dev.jasonpearson.android.data.settings.SettingsRepository
+import dev.jasonpearson.android.subsystem.analytics.AnalyticsConsent
+import dev.jasonpearson.android.subsystem.analytics.AnalyticsSink
+import dev.jasonpearson.android.subsystem.experimentation.InstallId
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Qualifier
 import java.io.File
+import java.util.UUID
 import kotlin.annotation.AnnotationRetention.BINARY
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 @ContributesTo(AppScope::class)
 interface ApplicationModule {
@@ -61,6 +70,40 @@ interface ApplicationModule {
         @Provides
         @StorageDirectory
         fun provideStorageDirectory(application: Application): File = application.filesDir
+
+        /**
+         * Backs analytics consent with the persisted opt-out. Starts disabled so no event is sent
+         * before the user's choice has loaded.
+         */
+        @Provides
+        @SingleIn(AppScope::class)
+        fun provideAnalyticsConsent(
+            settings: SettingsRepository,
+            scope: BackgroundAppCoroutineScope,
+        ): AnalyticsConsent {
+            val enabled =
+                settings.settings
+                    .map { it.analyticsEnabled }
+                    .stateIn(scope, SharingStarted.Eagerly, false)
+            return AnalyticsConsent { enabled.value }
+        }
+
+        @Provides
+        fun provideAnalyticsSink(): AnalyticsSink = AnalyticsSink { event ->
+            Log.d("Analytics", "${event.name} ${event.params}")
+        }
+
+        /**
+         * A random per-install id (never a device identifier) used only for experiment bucketing.
+         */
+        @Provides
+        @SingleIn(AppScope::class)
+        @InstallId
+        fun provideInstallId(@StorageDirectory directory: File): String {
+            val file = File(directory, "install_id")
+            return file.takeIf { it.exists() }?.readText()?.trim()?.takeIf { it.isNotEmpty() }
+                ?: UUID.randomUUID().toString().also { file.writeText(it) }
+        }
 
         @Provides
         @DebugBuild

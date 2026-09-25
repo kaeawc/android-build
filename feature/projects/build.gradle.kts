@@ -38,9 +38,13 @@ dependencies {
     implementation(projects.core.network)
     implementation(projects.data.projects)
     implementation(projects.foundation.designsystem)
+    implementation(projects.subsystem.analytics)
+    implementation(projects.subsystem.experimentation)
     implementation(libs.bundles.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material.icons)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.metro.runtime)
+
+    testImplementation(libs.junit)
 }

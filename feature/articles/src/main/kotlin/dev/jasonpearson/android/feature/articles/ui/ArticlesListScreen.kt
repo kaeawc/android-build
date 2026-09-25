@@ -36,6 +36,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -65,9 +66,10 @@ import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 fun ArticlesListScreen(
     repository: ArticlesRepository,
     onArticleClick: (slug: String) -> Unit,
+    modifier: Modifier = Modifier,
     onTagClick: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
+    onSavedClick: () -> Unit = {},
 ) {
     val state by
         produceState<ArticlesUiState>(ArticlesUiState.Loading, repository) {
@@ -101,6 +103,9 @@ fun ArticlesListScreen(
             TopAppBar(
                 title = { Text("Articles") },
                 actions = {
+                    IconButton(onClick = onSavedClick) {
+                        Icon(Icons.Filled.Bookmarks, contentDescription = "Saved")
+                    }
                     IconButton(onClick = onSearchClick) {
                         Icon(Icons.Filled.Search, contentDescription = "Search")
                     }

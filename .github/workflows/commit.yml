@@ -373,6 +373,22 @@ jobs:
           reuse-configuration-cache: false
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
+      - name: "Dump app launch diagnostics on failure"
+        if: failure()
+        shell: "bash"
+        run: |
+          echo "::group::crash buffer"
+          adb logcat -d -b crash || true
+          echo "::endgroup::"
+          echo "::group::direct launch"
+          adb shell am start -W -n dev.jasonpearson.android/.MainActivity || true
+          sleep 5
+          adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
+          echo "::endgroup::"
+          echo "::group::logcat (AndroidRuntime / app)"
+          adb logcat -d -b main,system,crash | grep -iE "AndroidRuntime|FATAL|jasonpearson|ActivityTaskManager" | tail -n 300 || true
+          echo "::endgroup::"
+
       - name: "Stop emulator.wtf session and daemon"
         if: always()
         shell: "bash"

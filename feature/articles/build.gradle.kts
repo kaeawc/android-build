@@ -37,6 +37,7 @@ dependencies {
     implementation(projects.core.model)
     implementation(projects.core.network)
     implementation(projects.data.articles)
+    implementation(projects.data.bookmarks)
     implementation(projects.foundation.designsystem)
     implementation(libs.bundles.compose.ui)
     implementation(libs.compose.foundation)

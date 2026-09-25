@@ -44,6 +44,9 @@ class AppLaunchAutoMobileTest {
     fun `app launches without crashing`() {
         val result = AutoMobilePlan(planPath = "test-plans/launch-app.yaml").execute()
 
-        assertTrue(result.success)
+        assertTrue(
+            "Plan failed: ${result.errorMessage}\n${result.output.take(4000)}",
+            result.success,
+        )
     }
 }

@@ -24,6 +24,7 @@
 package dev.jasonpearson.android.foundation.designsystem.theme
 
 import android.os.Build
+import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -35,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 
 /** Whether this platform version supports Material You dynamic color. */
 val supportsDynamicColor: Boolean
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.S)
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
 private val LightColors =

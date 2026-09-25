@@ -29,10 +29,15 @@ import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.SingleIn
 import dev.jasonpearson.android.data.about.AboutRepository
 import dev.jasonpearson.android.data.articles.ArticlesRepository
+import dev.jasonpearson.android.data.bookmarks.BookmarksRepository
 import dev.jasonpearson.android.data.photography.PhotographyRepository
 import dev.jasonpearson.android.data.projects.ProjectsRepository
 import dev.jasonpearson.android.data.settings.SettingsRepository
 import dev.jasonpearson.android.data.talks.TalksRepository
+import dev.jasonpearson.android.feature.widget.WidgetGraph
+import dev.jasonpearson.android.subsystem.analytics.AnalyticsClient
+import dev.jasonpearson.android.subsystem.analytics.ScreenTracker
+import dev.jasonpearson.android.subsystem.experimentation.ExperimentRepository
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 
@@ -49,7 +54,7 @@ import dev.zacsweers.metro.Provides
  */
 @DependencyGraph(scope = AppScope::class)
 @SingleIn(AppScope::class)
-internal interface AppGraph {
+internal interface AppGraph : WidgetGraph {
 
     /** Injects dependencies into the Application class. Called during app initialization. */
     fun inject(application: App)
@@ -64,9 +69,13 @@ internal interface AppGraph {
     // Note: In a larger app, consider using subcomponents instead of exposing everything
     val application: Application
     val aboutRepository: AboutRepository
-    val articlesRepository: ArticlesRepository
-    val photographyRepository: PhotographyRepository
+    override val articlesRepository: ArticlesRepository
+    val bookmarksRepository: BookmarksRepository
+    override val photographyRepository: PhotographyRepository
     val projectsRepository: ProjectsRepository
     val settingsRepository: SettingsRepository
     val talksRepository: TalksRepository
+    val screenTracker: ScreenTracker
+    val analyticsClient: AnalyticsClient
+    val experimentRepository: ExperimentRepository
 }
