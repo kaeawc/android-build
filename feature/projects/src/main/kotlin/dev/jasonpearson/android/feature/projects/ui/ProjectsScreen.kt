@@ -26,7 +26,6 @@ package dev.jasonpearson.android.feature.projects.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -39,24 +38,26 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -64,11 +65,17 @@ import dev.jasonpearson.android.core.model.Project
 import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.projects.ProjectsRepository
 import dev.jasonpearson.android.feature.projects.ProjectsExperiments
+import dev.jasonpearson.android.foundation.designsystem.components.EmptyContent
+import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
+import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
 import dev.jasonpearson.android.foundation.designsystem.util.openUrl
 import dev.jasonpearson.android.subsystem.analytics.AnalyticsClient
 import dev.jasonpearson.android.subsystem.analytics.AnalyticsEvent
 import dev.jasonpearson.android.subsystem.experimentation.ExperimentRepository
 import dev.jasonpearson.android.subsystem.experimentation.Treatment
+
+/** Each new value re-runs the load; [forceRefresh] bypasses the ETag-revalidated cache. */
+private data class LoadRequest(val id: Int = 0, val forceRefresh: Boolean = false)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,90 +100,132 @@ fun ProjectsScreen(
         )
     }
     var selectedLanguage by remember { mutableStateOf<String?>(null) }
-    val state by
-        produceState<ProjectsUiState>(ProjectsUiState.Loading, repository) {
-            value =
-                when (val result = repository.overview()) {
-                    is NetworkResult.Success -> ProjectsUiState.Content(result.data)
-                    is NetworkResult.Failure ->
-                        ProjectsUiState.Error(result.error.message ?: "Failed to load")
-                }
-        }
+    var state by remember(repository) { mutableStateOf<ProjectsUiState>(ProjectsUiState.Loading) }
+    var request by remember(repository) { mutableStateOf(LoadRequest()) }
+    var isRefreshing by remember(repository) { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Scaffold(modifier = modifier, topBar = { TopAppBar(title = { Text("Projects") }) }) {
-        innerPadding ->
+    LaunchedEffect(repository, request) {
+        val result = repository.overview(forceRefresh = request.forceRefresh)
+        isRefreshing = false
+        when (result) {
+            is NetworkResult.Success -> state = ProjectsUiState.Content(result.data)
+            is NetworkResult.Failure -> {
+                val message = result.error.message ?: "Failed to load"
+                // A failed refresh keeps the projects already on screen.
+                if (state is ProjectsUiState.Content) snackbarHostState.showSnackbar(message)
+                else state = ProjectsUiState.Error(message)
+            }
+        }
+    }
+
+    Scaffold(
+        modifier = modifier,
+        topBar = { TopAppBar(title = { Text("Projects") }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { innerPadding ->
         when (val currentState = state) {
             ProjectsUiState.Loading -> LoadingContent(Modifier.padding(innerPadding))
             is ProjectsUiState.Error ->
-                ErrorContent(currentState.message, Modifier.padding(innerPadding))
-            is ProjectsUiState.Content -> {
-                val overview = currentState.overview
-                val pinned =
-                    overview.pinned.filter {
-                        selectedLanguage == null || it.language == selectedLanguage
-                    }
-                val filteredOthers =
-                    overview.others.filter {
-                        selectedLanguage == null || it.language == selectedLanguage
-                    }
-                val others = sortOthers(filteredOthers, treatment)
-                LazyColumn(
+                ErrorContent(
+                    message = currentState.message,
+                    modifier = Modifier.padding(innerPadding),
+                    onRetry = {
+                        state = ProjectsUiState.Loading
+                        request = LoadRequest(request.id + 1)
+                    },
+                )
+            is ProjectsUiState.Content ->
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        isRefreshing = true
+                        request = LoadRequest(request.id + 1, forceRefresh = true)
+                    },
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    item(key = "filters") {
-                        Row(
-                            modifier =
-                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            FilterChip(
-                                selected = selectedLanguage == null,
-                                onClick = { selectedLanguage = null },
-                                label = { Text("All") },
-                            )
-                            overview.languages.forEach { language ->
-                                FilterChip(
-                                    selected = selectedLanguage == language,
-                                    onClick = { selectedLanguage = language },
-                                    label = { Text(language) },
-                                )
-                            }
-                        }
-                    }
-                    item(key = "pinned_header") { SectionHeader("Pinned") }
-                    items(pinned, key = { "pinned_${it.id}" }) { project ->
-                        ProjectCard(project, pinned = true) {
+                    ProjectsContent(
+                        content = currentState,
+                        selectedLanguage = selectedLanguage,
+                        onSelectLanguage = { selectedLanguage = it },
+                        treatment = treatment,
+                        onOpen = { project ->
                             analytics?.track(
                                 AnalyticsEvent("project_open", mapOf("name" to project.name))
                             )
                             if (onProjectClick != null) onProjectClick(project.name)
                             else openUrl(context, project.url)
-                        }
-                    }
-                    item(key = "all_header") {
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            SectionHeader("All projects")
-                            Text(
-                                text =
-                                    if (treatment == Treatment.CONTROL) "Sorted by stars"
-                                    else "Sorted by recently updated",
-                                style = MaterialTheme.typography.labelSmall,
-                            )
-                        }
-                    }
-                    items(others, key = { "other_${it.id}" }) { project ->
-                        ProjectCard(project, pinned = false) {
-                            analytics?.track(
-                                AnalyticsEvent("project_open", mapOf("name" to project.name))
-                            )
-                            if (onProjectClick != null) onProjectClick(project.name)
-                            else openUrl(context, project.url)
-                        }
-                    }
+                        },
+                    )
+                }
+        }
+    }
+}
+
+@Composable
+private fun ProjectsContent(
+    content: ProjectsUiState.Content,
+    selectedLanguage: String?,
+    onSelectLanguage: (String?) -> Unit,
+    treatment: Treatment,
+    onOpen: (Project) -> Unit,
+) {
+    val data = content.overview
+    if (data.pinned.isEmpty() && data.others.isEmpty()) {
+        // Scrollable so the pull-to-refresh gesture still works on an empty list.
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            item(key = "empty") {
+                EmptyContent("No projects to show yet", Modifier.fillParentMaxSize())
+            }
+        }
+        return
+    }
+    val pinned = data.pinned.filter { selectedLanguage == null || it.language == selectedLanguage }
+    val filteredOthers =
+        data.others.filter { selectedLanguage == null || it.language == selectedLanguage }
+    val others = sortOthers(filteredOthers, treatment)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item(key = "filters") {
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(
+                    selected = selectedLanguage == null,
+                    onClick = { onSelectLanguage(null) },
+                    label = { Text("All") },
+                )
+                data.languages.forEach { language ->
+                    FilterChip(
+                        selected = selectedLanguage == language,
+                        onClick = { onSelectLanguage(language) },
+                        label = { Text(language) },
+                        leadingIcon = { LanguageDot(language) },
+                    )
                 }
             }
+        }
+        item(key = "pinned_header") { SectionHeader("Pinned") }
+        items(pinned, key = { "pinned_${it.id}" }) { project ->
+            ProjectCard(project, pinned = true) { onOpen(project) }
+        }
+        item(key = "all_header") {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                SectionHeader("All projects")
+                Text(
+                    text =
+                        if (treatment == Treatment.CONTROL) "Sorted by stars"
+                        else "Sorted by recently updated",
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+        }
+        items(others, key = { "other_${it.id}" }) { project ->
+            ProjectCard(project, pinned = false) { onOpen(project) }
         }
     }
 }
@@ -195,20 +244,6 @@ internal fun sortOthers(others: List<Project>, treatment: Treatment): List<Proje
 @Composable
 private fun SectionHeader(title: String) {
     Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
-private fun ErrorContent(message: String, modifier: Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = message)
-    }
 }
 
 @Composable
@@ -243,12 +278,39 @@ private fun ProjectCard(project: Project, pinned: Boolean, onClick: () -> Unit) 
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            val metadata = buildList {
-                add("★ ${project.stars}")
-                project.language?.let(::add)
-                project.topics.take(3).takeIf { it.isNotEmpty() }?.let { add(it.joinToString()) }
-            }
-            Text(text = metadata.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+            ProjectMetadata(project)
         }
+    }
+}
+
+/** `★ stars · ● Language · topics`, with the dot in the language's GitHub color. */
+@Composable
+internal fun ProjectMetadata(
+    project: Project,
+    topicLimit: Int = 3,
+    style: TextStyle = MaterialTheme.typography.bodySmall,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text = "★ ${project.stars}", style = style)
+        project.language?.let { language ->
+            Text(text = "·", style = style)
+            LanguageDot(language)
+            Text(text = language, style = style)
+        }
+        project.topics
+            .take(topicLimit)
+            .takeIf { it.isNotEmpty() }
+            ?.let { topics ->
+                Text(text = "·", style = style)
+                Text(
+                    text = topics.joinToString(),
+                    style = style,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
     }
 }
