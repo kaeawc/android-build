@@ -147,8 +147,10 @@ private fun AppRoot(
     // SaveableStateProvider. Only the current tab is composed. A hidden tab's NavDisplay leaves
     // composition without popping anything, so its entry decorators and every entry's saveable
     // state (LazyList scroll, rememberSaveable) are saved under the tab's key and restored when
-    // the tab returns. Stack depth, scroll position and loaded state therefore survive tab
-    // switches and configuration changes.
+    // the tab returns. Stack depth and saveable state therefore survive tab switches and
+    // configuration changes. Loaded data does not: screens hold it in remember/produceState, so a
+    // returning tab refetches (network-first) until screens move data into ViewModels, which the
+    // hoisted decorators below would then retain.
     val stacks = AppDestination.topLevel.associateWith { rememberNavBackStack(it) }
     val tabStates = rememberSaveableStateHolder()
     // Hoisted out of the per-tab provider: a ViewModelStore provider clears every store when it

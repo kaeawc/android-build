@@ -171,7 +171,7 @@ fun PhotographyScreen(repository: PhotographyRepository, modifier: Modifier = Mo
         ?.takeIf { it in photos.indices }
         ?.let { index ->
             GalleryViewer(
-                photos = photos,
+                gallery = photos,
                 initialPage = index,
                 onDismiss = { selectedPhotoIndex = null },
             )
@@ -216,7 +216,10 @@ private fun PhotoGrid(photos: List<GalleryPhoto>, onPhotoClick: (Int) -> Unit) {
 }
 
 @Composable
-private fun GalleryViewer(photos: List<GalleryPhoto>, initialPage: Int, onDismiss: () -> Unit) {
+private fun GalleryViewer(gallery: List<GalleryPhoto>, initialPage: Int, onDismiss: () -> Unit) {
+    // Snapshot the gallery while the viewer is open: a pull-to-refresh landing with fewer photos
+    // would otherwise index past the end before the pager clamps its current page.
+    val photos = remember { gallery }
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { photos.size })
     var scale by remember { mutableFloatStateOf(1f) }
     var translation by remember { mutableStateOf(Offset.Zero) }
