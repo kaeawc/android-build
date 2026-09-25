@@ -68,3 +68,29 @@ public suspend fun <T : Any> ContentCache.fetchWithFallback(
         }
         if (decoded != null) Result.success<Fetched<T>>(decoded) else Result.failure<Fetched<T>>(e)
     }
+
+/**
+ * Network-only refresh. This stays separate from [fetchWithFallback] so existing callers retain
+ * their offline fallback behavior; refresh failures never read or modify the cache.
+ */
+public suspend fun <T : Any> ContentCache.fetchFresh(
+    key: String,
+    encode: (T) -> String,
+    decode: (String) -> T,
+    fetch: suspend () -> T,
+): Result<Fetched<T>> =
+    try {
+        val fresh = fetch()
+        try {
+            put(key, encode(fresh))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Best-effort: a failed cache write must not fail a successful refresh.
+        }
+        Result.success(Fetched(fresh, fromCache = false))
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Result.failure(e)
+    }

@@ -35,10 +35,16 @@ class FetchWithFallbackTest {
 
     private class MapCache(var failWrites: Boolean = false) : ContentCache {
         val entries = mutableMapOf<String, CachedEntry>()
+        var reads = 0
+        var writes = 0
 
-        override suspend fun get(key: String): CachedEntry? = entries[key]
+        override suspend fun get(key: String): CachedEntry? {
+            reads++
+            return entries[key]
+        }
 
         override suspend fun put(key: String, value: String) {
+            writes++
             if (failWrites) throw IOException("disk full")
             entries[key] = CachedEntry(value, Instant.fromEpochMilliseconds(42))
         }
@@ -94,5 +100,34 @@ class FetchWithFallbackTest {
                 throw IOException("offline")
             }
         assertTrue(result.exceptionOrNull() is IOException)
+    }
+
+    @Test
+    fun `fresh refresh is returned and cached`() = runTest {
+        val cache = MapCache()
+        val result = cache.fetchFresh("k", { it }, { it }) { "fresh" }.getOrThrow()
+        assertEquals("fresh", result.value)
+        assertFalse(result.fromCache)
+        assertEquals("fresh", cache.entries["k"]?.value)
+        assertEquals(1, cache.writes)
+        assertEquals(0, cache.reads)
+    }
+
+    @Test
+    fun `failed refresh does not read or overwrite cached entry`() = runTest {
+        val cache =
+            MapCache().apply { entries["k"] = CachedEntry("old", Instant.fromEpochMilliseconds(7)) }
+        val failure = IOException("offline")
+        val result = cache.fetchFresh<String>("k", { it }, { it }) { throw failure }
+        assertTrue(result.exceptionOrNull() === failure)
+        assertEquals("old", cache.entries["k"]?.value)
+        assertEquals(0, cache.reads)
+        assertEquals(0, cache.writes)
+    }
+
+    @Test
+    fun `cache write failure does not fail successful refresh`() = runTest {
+        val result = MapCache(failWrites = true).fetchFresh("k", { it }, { it }) { "fresh" }
+        assertEquals("fresh", result.getOrThrow().value)
     }
 }
