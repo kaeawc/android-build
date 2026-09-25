@@ -63,9 +63,8 @@ public class FileContentCache(@StorageDirectory directory: File, private val clo
 
     override suspend fun put(key: String, value: String): Unit =
         withContext(Dispatchers.IO) {
-            check(cacheDirectory.isDirectory || cacheDirectory.mkdirs()) {
-                "Unable to create cache directory: $cacheDirectory"
-            }
+            // Idempotent and race-safe: concurrent first-launch puts may both create the directory.
+            Files.createDirectories(cacheDirectory.toPath())
             val temporary = Files.createTempFile(cacheDirectory.toPath(), "entry-", ".tmp")
             try {
                 Files.writeString(temporary, "${clock.now().toEpochMilliseconds()}\n$value")
@@ -82,7 +81,8 @@ public class FileContentCache(@StorageDirectory directory: File, private val clo
 
     override suspend fun clear(): Unit =
         withContext(Dispatchers.IO) {
-            cacheDirectory.listFiles()?.forEach { Files.delete(it.toPath()) }
+            // deleteIfExists: a concurrent put may move or remove its temp file mid-iteration.
+            cacheDirectory.listFiles()?.forEach { Files.deleteIfExists(it.toPath()) }
             Unit
         }
 
