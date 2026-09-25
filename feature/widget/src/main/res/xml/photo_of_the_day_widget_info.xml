@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Refreshes daily, matching the photo-of-the-day rotation. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:targetApi="s"
@@ -7,7 +8,7 @@
     android:targetCellWidth="3"
     android:targetCellHeight="3"
     android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="21600000"
+    android:updatePeriodMillis="86400000"
     android:widgetCategory="home_screen"
     android:description="@string/photo_of_the_day_widget_description"
     android:initialLayout="@layout/glance_default_loading_layout" />

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Refreshes every 3 hours (the system floors updatePeriodMillis at 30 minutes). -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:targetApi="s"
@@ -7,7 +8,7 @@
     android:targetCellWidth="4"
     android:targetCellHeight="2"
     android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="21600000"
+    android:updatePeriodMillis="10800000"
     android:widgetCategory="home_screen"
     android:description="@string/latest_article_widget_description"
     android:initialLayout="@layout/glance_default_loading_layout" />
