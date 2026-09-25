@@ -38,4 +38,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.metro.runtime)
     implementation(libs.retrofit)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
