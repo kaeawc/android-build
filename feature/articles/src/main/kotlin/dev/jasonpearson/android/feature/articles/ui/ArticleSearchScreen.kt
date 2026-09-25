@@ -44,39 +44,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.jasonpearson.android.core.model.SearchEntry
-import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.articles.ArticlesRepository
 import dev.jasonpearson.android.foundation.designsystem.components.EmptyContent
 import dev.jasonpearson.android.foundation.designsystem.components.ErrorContent
 import dev.jasonpearson.android.foundation.designsystem.components.LoadingContent
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 
-private sealed interface SearchUiState {
-    data object Idle : SearchUiState
-
-    data object Loading : SearchUiState
-
-    data class Results(val entries: List<SearchEntry>) : SearchUiState
-
-    data class Error(val message: String) : SearchUiState
-}
-
-@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArticleSearchScreen(
     repository: ArticlesRepository,
@@ -84,31 +67,11 @@ fun ArticleSearchScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var query by remember { mutableStateOf("") }
-    var state by remember { mutableStateOf<SearchUiState>(SearchUiState.Idle) }
-    // Bumped by Retry to re-run the current query.
-    var attempt by remember { mutableIntStateOf(0) }
+    val model = viewModel { ArticleSearchViewModel(repository) }
+    val query by model.query.collectAsState()
+    val state by model.state.collectAsState()
     val focusRequester = remember { FocusRequester() }
-
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
-    LaunchedEffect(repository) {
-        snapshotFlow { query to attempt }
-            .distinctUntilChanged()
-            .debounce(250)
-            .collectLatest { (currentQuery, _) ->
-                if (currentQuery.isBlank()) {
-                    state = SearchUiState.Idle
-                } else {
-                    state = SearchUiState.Loading
-                    state =
-                        when (val result = repository.search(currentQuery)) {
-                            is NetworkResult.Success -> SearchUiState.Results(result.data)
-                            is NetworkResult.Failure ->
-                                SearchUiState.Error(result.error.message ?: "Search failed")
-                        }
-                }
-            }
-    }
 
     Scaffold(
         modifier = modifier,
@@ -126,7 +89,7 @@ fun ArticleSearchScreen(
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             OutlinedTextField(
                 value = query,
-                onValueChange = { query = it },
+                onValueChange = model::setQuery,
                 label = { Text("Search articles") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(16.dp).focusRequester(focusRequester),
@@ -135,7 +98,7 @@ fun ArticleSearchScreen(
                 SearchUiState.Idle -> Unit
                 SearchUiState.Loading -> LoadingContent()
                 is SearchUiState.Error ->
-                    ErrorContent(message = currentState.message, onRetry = { attempt++ })
+                    ErrorContent(message = currentState.message, onRetry = model::retry)
                 is SearchUiState.Results -> {
                     if (currentState.entries.isEmpty()) {
                         EmptyContent("No articles found")

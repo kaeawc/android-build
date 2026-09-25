@@ -44,17 +44,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.jasonpearson.android.core.model.Article
 import dev.jasonpearson.android.core.model.Tag
-import dev.jasonpearson.android.core.network.NetworkResult
 import dev.jasonpearson.android.data.articles.ArticlesRepository
 import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 
@@ -68,21 +65,10 @@ fun ArticlesListScreen(
     onSearchClick: () -> Unit = {},
     onSavedClick: () -> Unit = {},
 ) {
-    val paginator =
-        rememberArticlesPaginator(repository) { page, refresh ->
-            repository.articlesPage(page, refresh = refresh)
-        }
-    // Bumped by pull-to-refresh and Retry so the featured row and tag chips reload too.
-    var headerGeneration by remember { mutableIntStateOf(0) }
-    val featured by
-        produceState<List<Article>>(emptyList(), repository, headerGeneration) {
-            // A failed reload keeps whatever was already showing.
-            (repository.featured() as? NetworkResult.Success)?.let { value = it.data }
-        }
-    val tags by
-        produceState<List<Tag>>(emptyList(), repository, headerGeneration) {
-            (repository.tags() as? NetworkResult.Success)?.let { value = it.data }
-        }
+    val model = viewModel { ArticlesListViewModel(repository) }
+    val state by model.state.collectAsState()
+    val featured = state.featured
+    val tags = state.tags
 
     Scaffold(
         modifier = modifier,
@@ -101,11 +87,13 @@ fun ArticlesListScreen(
         },
     ) { paddingValues ->
         PagedArticles(
-            paginator = paginator,
+            paginator = model.paginator,
             onArticleClick = onArticleClick,
             emptyMessage = "No articles yet",
             modifier = Modifier.padding(paddingValues),
-            onRefresh = { headerGeneration++ },
+            onRefresh = model::refresh,
+            onRetry = model::retry,
+            onLoadMore = model::loadMore,
         ) {
             if (featured.isNotEmpty()) {
                 item(key = "featured") {
