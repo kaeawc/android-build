@@ -44,6 +44,8 @@ sealed interface AppDestination : NavKey {
 
     @Serializable data object Search : AppDestination
 
+    @Serializable data object Saved : AppDestination
+
     @Serializable data class ProjectDetail(val name: String) : AppDestination
 
     @Serializable data object Settings : AppDestination

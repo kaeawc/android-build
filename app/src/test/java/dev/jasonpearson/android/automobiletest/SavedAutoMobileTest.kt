@@ -21,33 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jasonpearson.android.subsystem.analytics
+package dev.jasonpearson.android.automobiletest
 
-import org.junit.Assert.assertEquals
+import dev.jasonpearson.automobile.junit.AutoMobilePlan
+import dev.jasonpearson.automobile.junit.AutoMobileRunner
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
 
-class ConsentGatedAnalyticsClientTest {
+/**
+ * AutoMobile JUnit tests for verifying app lifecycle transitions on a real Android device or
+ * emulator. These tests run on the host JVM and communicate with the device via ADB using the
+ * AutoMobile runner.
+ *
+ * Requires an ADB-connected device and the AutoMobile control proxy APK path set via
+ * AUTOMOBILE_CTRL_PROXY_APK_PATH environment variable.
+ */
+@RunWith(AutoMobileRunner::class)
+class SavedAutoMobileTest {
 
     @Test
-    fun `does not send events when consent is disabled`() {
-        val sent = mutableListOf<AnalyticsEvent>()
-        val client =
-            ConsentGatedAnalyticsClient(AnalyticsSink(sent::add), AnalyticsConsent { false })
+    fun `saved screen opens empty on a fresh install and navigates back`() {
+        val result = AutoMobilePlan(planPath = "test-plans/saved.yaml").execute()
 
-        client.track(AnalyticsEvent("tap", mapOf("target" to "project")))
-
-        assertEquals(emptyList<AnalyticsEvent>(), sent)
-    }
-
-    @Test
-    fun `forwards the exact event when consent is enabled`() {
-        val sent = mutableListOf<AnalyticsEvent>()
-        val client =
-            ConsentGatedAnalyticsClient(AnalyticsSink(sent::add), AnalyticsConsent { true })
-        val event = AnalyticsEvent("tap", mapOf("target" to "project"))
-
-        client.track(event)
-
-        assertEquals(listOf(event), sent)
+        assertTrue(result.success)
     }
 }

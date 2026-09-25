@@ -27,19 +27,24 @@ import android.app.Application
 import dev.jasonpearson.android.debug.setupStrictMode
 import dev.jasonpearson.android.di.AppGraph
 import dev.jasonpearson.android.di.BackgroundAppCoroutineScope
+import dev.jasonpearson.android.feature.widget.WidgetGraph
+import dev.jasonpearson.android.feature.widget.WidgetGraphProvider
 import dev.jasonpearson.android.logging.Logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.createGraphFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class App : Application() {
+class App : Application(), WidgetGraphProvider {
 
     companion object {
         internal val TAG = App::class.simpleName!!
     }
 
     internal lateinit var appComponent: AppGraph
+
+    override val widgetGraph: WidgetGraph
+        get() = appComponent
 
     @Inject lateinit var backgroundScope: BackgroundAppCoroutineScope
 

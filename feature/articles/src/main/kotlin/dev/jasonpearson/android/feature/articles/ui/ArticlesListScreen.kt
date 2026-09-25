@@ -66,9 +66,9 @@ import dev.jasonpearson.android.foundation.designsystem.components.NetworkImage
 fun ArticlesListScreen(
     repository: ArticlesRepository,
     onArticleClick: (slug: String) -> Unit,
+    modifier: Modifier = Modifier,
     onTagClick: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
     onSavedClick: () -> Unit = {},
 ) {
     val state by

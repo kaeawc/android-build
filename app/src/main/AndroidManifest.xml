@@ -18,11 +18,34 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.Android">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- jasonpearson.dev links. Ghost(Pro) can't host assetlinks.json, so verification
+                 fails and Android 12+ users opt in via "Open supported links"; the app routes
+                 whatever it receives through DeepLinkRouter. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" />
+                <data android:host="www.jasonpearson.dev" />
+                <data android:host="jasonpearson.dev" />
+            </intent-filter>
+            <!-- In-app links, e.g. from the home-screen widgets: jasonpearsondev://article/<slug> -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="jasonpearsondev" />
             </intent-filter>
         </activity>
     </application>

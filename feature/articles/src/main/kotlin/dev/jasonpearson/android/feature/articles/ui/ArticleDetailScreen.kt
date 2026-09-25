@@ -79,8 +79,8 @@ fun ArticleDetailScreen(
     repository: ArticlesRepository,
     slug: String,
     onBack: () -> Unit,
-    onArticleClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
+    onArticleClick: (String) -> Unit = {},
     bookmarks: BookmarksRepository? = null,
 ) {
     val state by

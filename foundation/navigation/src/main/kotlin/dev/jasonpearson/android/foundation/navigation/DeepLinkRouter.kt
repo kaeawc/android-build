@@ -1,3 +1,26 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2026 Jason Pearson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 package dev.jasonpearson.android.foundation.navigation
 
 import java.net.URI
@@ -24,7 +47,8 @@ object DeepLinkRouter {
             AppDestination.Articles,
             is AppDestination.ArticleDetail,
             is AppDestination.Tag,
-            AppDestination.Search -> AppDestination.Articles
+            AppDestination.Search,
+            AppDestination.Saved -> AppDestination.Articles
             AppDestination.Talks -> AppDestination.Talks
             AppDestination.Projects,
             is AppDestination.ProjectDetail -> AppDestination.Projects
@@ -83,6 +107,9 @@ object DeepLinkRouter {
                 }
             "photography" -> if (segments.isEmpty()) listOf(AppDestination.Photography) else null
             "about" -> if (segments.isEmpty()) listOf(AppDestination.About) else null
+            "saved" ->
+                if (segments.isEmpty()) listOf(AppDestination.Articles, AppDestination.Saved)
+                else null
             "settings" ->
                 if (segments.isEmpty()) listOf(AppDestination.About, AppDestination.Settings)
                 else null
