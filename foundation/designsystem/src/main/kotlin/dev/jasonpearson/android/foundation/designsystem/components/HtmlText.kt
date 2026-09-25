@@ -52,8 +52,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -275,14 +276,15 @@ private fun InlineImage(image: InlineImageRef, context: Context) {
     val knownIntrinsicSize = intrinsicSize.takeIf {
         it.isSpecified && it.width > 0f && it.height > 0f
     }
-    val configuration = LocalConfiguration.current
+    val windowWidthDp =
+        with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp().value }
     val resolvedSize =
         resolveInlineImageSize(
             intrinsicWidth = knownIntrinsicSize?.width,
             intrinsicHeight = knownIntrinsicSize?.height,
             attributeWidth = image.width,
             attributeHeight = image.height,
-            maxWidthDp = configuration.screenWidthDp.toFloat(),
+            maxWidthDp = windowWidthDp,
         )
     var modifier: Modifier =
         resolvedSize?.let { size ->
