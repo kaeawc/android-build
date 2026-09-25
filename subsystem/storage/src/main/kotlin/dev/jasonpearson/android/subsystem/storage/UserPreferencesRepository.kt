@@ -23,23 +23,29 @@
  */
 package dev.jasonpearson.android.subsystem.storage
 
+import dev.jasonpearson.android.core.di.AppScope
+import dev.jasonpearson.android.core.di.SingleIn
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 
 /** User-facing preferences persisted through the [KeyValueStore]. */
 data class UserPreferences(val darkTheme: Boolean = false, val onboardingComplete: Boolean = false)
 
 /** Reads and writes [UserPreferences], mapping the typed model to/from string keys. */
-class UserPreferencesRepository(private val store: KeyValueStore) {
+@Inject
+@SingleIn(AppScope::class)
+public class UserPreferencesRepository(private val store: KeyValueStore) {
 
-    val preferences: Flow<UserPreferences> = store.let { s ->
-        s.observe(KEY_DARK_THEME).map { dark ->
+    val preferences: Flow<UserPreferences> =
+        combine(store.observe(KEY_DARK_THEME), store.observe(KEY_ONBOARDING_COMPLETE)) {
+            dark,
+            onboarding ->
             UserPreferences(
                 darkTheme = dark.toBoolean(),
-                onboardingComplete = s.get(KEY_ONBOARDING_COMPLETE).toBoolean(),
+                onboardingComplete = onboarding.toBoolean(),
             )
         }
-    }
 
     suspend fun setDarkTheme(enabled: Boolean) = store.put(KEY_DARK_THEME, enabled.toString())
 

@@ -26,7 +26,8 @@ package dev.jasonpearson.android.client.ghost.dto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Serializable data class GhostPostsResponse(val posts: List<GhostPostDto>)
+@Serializable
+data class GhostPostsResponse(val posts: List<GhostPostDto>, val meta: GhostMetaDto? = null)
 
 @Serializable data class GhostPagesResponse(val pages: List<GhostPostDto>)
 
@@ -45,9 +46,63 @@ data class GhostPostDto(
     val tags: List<GhostTagDto>? = null,
     @SerialName("primary_author") val primaryAuthor: GhostAuthorDto? = null,
     val authors: List<GhostAuthorDto>? = null,
+    val featured: Boolean = false,
+    @SerialName("primary_tag") val primaryTag: GhostTagDto? = null,
+    val url: String? = null,
+    @SerialName("updated_at") val updatedAt: String? = null,
 )
 
-@Serializable data class GhostTagDto(val id: String, val slug: String, val name: String)
+@Serializable
+data class GhostTagDto(
+    val id: String,
+    val slug: String,
+    val name: String,
+    val count: GhostCountDto? = null,
+)
+
+@Serializable data class GhostCountDto(val posts: Int? = null)
+
+@Serializable data class GhostMetaDto(val pagination: GhostPaginationDto? = null)
+
+@Serializable
+data class GhostPaginationDto(
+    val page: Int? = null,
+    val limit: Int? = null,
+    val pages: Int? = null,
+    val total: Int? = null,
+    val next: Int? = null,
+    val prev: Int? = null,
+)
+
+@Serializable data class GhostTagsResponse(val tags: List<GhostTagDto>)
+
+@Serializable data class GhostSettingsResponse(val settings: GhostSettingsDto)
+
+@Serializable
+data class GhostSettingsDto(
+    val title: String,
+    val description: String? = null,
+    val icon: String? = null,
+    @SerialName("cover_image") val coverImage: String? = null,
+    val url: String? = null,
+    val twitter: String? = null,
+    val facebook: String? = null,
+    val linkedin: String? = null,
+    val navigation: List<GhostNavItemDto> = emptyList(),
+)
+
+@Serializable data class GhostNavItemDto(val label: String, val url: String)
+
+@Serializable data class GhostSearchIndexResponse(val posts: List<GhostSearchIndexPostDto>)
+
+@Serializable
+data class GhostSearchIndexPostDto(
+    val id: String,
+    val slug: String,
+    val title: String,
+    val excerpt: String? = null,
+    val url: String? = null,
+)
 
 @Serializable
 data class GhostAuthorDto(

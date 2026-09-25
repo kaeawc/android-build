@@ -31,3 +31,10 @@ plugins {
     id("androidbuild.kotlin-common")
     id("androidbuild.publish")
 }
+
+tasks.register("testDebugUnitTest") {
+    group = "verification"
+    description =
+        "Alias for `test` so the Android unit-test task selector also runs JVM module tests."
+    dependsOn(tasks.named("test"))
+}

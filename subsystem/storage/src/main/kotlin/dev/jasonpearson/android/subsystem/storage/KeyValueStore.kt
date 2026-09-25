@@ -26,6 +26,7 @@ package dev.jasonpearson.android.subsystem.storage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 /** A minimal observable key/value store abstraction over which repositories are built. */
@@ -43,7 +44,9 @@ class InMemoryKeyValueStore(initial: Map<String, String> = emptyMap()) : KeyValu
 
     val snapshot: Flow<Map<String, String>> = state.asStateFlow()
 
-    override fun observe(key: String): Flow<String?> = state.map { it[key] }
+    // distinctUntilChanged matches DataStoreKeyValueStore's per-key semantics, so tests using this
+    // double don't see spurious re-emissions when an unrelated key changes.
+    override fun observe(key: String): Flow<String?> = state.map { it[key] }.distinctUntilChanged()
 
     override suspend fun put(key: String, value: String?) {
         state.value =

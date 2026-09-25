@@ -41,6 +41,10 @@ moduleGraphAssert {
         arrayOf(
             ":app -> :.*",
             ":client:.* -> :core:.*",
+            ":data:.* -> :client:.*",
+            ":data:.* -> :core:.*",
+            ":data:.* -> :subsystem:.*",
+            ":feature:.* -> :data:.*",
             ":feature:.* -> :client:.*",
             ":feature:.* -> :core:.*",
             ":feature:.* -> :subsystem:.*",
@@ -86,13 +90,18 @@ android {
             "GHOST_API_URL",
             "\"" +
                 (project.findProperty("GHOST_API_URL") as String?
-                    ?: "https://www.jasonpearson.dev/ghost/api/content/") +
+                    ?: "https://jasonpearson.ghost.io/ghost/api/content/") +
                 "\"",
         )
+        // Ghost Content API keys are public and read-only by design; this one is the key the
+        // site itself embeds in its HTML. Override via GHOST_CONTENT_API_KEY in gradle.properties.
         buildConfigField(
             "String",
             "GHOST_CONTENT_API_KEY",
-            "\"" + (project.findProperty("GHOST_CONTENT_API_KEY") as String? ?: "") + "\"",
+            "\"" +
+                (project.findProperty("GHOST_CONTENT_API_KEY") as String?
+                    ?: "85c0ab53b21839d275cac14df2") +
+                "\"",
         )
 
         testInstrumentationRunner = "dev.jasonpearson.android.TestRunner"
@@ -173,12 +182,18 @@ dependencies {
     implementation(projects.client.github)
     implementation(projects.core.di)
     implementation(projects.core.network)
+    implementation(projects.data.about)
+    implementation(projects.data.articles)
+    implementation(projects.data.photography)
+    implementation(projects.data.projects)
+    implementation(projects.data.talks)
     implementation(projects.feature.about)
     implementation(projects.feature.articles)
     implementation(projects.feature.photography)
     implementation(projects.feature.projects)
     implementation(projects.feature.talks)
     implementation(projects.foundation.navigation)
+    implementation(projects.subsystem.storage)
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.bundles.compose.ui)

@@ -21,10 +21,16 @@
 package dev.jasonpearson.android.client.ghost.mapper
 
 import dev.jasonpearson.android.client.ghost.dto.GhostPostDto
+import dev.jasonpearson.android.client.ghost.dto.GhostSearchIndexPostDto
+import dev.jasonpearson.android.client.ghost.dto.GhostSettingsDto
+import dev.jasonpearson.android.client.ghost.dto.GhostTagDto
 import dev.jasonpearson.android.core.model.Article
 import dev.jasonpearson.android.core.model.Author
 import dev.jasonpearson.android.core.model.ContentPage
+import dev.jasonpearson.android.core.model.NavLink
 import dev.jasonpearson.android.core.model.Photo
+import dev.jasonpearson.android.core.model.SearchEntry
+import dev.jasonpearson.android.core.model.SiteSettings
 import dev.jasonpearson.android.core.model.Tag
 import kotlinx.datetime.Instant
 
@@ -38,9 +44,30 @@ fun GhostPostDto.toArticle(): Article =
         featureImageUrl = featureImage,
         publishedAt = publishedAt?.let { Instant.parse(it) },
         readingTimeMinutes = readingTime,
-        tags = tags?.map { Tag(it.id, it.slug, it.name) } ?: emptyList(),
+        tags = tags?.map { it.toTag() } ?: emptyList(),
         author = primaryAuthor?.let { Author(it.id, it.name, it.profileImage, it.url) },
+        featured = featured,
+        primaryTag = primaryTag?.toTag(),
+        url = url,
     )
+
+fun GhostTagDto.toTag(): Tag = Tag(id, slug, name, count?.posts)
+
+fun GhostSettingsDto.toSiteSettings(): SiteSettings =
+    SiteSettings(
+        title = title,
+        description = description,
+        iconUrl = icon,
+        coverImageUrl = coverImage,
+        url = url,
+        twitter = twitter,
+        facebook = facebook,
+        linkedin = linkedin,
+        navigation = navigation.map { NavLink(it.label, it.url) },
+    )
+
+fun GhostSearchIndexPostDto.toSearchEntry(): SearchEntry =
+    SearchEntry(id = id, slug = slug, title = title, excerpt = excerpt, url = url)
 
 fun GhostPostDto.toContentPage(): ContentPage = ContentPage(slug, title, html ?: "")
 

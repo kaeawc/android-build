@@ -48,8 +48,12 @@ interface NetworkModule {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun provideLoggingInterceptor(): HttpLoggingInterceptor =
-            HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC }
+        fun provideLoggingInterceptor(@DebugBuild debugBuild: Boolean): HttpLoggingInterceptor =
+            HttpLoggingInterceptor().apply {
+                level =
+                    if (debugBuild) HttpLoggingInterceptor.Level.BASIC
+                    else HttpLoggingInterceptor.Level.NONE
+            }
 
         @Provides
         @SingleIn(AppScope::class)

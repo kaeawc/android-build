@@ -23,4 +23,4 @@
  */
 package dev.jasonpearson.android.core.model
 
-data class Tag(val id: String, val slug: String, val name: String)
+data class Tag(val id: String, val slug: String, val name: String, val postCount: Int? = null)

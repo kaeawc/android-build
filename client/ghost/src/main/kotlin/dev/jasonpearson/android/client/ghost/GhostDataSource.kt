@@ -24,10 +24,16 @@ import dev.jasonpearson.android.client.ghost.api.GhostContentApi
 import dev.jasonpearson.android.client.ghost.mapper.extractPhotos
 import dev.jasonpearson.android.client.ghost.mapper.toArticle
 import dev.jasonpearson.android.client.ghost.mapper.toContentPage
+import dev.jasonpearson.android.client.ghost.mapper.toSearchEntry
+import dev.jasonpearson.android.client.ghost.mapper.toSiteSettings
+import dev.jasonpearson.android.client.ghost.mapper.toTag
 import dev.jasonpearson.android.core.di.GhostContentKey
 import dev.jasonpearson.android.core.model.Article
 import dev.jasonpearson.android.core.model.ContentPage
 import dev.jasonpearson.android.core.model.Photo
+import dev.jasonpearson.android.core.model.SearchEntry
+import dev.jasonpearson.android.core.model.SiteSettings
+import dev.jasonpearson.android.core.model.Tag
 import dev.zacsweers.metro.Inject
 
 @Inject
@@ -46,4 +52,42 @@ class GhostDataSource(
 
     suspend fun getPhotos(pageSlug: String = "photography"): List<Photo> =
         extractPhotos(getPage(pageSlug).html)
+
+    suspend fun getAllArticles(): List<Article> {
+        val articles = mutableListOf<Article>()
+        var page = 1
+        do {
+            val response = api.getPostsPage(key = contentKey, page = page)
+            articles += response.posts.map { it.toArticle() }
+            page = response.meta?.pagination?.next ?: break
+        } while (true)
+        return articles
+    }
+
+    suspend fun getFeaturedArticles(): List<Article> =
+        api.getPostsPage(key = contentKey, filter = "featured:true").posts.map { it.toArticle() }
+
+    suspend fun getArticlesByTag(tagSlug: String): List<Article> =
+        api.getPostsPage(key = contentKey, filter = "tag:$tagSlug").posts.map { it.toArticle() }
+
+    suspend fun getRelatedArticles(article: Article, limit: Int = 3): List<Article> {
+        val tag = article.primaryTag ?: article.tags.firstOrNull() ?: return emptyList()
+        return api.getPostsPage(
+                key = contentKey,
+                filter = buildRelatedFilter(tag.slug, article.id),
+                limit = limit,
+            )
+            .posts
+            .map { it.toArticle() }
+    }
+
+    suspend fun getTags(): List<Tag> = api.getTags(contentKey).tags.map { it.toTag() }
+
+    suspend fun getSettings(): SiteSettings = api.getSettings(contentKey).settings.toSiteSettings()
+
+    suspend fun getSearchIndex(): List<SearchEntry> =
+        api.getSearchIndexPosts(contentKey).posts.map { it.toSearchEntry() }
 }
+
+internal fun buildRelatedFilter(tagSlug: String, excludeId: String): String =
+    "tag:$tagSlug+id:-$excludeId"

@@ -27,11 +27,13 @@ import android.app.Application
 import dev.jasonpearson.android.App
 import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.SingleIn
-import dev.jasonpearson.android.feature.about.data.AboutRepository
-import dev.jasonpearson.android.feature.articles.data.ArticlesRepository
-import dev.jasonpearson.android.feature.photography.data.PhotographyRepository
-import dev.jasonpearson.android.feature.projects.data.ProjectsRepository
-import dev.jasonpearson.android.feature.talks.data.TalksRepository
+import dev.jasonpearson.android.data.about.AboutRepository
+import dev.jasonpearson.android.data.articles.ArticlesRepository
+import dev.jasonpearson.android.data.photography.PhotographyRepository
+import dev.jasonpearson.android.data.projects.ProjectsRepository
+import dev.jasonpearson.android.data.talks.TalksRepository
+import dev.jasonpearson.android.subsystem.storage.ContentCache
+import dev.jasonpearson.android.subsystem.storage.KeyValueStore
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 
@@ -67,4 +69,8 @@ internal interface AppGraph {
     val photographyRepository: PhotographyRepository
     val projectsRepository: ProjectsRepository
     val talksRepository: TalksRepository
+
+    // Storage bindings, exposed so the graph validates their @StorageDirectory/Clock inputs.
+    val contentCache: ContentCache
+    val keyValueStore: KeyValueStore
 }

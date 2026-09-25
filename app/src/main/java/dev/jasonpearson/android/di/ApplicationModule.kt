@@ -23,13 +23,17 @@
  */
 package dev.jasonpearson.android.di
 
+import android.app.Application
 import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.GhostApiUrl
 import dev.jasonpearson.android.core.di.GhostContentKey
 import dev.jasonpearson.android.core.di.SingleIn
+import dev.jasonpearson.android.core.di.StorageDirectory
+import dev.jasonpearson.android.core.network.DebugBuild
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Qualifier
+import java.io.File
 import kotlin.annotation.AnnotationRetention.BINARY
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
@@ -53,6 +57,14 @@ interface ApplicationModule {
         @GhostContentKey
         fun provideGhostContentKey(): String =
             dev.jasonpearson.android.BuildConfig.GHOST_CONTENT_API_KEY
+
+        @Provides
+        @StorageDirectory
+        fun provideStorageDirectory(application: Application): File = application.filesDir
+
+        @Provides
+        @DebugBuild
+        fun provideDebugBuild(): Boolean = dev.jasonpearson.android.BuildConfig.DEBUG
 
         @PresenterScope
         @Provides

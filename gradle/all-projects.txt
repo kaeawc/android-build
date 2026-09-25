@@ -5,6 +5,11 @@
 :core:di
 :core:model
 :core:network
+:data:about
+:data:articles
+:data:photography
+:data:projects
+:data:talks
 :feature:about
 :feature:articles
 :feature:photography

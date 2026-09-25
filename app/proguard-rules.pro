@@ -203,3 +203,40 @@
 
 # Uncomment to see mapping file location
 # -printmapping /tmp/mapping.txt
+
+###########################################
+# kotlinx.serialization Rules
+###########################################
+
+# The General Android Rules above already retain *Annotation* and InnerClasses.
+# kotlinx.serialization 1.11 supplies consumer rules for ordinary generated serializers.
+-dontnote kotlinx.serialization.**
+
+# Serializers referenced directly (Foo.serializer()) stay reachable on their own; only
+# reflective lookups need explicit keeps. A member-conditioned `-if ... { static **$* *; }`
+# companion rule was verified with the standalone R8 jar to keep nothing, so this file uses
+# explicit class keeps instead.
+
+# Keep generated serializer names and INSTANCE accessors when the owning class is retained.
+-if @kotlinx.serialization.Serializable class dev.jasonpearson.android.**
+-keepnames class <1>$$serializer {
+    static <1>$$serializer INSTANCE;
+}
+
+# Ghost and GitHub DTO packages use generated serializers and stable model names.
+-keep class dev.jasonpearson.android.client.**.dto.** { *; }
+
+# Nav3 saves the back stack by key class name and resolves each key's serializer reflectively,
+# so AppDestination, its subtypes, and their generated serializers must keep names and members.
+-keep class dev.jasonpearson.android.foundation.navigation.** { *; }
+
+###########################################
+# Retrofit Rules
+###########################################
+
+# The General Android Rules above already retain Signature and Exceptions.
+# Retain suspend-call generic signatures and HTTP-annotated service methods.
+-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+-keepclassmembers,allowshrinking,allowobfuscation interface * {
+    @retrofit2.http.* <methods>;
+}

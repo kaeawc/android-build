@@ -33,10 +33,10 @@ android { namespace = "dev.jasonpearson.android.feature.projects" }
 
 dependencies {
     implementation(platform(libs.compose.bom))
-    implementation(projects.client.github)
     implementation(projects.core.di)
     implementation(projects.core.model)
     implementation(projects.core.network)
+    implementation(projects.data.projects)
     implementation(projects.foundation.designsystem)
     implementation(libs.bundles.compose.ui)
     implementation(libs.compose.foundation)
