@@ -33,8 +33,6 @@ import dev.jasonpearson.android.subsystem.storage.fetchWithFallback
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @ContributesBinding(AppScope::class)
@@ -46,16 +44,31 @@ class DefaultTalksRepository(
     private val json: Json,
 ) : TalksRepository {
 
-    override suspend fun talks(): NetworkResult<List<Talk>> = networkResult {
-        contentCache
-            .fetchWithFallback(
-                key = "talks:list",
-                encode = { json.encodeToString(ListSerializer(Talk.serializer()), it) },
-                decode = { json.decodeFromString(ListSerializer(Talk.serializer()), it) },
-            ) {
-                parseTalks(ghost.getPage("talks").html)
-            }
-            .getOrThrow()
-            .value
+    private val serializer = ListSerializer(Talk.serializer())
+
+    override suspend fun talks(forceRefresh: Boolean): NetworkResult<List<Talk>> = networkResult {
+        if (forceRefresh) {
+            contentCache.fetchFresh(
+                key = CACHE_KEY,
+                encode = { json.encodeToString(serializer, it) },
+                fetch = ::fetchTalks,
+            )
+        } else {
+            contentCache
+                .fetchWithFallback(
+                    key = CACHE_KEY,
+                    encode = { json.encodeToString(serializer, it) },
+                    decode = { json.decodeFromString(serializer, it) },
+                    fetch = ::fetchTalks,
+                )
+                .getOrThrow()
+                .value
+        }
+    }
+
+    private suspend fun fetchTalks(): List<Talk> = parseTalks(ghost.getPage("talks").html)
+
+    private companion object {
+        const val CACHE_KEY = "talks:list"
     }
 }

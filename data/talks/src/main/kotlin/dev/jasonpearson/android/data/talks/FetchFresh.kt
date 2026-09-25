@@ -21,15 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package dev.jasonpearson.android.data.talks
 
-import dev.jasonpearson.android.core.network.NetworkResult
+import dev.jasonpearson.android.subsystem.storage.ContentCache
+import kotlin.coroutines.cancellation.CancellationException
 
-interface TalksRepository {
-    /**
-     * Loads the talks page. By default this is network-first with a fallback to the last cached
-     * copy. With [forceRefresh] (pull-to-refresh) the cache is bypassed: a failed fetch surfaces
-     * its error instead of returning stale data, and a successful one replaces the cached copy.
-     */
-    suspend fun talks(forceRefresh: Boolean = false): NetworkResult<List<Talk>>
+/**
+ * Cache-bypassing read for an explicit refresh: always fetches, never falls back to the cached copy
+ * (so a failure surfaces), and stores a successful result best-effort, like `fetchWithFallback`.
+ */
+internal suspend fun <T : Any> ContentCache.fetchFresh(
+    key: String,
+    encode: (T) -> String,
+    fetch: suspend () -> T,
+): T {
+    val fresh = fetch()
+    try {
+        put(key, encode(fresh))
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        // Best-effort: a failed cache write must not fail a successful refresh.
+    }
+    return fresh
 }
