@@ -82,8 +82,8 @@ class DefaultArticlesRepository(
             is NetworkResult.Success ->
                 NetworkResult.Success(
                     result.data
-                        .filter { it.postCount != null && it.postCount > 0 }
-                        .sortedByDescending { it.postCount }
+                        .filter { (it.postCount ?: 0) > 0 }
+                        .sortedByDescending { it.postCount ?: 0 }
                 )
             is NetworkResult.Failure -> result
         }

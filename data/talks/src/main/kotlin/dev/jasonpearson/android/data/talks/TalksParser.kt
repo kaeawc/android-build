@@ -32,7 +32,7 @@ internal fun parseTalks(html: String): List<Talk> {
     val body = document.body()
     val topLevelElements =
         if (body.children().isNotEmpty()) body.children() else document.children()
-    val talks = mutableListOf<Talk>()
+    val talks = mutableListOf<TalkBuilder>()
     var current: TalkBuilder? = null
 
     for (element in topLevelElements) {

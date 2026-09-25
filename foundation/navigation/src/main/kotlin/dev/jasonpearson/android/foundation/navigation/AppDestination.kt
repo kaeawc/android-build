@@ -40,6 +40,14 @@ sealed interface AppDestination : NavKey {
 
     @Serializable data class ArticleDetail(val slug: String) : AppDestination
 
+    @Serializable data class Tag(val slug: String) : AppDestination
+
+    @Serializable data object Search : AppDestination
+
+    @Serializable data class ProjectDetail(val name: String) : AppDestination
+
+    @Serializable data object Settings : AppDestination
+
     companion object {
         val topLevel: List<AppDestination> = listOf(Articles, Talks, Projects, Photography, About)
     }

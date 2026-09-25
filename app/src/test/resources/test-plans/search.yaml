@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=https://unpkg.com/@kaeawc/auto-mobile/schemas/test-plan.schema.json
+---
+name: search
+description: Open article search from the Articles tab, type a query, and navigate back
+steps:
+  - tool: launchApp
+    appId: dev.jasonpearson.android
+    clearAppData: true
+    label: Launch the app with clean state
+
+  - tool: observe
+    waitFor:
+      text: Articles
+    label: Wait for the bottom navigation to render
+
+  - tool: tapOn
+    action: tap
+    text: Search
+    label: Open article search from the Articles top bar
+
+  - tool: observe
+    waitFor:
+      text: Search articles
+    label: Verify the search screen is displayed
+
+  - tool: inputText
+    text: android
+    label: Type a search query into the auto-focused field
+
+  - tool: tapOn
+    action: tap
+    text: Back
+    label: Navigate back from search
+
+  - tool: observe
+    waitFor:
+      text: Articles
+    label: Verify the navigation shell is still showing
+
+  - tool: terminateApp
+    appId: dev.jasonpearson.android
+    label: Terminate the app after test
