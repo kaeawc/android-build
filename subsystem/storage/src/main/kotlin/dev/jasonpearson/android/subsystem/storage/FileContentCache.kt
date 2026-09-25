@@ -88,6 +88,12 @@ public class FileContentCache(@StorageDirectory directory: File, private val clo
             Unit
         }
 
+    // Only the cache subdirectory is measured; the KeyValueStore file lives beside it, not in it.
+    override suspend fun sizeBytes(): Long =
+        withContext(Dispatchers.IO) {
+            cacheDirectory.listFiles()?.filter(File::isFile)?.sumOf(File::length) ?: 0L
+        }
+
     private fun fileFor(key: String): File {
         val digest = MessageDigest.getInstance("SHA-256").digest(key.toByteArray(Charsets.UTF_8))
         val hexDigits = "0123456789abcdef"

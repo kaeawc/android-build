@@ -25,6 +25,7 @@ package dev.jasonpearson.android.data.settings
 
 import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.SingleIn
+import dev.jasonpearson.android.subsystem.storage.ContentCache
 import dev.jasonpearson.android.subsystem.storage.KeyValueStore
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -33,7 +34,9 @@ import kotlinx.coroutines.flow.combine
 
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
-public class DefaultSettingsRepository @Inject constructor(private val store: KeyValueStore) :
+public class DefaultSettingsRepository
+@Inject
+constructor(private val store: KeyValueStore, private val contentCache: ContentCache) :
     SettingsRepository {
     override val settings: Flow<AppSettings> =
         combine(
@@ -58,6 +61,13 @@ public class DefaultSettingsRepository @Inject constructor(private val store: Ke
 
     override suspend fun setAnalyticsEnabled(enabled: Boolean) {
         store.put(ANALYTICS_ENABLED_KEY, enabled.toString())
+    }
+
+    override suspend fun cacheSizeBytes(): Long? = contentCache.sizeBytes()
+
+    // Settings and bookmarks live in the KeyValueStore, which ContentCache never touches.
+    override suspend fun clearCache() {
+        contentCache.clear()
     }
 
     private fun parseThemeMode(raw: String?): ThemeMode =

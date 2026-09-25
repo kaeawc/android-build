@@ -23,6 +23,8 @@
  */
 package dev.jasonpearson.android.feature.settings
 
+import android.text.format.Formatter
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,6 +36,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -45,17 +48,26 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.jasonpearson.android.data.settings.AppSettings
 import dev.jasonpearson.android.data.settings.SettingsRepository
 import dev.jasonpearson.android.data.settings.ThemeMode
 import dev.jasonpearson.android.foundation.designsystem.theme.supportsDynamicColor
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,12 +137,88 @@ fun SettingsScreen(
             )
 
             HorizontalDivider()
+            SectionTitle("Storage")
+            ClearOfflineCacheRow(repository)
+
+            HorizontalDivider()
             SectionTitle("About")
             Text("Version $appVersion", style = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.size(4.dp))
         }
     }
 }
+
+@Composable
+private fun ClearOfflineCacheRow(repository: SettingsRepository) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var refreshKey by remember { mutableIntStateOf(0) }
+    var sizeBytes by remember { mutableStateOf<Long?>(null) }
+    var confirming by remember { mutableStateOf(false) }
+    var clearing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(repository, refreshKey) { sizeBytes = safely { repository.cacheSizeBytes() } }
+
+    val kept = "Saved articles and settings are kept."
+    val supportingText =
+        when (val size = sizeBytes) {
+            null -> "Remove cached articles and pages. $kept"
+            else -> "Using ${Formatter.formatShortFileSize(context, size)}. $kept"
+        }
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clickable(enabled = !clearing, onClickLabel = "Clear offline cache") {
+                    confirming = true
+                }
+                .padding(vertical = 4.dp)
+    ) {
+        Text("Clear offline cache", style = MaterialTheme.typography.bodyLarge)
+        Text(supportingText, style = MaterialTheme.typography.bodyMedium)
+    }
+
+    if (confirming) {
+        AlertDialog(
+            onDismissRequest = { confirming = false },
+            title = { Text("Clear offline cache?") },
+            text = {
+                Text(
+                    "Cached articles and pages will download again the next time you're " +
+                        "online. $kept"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirming = false
+                        clearing = true
+                        coroutineScope.launch {
+                            try {
+                                safely { repository.clearCache() }
+                            } finally {
+                                clearing = false
+                                refreshKey++
+                            }
+                        }
+                    }
+                ) {
+                    Text("Clear")
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirming = false }) { Text("Cancel") } },
+        )
+    }
+}
+
+/** Runs [block], mapping any non-cancellation failure to null so a cache I/O error can't crash. */
+private suspend fun <T> safely(block: suspend () -> T): T? =
+    try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        null
+    }
 
 @Composable
 private fun SectionTitle(title: String) {
