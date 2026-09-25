@@ -87,6 +87,18 @@ constructor(private val store: KeyValueStore, private val clock: Clock) : Bookma
         }
     }
 
+    override suspend fun restore(bookmark: Bookmark) {
+        mutex.withLock {
+            val current = decode(store.get(BOOKMARKS_KEY))
+            // Re-saved in the meantime: keep that newer bookmark rather than duplicating the slug.
+            if (current.any { it.slug == bookmark.slug }) return
+            store.put(
+                BOOKMARKS_KEY,
+                json.encodeToString(ListSerializer(Bookmark.serializer()), current + bookmark),
+            )
+        }
+    }
+
     private fun decode(raw: String?): List<Bookmark> =
         if (raw == null) emptyList()
         else
