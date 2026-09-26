@@ -3,8 +3,8 @@
 This repo adopts [Block's Artifact Swap](https://github.com/block/artifact-swap) — during IDE
 sync, Gradle projects that are unchanged relative to the last green `main` are **excluded from the
 build and replaced by pre-compiled artifacts**, so the IDE configures only the modules you're
-actually working on. On this graph that means focusing one feature configures ~2 projects instead
-of all 17; the payoff scales with module count.
+actually working on. On this 28-module graph, focusing one feature keeps 1 project and swaps out
+the rest of its closure (9 of 10 for `:feature:talks`); the payoff scales with module count.
 
 Instead of Artifactory, artifacts live in **GitHub Packages**
 (`maven.pkg.github.com/kaeawc/android-build`). Artifact Swap's repository client speaks plain
@@ -104,13 +104,30 @@ Locally proven end-to-end (fresh clone, simulated sync via `-Didea.sync.active=t
 - CLI builds (`assembleDebug`, `assertModuleGraph`, `checkAllProjectsList`, unit tests) are
   unaffected with the swap enabled or disabled.
 
+The two bullets above were recorded at 17 modules. Re-measured at 28 modules (37a025d, fresh normal
+clone, BOM downloaded from GitHub Packages, cold configuration best of three):
+
+| Simulated sync | Module selection | Cold configuration |
+|---|---|---|
+| Full graph, no swap | — | 1.5–2.3 s |
+| Focus `:feature:talks`, no swap | — | 0.85 s |
+| Focus `:feature:talks` + swap | `1 selected out of 10 candidates … excluded: 9` | 1.66 s |
+| Focus `:app` + swap | `1 selected out of 28 candidates … excluded: 27` | 1.76 s |
+
+With `:app` focused and everything else swapped, `:app`'s `debugRuntimeClasspath` resolves 48
+`dev.jasonpearson.android:*` artifact coordinates and has zero `FAILED` entries. Installing the CLI
+took 2.9 s, the first `download-artifacts.sh` 11.1 s, and a repeat 6.5 s. Swapping still costs more
+at configuration time than it saves on a graph this small: it resolves the BOM and artifact
+metadata, while the projects it removes each take only milliseconds to configure.
+
 The CI publish pipeline against GitHub Packages has now been proven end-to-end in CI: since PR
 #418, commits a5bb1e7, f6d25c4, and e6f8705 each published a BOM
 `dev.jasonpearson.android:bom:<sha>` to GitHub Packages and advanced the `artifact-swap-green-main`
 marker/ref, and `artifact-checker` skipped already-published module hashes on the latest run. The
 guard is covered by its standalone throwaway-repository test and workflow lint; the publish path and
-Gradle cache behavior were exercised on commit 2c63735, and only the skip path is still
-unexercised. Note the publish repository requires BOTH
+Gradle cache behavior were exercised on commit 2c63735, and the skip path on the docs-only commit
+4317699 (`skip: 1 changed file(s), none swap-relevant`, an 8-second job that left
+`artifact-swap-green-main` untouched). Note the publish repository requires BOTH
 `artifactswap.artifactRepo.username` and the token to attach credentials at all -- the username is
 set in gradle.properties; removing it would silently publish unauthenticated and 401.
 
@@ -127,9 +144,21 @@ The first before-and-after publish measurements are:
 The pipeline total dropped from 165s to 41s, and the whole job took about 80 seconds including
 checkout, setup-gradle cache restore, and cache save. The after numbers come from one Publish run on
 main for commit 2c63735 on 2026-09-13, with a warm dependency cache restored from the Commit
-workflow's cache; this is a single-run measurement, not an average. The skip path is still
-unexercised because no docs-only commit has landed since the guard merged to trigger a real skip
-decision.
+workflow's cache; this is a single-run measurement, not an average.
+
+At 28 modules, after the companion-app rebuild, the same pipeline looks like this (Publish runs on
+main, stage boundaries read from the job logs):
+
+| commit | hashing | task-finder | artifact-checker | task-runner | bom-publisher | pipeline | job |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 3a2e7f4 (#437) | 37s | 54s | 2s | 165s | 4s | 262s | — |
+| 002f1c4 (#441) | 19s | 32s | 3s | 229s | 5s | 288s | — |
+| af1ca31 (#442) | 23s | 63s | 3s | 168s | 4s | 261s | 5m20s |
+| 37a025d (#443) | 14s | 33s | 3s | 139s | 5s | 194s | 4m04s |
+
+`task-runner` now dominates: each of those commits rewrote most modules, so most content hashes
+were new and had to be compiled and published. That is the steady state for a rebuild, not for
+ordinary feature work, where only the touched modules and their dependents re-publish.
 
 ## Known caveats
 
@@ -146,3 +175,13 @@ decision.
   references the build-scan API); it's applied without a server, so no scans are published.
 - The CLI's telemetry endpoint is pointed at a fast-failing localhost port; the resulting log
   noise in CLI output is harmless.
+- **Content hashes cover only each module's own files.** A change confined to
+  `gradle/libs.versions.toml` or `build-logic/` does not change any hash, so nothing re-publishes
+  and swapped modules keep POMs pinned to the previous dependency versions. This has already
+  happened: the navigation-compose bump in 5ff8421 touched only the catalog, and its Publish run
+  found all 16 library hashes already published. Upstream's fix is `hashing
+  --use-build-logic-version`, which mixes `square.registerPluginsVersion.consumer` from
+  `gradle.properties` into every hash; wiring a digest of the catalog and `build-logic/` into that
+  key in `ci-publish.sh` would close it. Until then, re-downloading does not help (the hashes, and
+  so the artifacts, are the same); after a catalog or `build-logic` change, sync once with
+  `artifactswap.enabled=false` if a swapped module's stale dependency versions matter.
