@@ -83,6 +83,13 @@ if (ideSyncActive && fastsyncEnabled) {
                             "for this sync with -Pfastsync.enabled=false."
                     )
             shouldResolveConsistentlyWith(compile)
+            // AGP later re-points test-component runtime classpaths (e.g.
+            // `debugAndroidTestRuntimeClasspath`) at the tested variant's runtime
+            // classpath, overriding the call above. That source is itself
+            // non-transitive here, so it never saw the test-only BOM-managed
+            // dependencies (`ui-test-junit4`), which then resolve FAILED. Re-assert the
+            // compile twin at resolution time, after every plugin has configured.
+            incoming.beforeResolve { shouldResolveConsistentlyWith(compile) }
         }
     }
 }
