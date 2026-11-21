@@ -32,7 +32,7 @@ import dev.jasonpearson.android.core.model.Photo
 import dev.jasonpearson.android.core.model.SearchEntry
 import dev.jasonpearson.android.core.model.SiteSettings
 import dev.jasonpearson.android.core.model.Tag
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 fun GhostPostDto.toArticle(): Article =
     Article(

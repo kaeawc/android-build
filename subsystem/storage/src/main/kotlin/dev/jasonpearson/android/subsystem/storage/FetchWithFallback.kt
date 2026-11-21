@@ -24,7 +24,7 @@
 package dev.jasonpearson.android.subsystem.storage
 
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /** A value from [fetchWithFallback], flagged when it came from the offline cache. */
 public data class Fetched<T>(val value: T, val fromCache: Boolean, val savedAt: Instant? = null)

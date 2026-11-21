@@ -45,6 +45,7 @@ val javaTarget = JavaVersion.toVersion(version("build-java-target"))
 
 extensions.configure<LibraryExtension> {
     compileSdk = version("build-android-compileSdk").toInt()
+    compileSdkMinor = version("build-android-compileSdkMinor").toInt()
     buildToolsVersion = version("build-android-buildTools")
 
     defaultConfig { minSdk = version("build-android-minSdk").toInt() }

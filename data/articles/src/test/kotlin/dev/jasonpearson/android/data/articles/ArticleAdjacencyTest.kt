@@ -24,7 +24,7 @@
 package dev.jasonpearson.android.data.articles
 
 import dev.jasonpearson.android.core.model.Article
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

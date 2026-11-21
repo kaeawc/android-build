@@ -41,9 +41,10 @@ pluginManagement {
     }
 
     plugins {
-        id("com.gradle.develocity") version "4.5.1"
+        id("com.gradle.develocity") version "4.6.1"
+        id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
         id("com.fueledbycaffeine.spotlight") version "1.8.0"
-        id("xyz.block.artifactswap.settings") version "0.1.12"
+        id("xyz.block.artifactswap.settings") version "0.1.15"
     }
 }
 
@@ -59,6 +60,9 @@ plugins {
     // only provides the classes -- no build scans are published.
     id("com.gradle.develocity")
     id("com.fueledbycaffeine.spotlight") apply false
+    // Lets Gradle download the JDK toolchain (build-java-toolchain) and the daemon JVM
+    // (gradle/gradle-daemon-jvm.properties) when no matching local JDK is installed.
+    id("org.gradle.toolchains.foojay-resolver-convention")
     id("xyz.block.artifactswap.settings")
 }
 

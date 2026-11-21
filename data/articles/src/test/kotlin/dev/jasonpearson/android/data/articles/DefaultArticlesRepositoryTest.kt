@@ -40,8 +40,8 @@ import dev.jasonpearson.android.data.articles.DefaultArticlesRepository.Companio
 import dev.jasonpearson.android.subsystem.storage.CachedEntry
 import dev.jasonpearson.android.subsystem.storage.ContentCache
 import java.io.IOException
+import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

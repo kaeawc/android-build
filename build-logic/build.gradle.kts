@@ -21,13 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins { `kotlin-dsl` }
 
 // Precompiled convention plugins need the Kotlin Gradle plugin and AGP on the
-// classpath so they can reference KotlinCompile and the Android extensions. The
-// Kotlin DSL compiles on the build's JDK; pin its toolchain to the project's Java
-// target for consistency with the modules these plugins configure.
-kotlin { jvmToolchain(libs.versions.build.java.target.get().toInt()) }
+// classpath so they can reference KotlinCompile and the Android extensions. Like the
+// modules these plugins configure, build-logic compiles on the project's toolchain
+// JDK but emits bytecode for the project's Java target.
+val javaTarget = libs.versions.build.java.target.get().toInt()
+
+kotlin {
+    jvmToolchain(libs.versions.build.java.toolchain.get().toInt())
+    compilerOptions { jvmTarget.set(JvmTarget.fromTarget(javaTarget.toString())) }
+}
+
+tasks.withType<JavaCompile>().configureEach { options.release.set(javaTarget) }
 
 dependencies {
     implementation(libs.kgp)

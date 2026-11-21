@@ -76,6 +76,7 @@ play {
 android {
     namespace = "dev.jasonpearson.android"
     compileSdk = libs.versions.build.android.compileSdk.get().toInt()
+    compileSdkMinor = libs.versions.build.android.compileSdkMinor.get().toInt()
     buildToolsVersion = libs.versions.build.android.buildTools.get()
 
     defaultConfig {

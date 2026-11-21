@@ -23,7 +23,7 @@
  */
 package dev.jasonpearson.android.subsystem.storage
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 public data class CachedEntry(val value: String, val savedAt: Instant)
 

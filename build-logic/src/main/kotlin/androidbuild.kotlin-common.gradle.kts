@@ -49,15 +49,19 @@ plugins {
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 val kotlinLanguageVersion = libs.findVersion("build-kotlin-language").get().requiredVersion
+val javaToolchain = libs.findVersion("build-java-toolchain").get().requiredVersion
 val javaTarget = libs.findVersion("build-java-target").get().requiredVersion
 
 // Pin compilation to the Java toolchain so `./gradlew` behaves identically
 // regardless of the developer's default JDK. AGP registers JavaPluginExtension for
 // Android modules too, so this single hook covers both JVM and Android modules;
-// KGP picks up the same Java toolchain.
+// KGP picks up the same Java toolchain. The toolchain (the newest JDK) is decoupled
+// from the bytecode level (`build-java-target`): kotlinc's `jvmTarget` is set below,
+// javac's in androidbuild.kotlin-jvm (`release`) and androidbuild.android-library /
+// the app (`compileOptions`).
 plugins.withType<JavaBasePlugin>().configureEach {
     extensions.configure<JavaPluginExtension> {
-        toolchain { languageVersion.set(JavaLanguageVersion.of(javaTarget.toInt())) }
+        toolchain { languageVersion.set(JavaLanguageVersion.of(javaToolchain.toInt())) }
     }
 }
 

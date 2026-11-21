@@ -62,12 +62,12 @@ performance-relevant choices break down into three groups.
 
 - `android.nonTransitiveRClass=true` — each library's `R` class holds only its own resources,
   shrinking the generated `R` classes across a module graph.
-- `android.enableBuildConfigAsBytecode=true` with `buildFeatures.buildconfig=false` — skips the
-  `BuildConfig` source-gen round trip.
+- `android.enableBuildConfigAsBytecode=true` — skips the `BuildConfig` source-gen round trip for
+  the one module (`:app`) that enables `BuildConfig` (off by default since AGP 9).
 - `android.r8.maxWorkers=2` — bounds R8 parallelism so it coexists with parallel Gradle tasks
   without over-committing memory. R8 full mode is the AGP 9.0+ default.
-- `android.lint.useK2Uast=true` and the disabled `buildfeatures` (aidl, renderscript, resvalues,
-  shaders) trim work this project never needs.
+- `android.lint.useK2Uast=true` and the disabled `buildfeatures` (resvalues, shaders) trim work
+  this project never needs.
 
 ## Compiler Flags
 
@@ -77,6 +77,11 @@ and once the module graph lands, the `androidbuild.kotlin-common` convention plu
 - `languageVersion` and `jvmTarget` are pinned from the version catalog
   ([gradle/libs.versions.toml](gradle/libs.versions.toml)) rather than the developer's default JDK,
   so `./gradlew` behaves identically across machines.
+- The JDK and the bytecode level are separate catalog entries. `build-java-toolchain` (JDK 27, the
+  newest release) runs the Gradle daemon ([gradle/gradle-daemon-jvm.properties](gradle/gradle-daemon-jvm.properties))
+  and javac/kotlinc; the Foojay resolver downloads it when no local JDK 27 is installed.
+  `build-java-target` (26) is the bytecode level javac and kotlinc emit: Kotlin 2.4 can't emit
+  JVM 27 bytecode yet (that arrives with Kotlin 2.5), and D8/R8 dex Java 26 class files fine.
 - `freeCompilerArgs` uses `addAll` (not assignment) so plugin-contributed args — Compose, Metro,
   `-Xcontext-parameters` — survive alongside the project's `-opt-in` list.
 - `coreLibraryDesugaring` is enabled so the app can target a modern JDK while still running on the

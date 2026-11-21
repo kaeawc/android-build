@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - uses: ./.github/actions/gradle-task-run
         with:
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - uses: ./.github/actions/gradle-task-run
         with:
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: "Run XMLStarlet"
         shell: "bash"
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: "Run ktfmt"
         shell: "bash"
@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: "Run ShellCheck"
         shell: "bash"
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - uses: ./.github/actions/gradle-task-run
         with:
@@ -103,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - uses: ./.github/actions/gradle-task-run
         with:
@@ -119,13 +119,13 @@ jobs:
           mv app/build/reports/lint-results-release.html build/reports/lint-results.html
 
       - name: "Store Android Lint SARIF Report"
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: success()
         with:
           sarif_file: build/reports/merged-lint.sarif
 
       - name: "Store Android Lint HTML Report"
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v7
         if: success()
         with:
           name: android-lint-default-report
@@ -137,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - uses: ./.github/actions/gradle-task-run
         with:
@@ -146,7 +146,7 @@ jobs:
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: "Store APK"
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v7
         with:
           name: apk
           path: app/build/outputs/apk/debug/app-debug.apk
@@ -157,7 +157,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: true
           ref: ${{ github.event.pull_request.base.sha }}
@@ -175,7 +175,7 @@ jobs:
           mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-base-debug.apk
 
       - name: "Store Base APK"
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v7
         with:
           name: base-apk
           path: app/build/outputs/apk/debug/app-base-debug.apk
@@ -185,7 +185,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - uses: ./.github/actions/gradle-task-run
         with:
@@ -197,7 +197,7 @@ jobs:
           optional-suffix: "-test"
 
       - name: "Store Test APK"
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v7
         with:
           name: test-apk
           path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
@@ -210,11 +210,11 @@ jobs:
       - build-apk
       - build-base-apk
     steps:
-      - uses: actions/download-artifact@v4.1.8
+      - uses: actions/download-artifact@v8
         with:
           name: apk
 
-      - uses: actions/download-artifact@v4.1.8
+      - uses: actions/download-artifact@v8
         with:
           name: base-apk
 
@@ -224,14 +224,14 @@ jobs:
           old-file-path: app-base-debug.apk
           new-file-path: app-debug.apk
 
-      - uses: peter-evans/find-comment@v3
+      - uses: peter-evans/find-comment@v4
         id: find-comment
         if: ${{ github.event.pull_request }}
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body-includes: Diffuse output
 
-      - uses: peter-evans/create-or-update-comment@v4
+      - uses: peter-evans/create-or-update-comment@v5
         if: ${{ github.event.pull_request }}
         with:
           body: |
@@ -243,7 +243,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v4.4.0
+      - uses: actions/upload-artifact@v7
         with:
           name: diffuse-output
           path: ${{ steps.diffuse.outputs.diff-file }}
@@ -258,18 +258,18 @@ jobs:
       - build-test-apk
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v4.1.8
+      - uses: actions/download-artifact@v8
         with:
           name: apk
 
-      - uses: actions/download-artifact@v4.1.8
+      - uses: actions/download-artifact@v8
         with:
           name: test-apk
 
       - name: "Run tests on emulator.wtf"
-        uses: emulator-wtf/run-tests@v0
+        uses: emulator-wtf/run-tests@v1
         with:
           api-token: ${{ secrets.EW_API_TOKEN }}
           app: app-debug.apk
@@ -278,7 +278,7 @@ jobs:
           record-video: true
 
       - name: "Publish Test Report"
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@v6
         if: always() # always run even if the tests fail
         with:
           check_name: "UI Test Report"
@@ -295,7 +295,7 @@ jobs:
       - build-apk
     steps:
       - name: "Git Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: "Setup Bun"
         uses: oven-sh/setup-bun@v2
@@ -316,7 +316,7 @@ jobs:
             "$GITHUB_WORKSPACE/schemas/test-plan.schema.json"
 
       - name: "Download app APK"
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v8
         with:
           name: apk
 
@@ -397,7 +397,7 @@ jobs:
           kill "$EW_SESSION_PID" 2>/dev/null || true
 
       - name: "Publish Test Report"
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@v6
         if: always()
         with:
           check_name: "AutoMobile Test Report"

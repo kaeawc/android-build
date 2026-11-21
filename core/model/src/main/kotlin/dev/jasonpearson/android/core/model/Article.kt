@@ -23,7 +23,7 @@
  */
 package dev.jasonpearson.android.core.model
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 data class Article(
     val id: String,
