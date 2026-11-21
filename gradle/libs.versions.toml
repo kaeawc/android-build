@@ -16,8 +16,9 @@ build-kotlin-datetime = "0.8.0"
 build-java-asm = "9.11.1"
 # JDK that runs the build and compiles every module (Gradle daemon + javac/kotlinc toolchain).
 build-java-toolchain = "27"
-# Bytecode level emitted by javac/kotlinc. Kotlin 2.4.x tops out at JVM 26 (JVM 27 needs Kotlin 2.5).
-build-java-target = "26"
+# Bytecode level emitted by javac/kotlinc, the same in the Bazel build (.bazelrc). Capped at 25 by
+# rules_android's dexer (R8 9.3); Kotlin 2.4 itself could emit 26.
+build-java-target = "25"
 build-gradle-dependencyAnalysis = "3.20.4"
 build-gradle-graphAssertion = "2.9.1"
 build-gradle-doctor = "0.12.1"

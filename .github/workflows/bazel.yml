@@ -1,0 +1,57 @@
+name: "Bazel"
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: bazel-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-and-test:
+    name: "Bazel Build & Test"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      # The runner image's SDK lacks the minor platform (compileSdk 37.2) and build-tools 37.
+      - name: "Install Android SDK packages"
+        shell: bash
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"
+
+      # Bazelisk reads .bazelversion. Caches: action outputs (disk cache) and downloads
+      # (repository cache), saved only from main so PRs can't evict each other's entries.
+      - uses: bazel-contrib/setup-bazel@0.19.2
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+          cache-save: ${{ github.event_name != 'pull_request' }}
+
+      - name: "Build everything (debug APK, instrumentation APK, libraries, tests)"
+        run: bazel build --config=ci //...
+
+      - name: "Unit tests"
+        run: bazel test --config=ci //...
+
+      - name: "Store APKs"
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-apks
+          path: |
+            bazel-bin/app/app.apk
+            bazel-bin/app/instrumentation_tests_apk.apk
+
+      - name: "Store test logs"
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-testlogs
+          path: bazel-testlogs/**/test.log

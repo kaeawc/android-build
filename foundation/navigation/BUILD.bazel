@@ -1,0 +1,8 @@
+load("//bazel:defs.bzl", "kt_android_module")
+
+kt_android_module(
+    custom_package = "dev.jasonpearson.android.foundation.navigation",
+    plugins = ["serialization"],
+    exports = ["@maven//:androidx_navigation3_navigation3_runtime"],
+    deps = ["@maven//:org_jetbrains_kotlinx_kotlinx_serialization_json"],
+)

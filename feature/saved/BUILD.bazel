@@ -1,0 +1,24 @@
+load("//bazel:defs.bzl", "kt_android_module")
+
+kt_android_module(
+    compose = True,
+    custom_package = "dev.jasonpearson.android.feature.saved",
+    plugins = ["metro"],
+    deps = [
+        "//core/di",
+        "//core/model",
+        "//data/bookmarks",
+        "//foundation/designsystem",
+        "@maven//:androidx_activity_activity_compose",
+        "@maven//:androidx_compose_foundation_foundation",
+        "@maven//:androidx_compose_material3_material3",
+        "@maven//:androidx_compose_material_material_icons_extended",
+        "@maven//:androidx_compose_ui_ui",
+        "@maven//:androidx_compose_ui_ui_graphics",
+        "@maven//:androidx_compose_ui_ui_tooling",
+        "@maven//:androidx_compose_ui_ui_tooling_preview",
+        "@maven//:androidx_compose_ui_ui_util",
+        "@maven//:dev_zacsweers_metro_runtime_jvm",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core",
+    ],
+)

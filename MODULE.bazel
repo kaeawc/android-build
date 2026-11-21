@@ -1,0 +1,255 @@
+"""Bazel build for android-build.
+
+Bazel is the primary build (CLI and CI). The Gradle build is kept only so Android Studio can
+sync the project. Library versions here mirror gradle/libs.versions.toml; bump both together.
+"""
+
+module(name = "android_build")
+
+bazel_dep(name = "platforms", version = "1.1.0")
+bazel_dep(name = "bazel_skylib", version = "1.9.2")
+bazel_dep(name = "rules_java", version = "9.9.0")
+bazel_dep(name = "rules_jvm_external", version = "7.2")
+bazel_dep(name = "rules_android", version = "0.8.1")
+bazel_dep(name = "rules_kotlin", version = "2.4.21")
+
+# Kotlin incremental compilation through the Build Tools API isn't in a tagged rules_kotlin
+# release yet. Until it is, build rules_kotlin from the incremental compilation stack
+# (bazel-contrib/rules_kotlin PRs via 0xLucasMarcal/rules_kotlin#1).
+_RULES_KOTLIN_COMMIT = "de1b3043036e31c97f121b41e2cdf57c16c42a3d"
+
+archive_override(
+    module_name = "rules_kotlin",
+    integrity = "sha256-qP7byx5muysVK298i+OoQadBhC4N+SZhvLtqTjhq8a4=",
+    strip_prefix = "rules_kotlin-%s" % _RULES_KOTLIN_COMMIT,
+    urls = ["https://github.com/0xLucasMarcal/rules_kotlin/archive/%s.tar.gz" % _RULES_KOTLIN_COMMIT],
+)
+
+# --- JDK 27 -----------------------------------------------------------------------------------
+
+jdk27 = use_extension("//bazel/jdk:extensions.bzl", "jdk27")
+use_repo(
+    jdk27,
+    "remotejdk27_linux",
+    "remotejdk27_linux_aarch64",
+    "remotejdk27_linux_aarch64_toolchain_config_repo",
+    "remotejdk27_linux_toolchain_config_repo",
+    "remotejdk27_macos_aarch64",
+    "remotejdk27_macos_aarch64_toolchain_config_repo",
+    "remotejdk27_win",
+    "remotejdk27_win_toolchain_config_repo",
+)
+
+register_toolchains(
+    "@remotejdk27_linux_toolchain_config_repo//:all",
+    "@remotejdk27_linux_aarch64_toolchain_config_repo//:all",
+    "@remotejdk27_macos_aarch64_toolchain_config_repo//:all",
+    "@remotejdk27_win_toolchain_config_repo//:all",
+    "//bazel/jdk:toolchain_jdk_25_definition",
+)
+
+# --- Kotlin 2.4.21 ----------------------------------------------------------------------------
+
+rules_kotlin_extensions = use_extension(
+    "@rules_kotlin//src/main/starlark/core/repositories:bzlmod_setup.bzl",
+    "rules_kotlin_extensions",
+)
+rules_kotlin_extensions.kotlinc_version(
+    sha256 = "7cc140e76daf416a0424a5557f99afd7ca89ebd463ea1101261e3e01c33e75cd",
+    version = "2.4.21",
+)
+
+# The Build Tools API implementation the worker compiles (and compiles incrementally) with.
+# Named btapi_impl, it replaces the release the rules bundle.
+rules_kotlin_extensions.btapi_impl_version(
+    name = "btapi_impl",
+    annotation_processing_sha256 = "b798fabf9adf246e3091d0e8ae06a1b3d19feee5e399e3d13b61e27871f19692",
+    build_tools_impl_sha256 = "3152b3e1fbaa4d48f3681734a2c0efc438359a48c8a3c5cac00d874670de1377",
+    compiler_sha256 = "ef19419c765e7ac8404465fa026ca8fc4dbb8a822de0fc79aa53c8dce29f1d02",
+    daemon_client_sha256 = "095903c4c4713bf91a562d226d7ba0464cf5424e76342d487deec494451ab29b",
+    jvm_abi_gen_sha256 = "e8ef7a82bc2df9c140d204fc0362f59b0e6df51c0406fb7360d18312da3be1cf",
+    reflect_sha256 = "7c9e8bda3cafa85b65692065acd22578b2843292b4e4baa8361bdc9175746e88",
+    script_runtime_sha256 = "a658cf5902a1525a06c264a5e42b437e97a6679ddeef8ca641246f270cf6a013",
+    stdlib_sha256 = "bd8250210584cb659847dce9cda660f8e9906e5def7fbebcea93dc6dcb6a88a3",
+    tooling_core_sha256 = "5fc5db083803232857408ed5c25bcc307c703b04bdef6cb2c34ebf4db611a622",
+    version = "2.4.21",
+)
+use_repo(rules_kotlin_extensions, "btapi_impl")
+
+register_toolchains("//bazel/kotlin:kotlin_toolchain")
+
+# --- Android SDK ------------------------------------------------------------------------------
+
+remote_android_extensions = use_extension(
+    "@rules_android//bzlmod_extensions:android_extensions.bzl",
+    "remote_android_tools_extensions",
+)
+use_repo(remote_android_extensions, "android_tools")
+
+# Reads $ANDROID_HOME. The API level defaults to the highest installed platform; .bazelrc pins
+# it to 37.2 (compileSdk 37, minor 2) with --@androidsdk//:api_level.
+android_sdk_repository_extension = use_extension(
+    "@rules_android//rules/android_sdk_repository:rule.bzl",
+    "android_sdk_repository_extension",
+)
+android_sdk_repository_extension.configure(build_tools_version = "37.0.0")
+use_repo(android_sdk_repository_extension, "androidsdk")
+
+register_toolchains(
+    "@androidsdk//:sdk-toolchain",
+    "@androidsdk//:all",
+)
+
+# --- Maven ------------------------------------------------------------------------------------
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+
+# AndroidX POMs declare exact-version ranges ([1.7.0,1.7.0]) on sibling artifacts, which the Maven
+# resolver can't reconcile across libraries the way Gradle's dependency constraints do. Pinning
+# each conflicting artifact to the highest version anything asks for resolves them. Regenerate
+# after a bump with bazel/scripts/align_androidx.py.
+ANDROIDX_ALIGNMENT = [
+    "androidx.activity:activity:1.13.0",
+    "androidx.activity:activity-ktx:1.13.0",
+    "androidx.arch.core:core-common:2.2.0",
+    "androidx.arch.core:core-runtime:2.2.0",
+    "androidx.compose.ui:ui-test-junit4-android:1.13.0",
+    "androidx.core:core:1.19.1",
+    "androidx.datastore:datastore:1.3.0",
+    "androidx.datastore:datastore-core:1.3.0",
+    "androidx.datastore:datastore-core-okio:1.3.0",
+    "androidx.glance:glance:1.2.0",
+    "androidx.lifecycle:lifecycle-common:2.11.1",
+    "androidx.lifecycle:lifecycle-common-java8:2.11.1",
+    "androidx.lifecycle:lifecycle-livedata:2.11.1",
+    "androidx.lifecycle:lifecycle-livedata-core:2.11.1",
+    "androidx.lifecycle:lifecycle-livedata-core-ktx:2.11.1",
+    "androidx.lifecycle:lifecycle-runtime:2.11.1",
+    "androidx.lifecycle:lifecycle-runtime-android:2.11.1",
+    "androidx.lifecycle:lifecycle-runtime-compose-android:2.11.1",
+    "androidx.lifecycle:lifecycle-viewmodel:2.11.1",
+    "androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.1",
+    "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.11.1",
+    "androidx.lifecycle:lifecycle-viewmodel-savedstate-android:2.11.1",
+    "androidx.savedstate:savedstate:1.4.0",
+    "androidx.savedstate:savedstate-compose:1.4.0",
+    "androidx.savedstate:savedstate-ktx:1.4.0",
+    "androidx.test:core:1.7.0",
+    "org.jetbrains.androidx.lifecycle:lifecycle-common:2.9.5",
+    "org.jetbrains.androidx.lifecycle:lifecycle-runtime:2.9.5",
+    "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel:2.9.5",
+]
+
+# Kotlin Multiplatform libraries outside AndroidX publish a common-metadata root, so name their
+# -android / -jvm variant directly. AndroidX and kotlinx roots already depend on the right one.
+maven.install(
+    name = "maven",
+    aar_import_bzl_label = "@rules_android//rules:rules.bzl",
+    artifacts = [
+        # Kotlin
+        "org.jetbrains.kotlin:kotlin-stdlib:2.4.21",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0",
+        # kotlinx-datetime's root POM has no -jvm dependency (Gradle module metadata only).
+        "org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.8.0",
+        "org.jetbrains.kotlinx:kotlinx-serialization-json:1.13.0",
+        "org.jetbrains.kotlinx:kotlinx-serialization-core:1.13.0",
+
+        # Metro (DI) runtime; the compiler plugin is below.
+        "dev.zacsweers.metro:runtime-jvm:1.6.0",
+
+        # Network
+        "com.squareup.retrofit2:retrofit:3.0.0",
+        "com.squareup.retrofit2:converter-kotlinx-serialization:3.0.0",
+        "com.squareup.okhttp3:okhttp-jvm:5.5.1",
+        "com.squareup.okhttp3:okhttp-android:5.5.1",
+        "com.squareup.okhttp3:logging-interceptor:5.5.1",
+        "org.jsoup:jsoup:1.24.1",
+        "com.google.zxing:core:3.5.4",
+
+        # AndroidX
+        "androidx.core:core-ktx:1.19.1",
+        "androidx.activity:activity-compose:1.13.0",
+        "androidx.lifecycle:lifecycle-runtime-ktx:2.11.1",
+        "androidx.lifecycle:lifecycle-viewmodel-compose:2.11.1",
+        "androidx.lifecycle:lifecycle-viewmodel-navigation3:2.11.1",
+        "androidx.navigation3:navigation3-runtime:1.2.2",
+        "androidx.navigation3:navigation3-ui:1.2.2",
+        "androidx.browser:browser:1.10.0",
+        "androidx.datastore:datastore-preferences-core:1.3.0",
+        "androidx.glance:glance-appwidget:1.2.0",
+        "androidx.glance:glance-material3:1.2.0",
+
+        # Compose (versions from the BOM below)
+        "androidx.compose.foundation:foundation",
+        "androidx.compose.material:material-icons-extended",
+        "androidx.compose.material3:material3",
+        "androidx.compose.material3:material3-adaptive-navigation-suite",
+        "androidx.compose.runtime:runtime",
+        "androidx.compose.ui:ui",
+        "androidx.compose.ui:ui-graphics",
+        "androidx.compose.ui:ui-tooling",
+        "androidx.compose.ui:ui-tooling-preview",
+        "androidx.compose.ui:ui-util",
+        "androidx.compose.ui:ui-test-junit4",
+        "androidx.compose.ui:ui-test-manifest",
+
+        # Images and effects
+        "io.coil-kt.coil3:coil-compose-android:3.6.3",
+        "io.coil-kt.coil3:coil-network-okhttp-android:3.6.3",
+        "io.coil-kt.coil3:coil-svg-android:3.6.3",
+        "dev.chrisbanes.haze:haze-android:2.1.0",
+        "dev.chrisbanes.haze:haze-blur-android:2.1.0",
+        "dev.chrisbanes.haze:haze-blur-materials-android:2.1.0",
+
+        # Compiler plugins
+        "org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.4.21",
+        "dev.zacsweers.metro:compiler:1.6.0",
+
+        # Build tools: a newer ASM for rules_android's desugarer (see the overrides below).
+        "org.ow2.asm:asm:9.11.1",
+        "org.ow2.asm:asm-analysis:9.11.1",
+        "org.ow2.asm:asm-commons:9.11.1",
+        "org.ow2.asm:asm-tree:9.11.1",
+        "org.ow2.asm:asm-util:9.11.1",
+
+        # Tests
+        "junit:junit:4.13.2",
+        "androidx.test.ext:junit:1.3.0",
+        "androidx.test.espresso:espresso-core:3.7.0",
+    ] + ANDROIDX_ALIGNMENT,
+    boms = ["androidx.compose:compose-bom:2026.11.01"],
+    excluded_artifacts = [
+        # Bazel picks okhttp-jvm or okhttp-android per target (//third_party/okhttp); the
+        # common-metadata root would put a second copy of every class on the classpath.
+        "com.squareup.okhttp3:okhttp",
+    ],
+    fail_if_repin_required = True,
+    lock_file = "//:maven_install.json",
+    repositories = [
+        "https://maven.google.com",
+        "https://repo1.maven.org/maven2",
+    ],
+    resolver = "maven",
+    use_starlark_android_rules = True,
+    version_conflict_policy = "pinned",
+)
+use_repo(maven, "maven")
+
+# rules_android's desugarer reads class files with ASM 9.7, which stops at Java 24. Point it at
+# ASM 9.11 so the project can emit Java 25 bytecode.
+[
+    maven.override(
+        name = "rules_android_maven",
+        coordinates = "org.ow2.asm:" + artifact,
+        target = "@maven//:org_ow2_asm_" + artifact.replace("-", "_"),
+    )
+    for artifact in [
+        "asm",
+        "asm-analysis",
+        "asm-commons",
+        "asm-tree",
+        "asm-util",
+    ]
+]

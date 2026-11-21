@@ -4,6 +4,16 @@
 
 This is a repository for experimenting with Android Build options. Different providers, build tools, and methods are used to showcase the different options available as well as best practices for workflow and performance. I have no intention of building an actual UX of any kind in this repository. This is where I catch and solve bugs that arise from the Android, Gradle, and Kotlin ecosystems or try out build concepts.
 
+## Building
+
+**Bazel** builds, tests and packages the app; Gradle is kept for Android Studio. See
+[docs/bazel.md](docs/bazel.md) for setup, the module macros, and Kotlin incremental compilation.
+
+```
+bazel build //app        # debug APK: bazel-bin/app/app.apk
+bazel test //...         # every unit test
+```
+
 ## JVM Args
 
 ### -XX:+UseG1GC
@@ -80,8 +90,9 @@ and once the module graph lands, the `androidbuild.kotlin-common` convention plu
 - The JDK and the bytecode level are separate catalog entries. `build-java-toolchain` (JDK 27, the
   newest release) runs the Gradle daemon ([gradle/gradle-daemon-jvm.properties](gradle/gradle-daemon-jvm.properties))
   and javac/kotlinc; the Foojay resolver downloads it when no local JDK 27 is installed.
-  `build-java-target` (26) is the bytecode level javac and kotlinc emit: Kotlin 2.4 can't emit
-  JVM 27 bytecode yet (that arrives with Kotlin 2.5), and D8/R8 dex Java 26 class files fine.
+  `build-java-target` (25) is the bytecode level javac and kotlinc emit, the same as the Bazel
+  build's: rules_android's dexer (R8 9.3) rejects Java 26 class files. (Kotlin 2.4 tops out at
+  JVM 26; JVM 27 arrives with Kotlin 2.5.)
 - `freeCompilerArgs` uses `addAll` (not assignment) so plugin-contributed args — Compose, Metro —
   survive alongside the project's `-opt-in` list.
 - `coreLibraryDesugaring` is enabled so the app can target a modern JDK while still running on the

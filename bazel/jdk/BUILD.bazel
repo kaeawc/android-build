@@ -1,0 +1,22 @@
+load("@rules_java//toolchains:default_java_toolchain.bzl", "DEFAULT_TOOLCHAIN_CONFIGURATION", "default_java_toolchain")
+load("@rules_java//toolchains:java_toolchain_alias.bzl", "java_runtime_version_alias")
+
+package(default_visibility = ["//visibility:public"])
+
+# The JDK 27 runtime chosen by --java_runtime_version=remotejdk_27, whatever the platform.
+java_runtime_version_alias(
+    name = "remotejdk_27",
+    runtime_version = "remotejdk_27",
+)
+
+# Compiles Java sources (R classes, Bazel's own Java tools) for Java 25 bytecode with javac running
+# on JDK 27: javac must be at least as new as the runtime whose system modules it compiles
+# against, and rules_java's built-in Java 25 toolchain runs javac on JDK 25. Selected by
+# --java_language_version=25 in .bazelrc; registered ahead of rules_java's toolchains.
+default_java_toolchain(
+    name = "toolchain_jdk_25",
+    configuration = DEFAULT_TOOLCHAIN_CONFIGURATION,
+    java_runtime = ":remotejdk_27",
+    source_version = "25",
+    target_version = "25",
+)

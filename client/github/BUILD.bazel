@@ -1,0 +1,18 @@
+load("//bazel:defs.bzl", "kt_jvm_module")
+
+kt_jvm_module(
+    plugins = [
+        "metro",
+        "serialization",
+    ],
+    deps = [
+        "//core/di",
+        "//core/model",
+        "//core/network",
+        "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:dev_zacsweers_metro_runtime_jvm",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_datetime_jvm",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_serialization_json",
+    ],
+)
