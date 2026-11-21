@@ -174,20 +174,26 @@ jobs:
     if: github.ref_name != 'main'
     runs-on: ubuntu-latest
     steps:
+      # The PR's checkout provides the CI actions; the base commit is built in base/.
       - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - name: "Git Checkout (PR base)"
         uses: actions/checkout@v7
         with:
           submodules: true
           ref: ${{ github.event.pull_request.base.sha }}
+          path: base
 
       - uses: ./.github/actions/bazel-setup
         with:
           disk-cache: apk
 
       - name: "Build APK from PR base SHA"
+        working-directory: base
         run: |
           bazel build --config=ci //app
-          mkdir -p out && cp bazel-bin/app/app.apk out/app-base-debug.apk
+          mkdir -p ../out && cp bazel-bin/app/app.apk ../out/app-base-debug.apk
 
       - name: "Store Base APK"
         uses: actions/upload-artifact@v7
