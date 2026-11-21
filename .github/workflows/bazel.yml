@@ -23,7 +23,8 @@ jobs:
       - name: "Install Android SDK packages"
         shell: bash
         run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          # `yes` exits on SIGPIPE once sdkmanager stops reading, which pipefail would report.
+          (yes || true) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"
 
       # Bazelisk reads .bazelversion. Caches: action outputs (disk cache) and downloads
