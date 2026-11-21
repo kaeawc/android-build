@@ -90,6 +90,10 @@ fi
 end_time=$(bash -c "$(pwd)/ci/get_timestamp.sh")
 total_elapsed=$((end_time - start_time))
 
+# Newer JDKs print sun.misc.Unsafe deprecation warnings when ktfmt starts; they are not
+# formatting errors.
+errors=$(echo "$errors" | grep -v '^WARNING: ' || true)
+
 # Check and report errors
 if [[ -n $errors ]]; then
     echo "Errors in the following files:"
