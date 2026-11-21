@@ -113,6 +113,27 @@ jobs:
       - name: "buildifier"
         run: bazel run --config=ci //bazel:buildifier_check
 
+  dependency-versions:
+    name: "Dependency Versions"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: "zulu"
+          java-version: "27"
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      # Bazel must resolve the versions Gradle does (bazel/scripts/repin.py): fails when an
+      # artifact resolves older in maven_install.json, or MODULE.bazel and the catalog drifted.
+      - name: "Bazel and Gradle resolve the same versions"
+        run: python3 bazel/scripts/repin.py --check
+
   android-lint:
     name: "Android Lint"
     runs-on: ubuntu-latest

@@ -104,7 +104,8 @@ Create the directory with the usual `src/main/kotlin` layout, then:
 ### Dependencies
 
 Versions live in `MODULE.bazel` (Bazel) and `gradle/libs.versions.toml` (Android Studio); bump
-both together. After changing Maven artifacts, repin with `bazel/scripts/align_androidx.py`.
+both together. After changing Maven artifacts, repin with `bazel/scripts/repin.py`: it makes Bazel
+resolve the same versions as Gradle, and CI checks that it's been run.
 Dependabot opens update PRs for the Gradle catalog, Bazel modules and GitHub Actions.
 
 ## CI
@@ -119,6 +120,7 @@ Dependabot opens update PRs for the Gradle catalog, Bazel modules and GitHub Act
 | Build Test APK | `bazel build //app:instrumentation_tests_apk` |
 | Unit Tests | `bazel test //...` |
 | Module Graph Check | Bazel analysis of `//...` (layer visibility) and buildifier |
+| Dependency Versions | Bazel resolves the same library versions as Gradle (`bazel/scripts/repin.py --check`) |
 | Android Platform | the Gradle build (what Android Studio syncs) still configures |
 | Android Lint | Android Lint on the release variant (Gradle), as HTML and SARIF |
 | ktfmt, Validate XML, Validate Shell Scripts | formatting and static checks |

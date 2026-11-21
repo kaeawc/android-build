@@ -22,7 +22,7 @@ updates:
       - maven-central
   # Bazel modules in MODULE.bazel (bazel_dep). Maven artifacts listed in MODULE.bazel mirror
   # gradle/libs.versions.toml: when a Gradle update lands, bump the same artifact there and
-  # repin with bazel/scripts/align_androidx.py.
+  # repin with bazel/scripts/repin.py (CI's Dependency Versions job checks it).
   - package-ecosystem: "bazel"
     directory: "/"
     target-branch: "main"
