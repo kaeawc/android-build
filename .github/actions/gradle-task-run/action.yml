@@ -71,9 +71,15 @@ runs:
     if: ${{ inputs.malloc-replacement == 'jemalloc' }}
     uses: kaeawc/setup-jemalloc@v0.0.3
 
+  # Installs tcmalloc from the distro and preloads it. (kaeawc/setup-tcmalloc@v0.0.1 installs
+  # google-perftools, which Ubuntu 26.04 -- the current ubuntu-latest -- no longer ships.)
   - name: "Set up tcmalloc"
-    if: ${{ inputs.malloc-replacement == 'tcmalloc' }}
-    uses: kaeawc/setup-tcmalloc@v0.0.1
+    if: ${{ inputs.malloc-replacement == 'tcmalloc' && runner.os == 'Linux' }}
+    shell: bash
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y libtcmalloc-minimal4t64
+      echo "LD_PRELOAD=$(find /usr/lib -name 'libtcmalloc_minimal.so.4' | head -n 1)" >> "$GITHUB_ENV"
 
   - name: "Sanitize artifact name"
     id: sanitize-name
