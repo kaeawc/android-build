@@ -77,7 +77,6 @@ tasks.withType<KotlinCompile>().configureEach {
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-opt-in=kotlin.ExperimentalUnsignedTypes",
             "-opt-in=kotlinx.coroutines.FlowPreview",
-            "-Xcontext-parameters",
         )
     }
 }

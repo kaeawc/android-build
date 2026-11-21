@@ -82,8 +82,8 @@ and once the module graph lands, the `androidbuild.kotlin-common` convention plu
   and javac/kotlinc; the Foojay resolver downloads it when no local JDK 27 is installed.
   `build-java-target` (26) is the bytecode level javac and kotlinc emit: Kotlin 2.4 can't emit
   JVM 27 bytecode yet (that arrives with Kotlin 2.5), and D8/R8 dex Java 26 class files fine.
-- `freeCompilerArgs` uses `addAll` (not assignment) so plugin-contributed args — Compose, Metro,
-  `-Xcontext-parameters` — survive alongside the project's `-opt-in` list.
+- `freeCompilerArgs` uses `addAll` (not assignment) so plugin-contributed args — Compose, Metro —
+  survive alongside the project's `-opt-in` list.
 - `coreLibraryDesugaring` is enabled so the app can target a modern JDK while still running on the
   project's `minSdk`.
 
