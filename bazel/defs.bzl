@@ -68,7 +68,8 @@ def _unit_tests(library, deps, plugins, extra_deps = [], excludes = []):
             name = name,
             size = "small",
             test_class = test_class,
-            runtime_deps = [":test_lib"],
+            # First, so tests load the -jvm variants of libraries the APK uses as -android.
+            runtime_deps = ["//third_party/jvm_test_variants", ":test_lib"],
         )
         tests.append(":" + name)
     native.test_suite(name = "tests", tests = tests)

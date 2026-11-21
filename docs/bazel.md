@@ -35,7 +35,7 @@ repository root. It's git-ignored and imported by `.bazelrc`.
 | `bazel/defs.bzl` | Module macros: `kt_jvm_module`, `kt_android_module`, `kt_android_application`, the Bazel counterparts of `build-logic`'s convention plugins |
 | `bazel/kotlin/` | Kotlin toolchain (language 2.4, Java 25 bytecode, project-wide opt-ins) and compiler plugins (Compose, kotlinx.serialization, Metro) |
 | `bazel/jdk/` | Temurin 27 as `remotejdk_27`, and the Java compile toolchain that runs javac on it |
-| `bazel/scripts/align_androidx.py` | Repins `@maven` and aligns AndroidX versions (see below) |
+| `bazel/scripts/repin.py` | Repins `@maven` to the versions Gradle resolves (see below) |
 | `third_party/okhttp/` | OkHttp for every target: its Android variant (see below) |
 | `<module>/BUILD.bazel` | One per module: its dependencies and compiler plugins |
 
@@ -98,10 +98,11 @@ rules_kotlin release includes it, delete the `archive_override`.
 Maven artifacts are listed in `MODULE.bazel` and pinned in `maven_install.json`. The versions
 match `gradle/libs.versions.toml`; bump both together.
 
-**After changing artifacts, repin** (not `bazel run @maven//:pin`; see the alignment note below):
+**After changing artifacts, repin** (not plain `bazel run @maven//:pin`; see the alignment note
+below). `--check` reports differences without changing anything:
 
 ```
-bazel/scripts/align_androidx.py
+bazel/scripts/repin.py
 ```
 
 Notes on how dependencies resolve differently from Gradle:
@@ -111,14 +112,23 @@ Notes on how dependencies resolve differently from Gradle:
   common metadata are listed by variant: `coil-compose-android`, `haze-android`,
   `metro:runtime-jvm`, `kotlinx-datetime-jvm`. AndroidX and most kotlinx roots already depend on
   the right variant.
-- **OkHttp** publishes `okhttp-jvm` and `okhttp-android` with one API. Bazel has one classpath,
-  so every target uses `okhttp-android` (`//third_party/okhttp`); JVM unit tests only touch its
-  plain model types. Don't add `okhttp-jvm` beside it: Bazel merges duplicate classes
-  first-wins without an error, and the JVM `PlatformRegistry` crashes the app at startup.
-- **AndroidX version alignment.** AndroidX POMs pin sibling artifacts to exact versions
-  (`[1.7.0,1.7.0]`). Gradle reconciles those with dependency constraints; rules_jvm_external's
-  Maven resolver fails on them. `align_androidx.py` repins and, for each conflict, adds the
-  highest requested version to `ANDROIDX_ALIGNMENT` in `MODULE.bazel`.
+- **OkHttp** publishes `okhttp-jvm` and `okhttp-android` with one API. Modules compile against
+  `okhttp-android` (`//third_party/okhttp`), and unit tests run on `okhttp-jvm` (see below).
+- **Versions come from Gradle.** rules_jvm_external's Maven resolver resolves a transitive
+  conflict to the *nearest* version, not the highest as Gradle does. It can't reconcile AndroidX's
+  exact-version ranges (`[1.7.0,1.7.0]`), and it doesn't fetch the `-android` variants that some
+  multiplatform roots only reference through Gradle module metadata. Each of those breaks the app
+  at runtime (for example, an old `androidx.collection` crashed Compose with
+  `ClassNotFoundException`). `repin.py` runs Gradle's dependency report for the app and pins
+  every artifact Bazel would resolve differently in `GRADLE_ALIGNMENT` in `MODULE.bazel`. It
+  fails if an artifact listed in `MODULE.bazel` is older than what Gradle resolves, which means
+  the two version lists drifted.
+- **One variant per library in the APK.** Bazel merges duplicate classes first-wins, without an
+  error. `repin.py` redirects `-jvm` variants that Gradle replaces with `-android` ones
+  (`GRADLE_VARIANTS`), for example `okhttp-jvm`, which `logging-interceptor` depends on.
+  JVM unit tests still need those `-jvm` jars, because the Android variants call Android APIs.
+  `//third_party/jvm_test_variants` (`JVM_TEST_VARIANTS`) puts them first on every unit test's
+  classpath.
 - **Unit tests of Android modules** run on the plain JVM against `android.jar`, like Gradle's
   local unit tests without Robolectric.
 
