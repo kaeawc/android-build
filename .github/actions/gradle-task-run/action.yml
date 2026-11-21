@@ -71,6 +71,13 @@ runs:
     if: ${{ inputs.malloc-replacement == 'jemalloc' }}
     uses: kaeawc/setup-jemalloc@v0.0.3
 
+  # kaeawc/setup-tcmalloc apt-installs google-perftools without refreshing the package index,
+  # which fails with 404s once the runner image's index goes stale.
+  - name: "Refresh apt package index"
+    if: ${{ inputs.malloc-replacement == 'tcmalloc' && runner.os == 'Linux' }}
+    shell: bash
+    run: sudo apt-get update
+
   - name: "Set up tcmalloc"
     if: ${{ inputs.malloc-replacement == 'tcmalloc' }}
     uses: kaeawc/setup-tcmalloc@v0.0.1
