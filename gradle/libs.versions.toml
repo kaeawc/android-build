@@ -5,7 +5,7 @@ build-android-compileSdk = "37"
 build-android-compileSdkMinor = "2"
 build-android-minSdk = "27"
 build-android-targetSdk = "37"
-build-android-agp = "9.5.1"
+build-android-agp = "9.5.2"
 # Uncomment to pin R8 version (e.g. for dev versions needed for kotlin metadata)
 # build-android-r8 = "9.0.32"
 build-android-desugar = "2.1.5"
