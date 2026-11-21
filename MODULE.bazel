@@ -162,7 +162,6 @@ maven.install(
         # Network
         "com.squareup.retrofit2:retrofit:3.0.0",
         "com.squareup.retrofit2:converter-kotlinx-serialization:3.0.0",
-        "com.squareup.okhttp3:okhttp-jvm:5.5.1",
         "com.squareup.okhttp3:okhttp-android:5.5.1",
         "com.squareup.okhttp3:logging-interceptor:5.5.1",
         "org.jsoup:jsoup:1.24.1",
@@ -221,8 +220,8 @@ maven.install(
     ] + ANDROIDX_ALIGNMENT,
     boms = ["androidx.compose:compose-bom:2026.11.01"],
     excluded_artifacts = [
-        # Bazel picks okhttp-jvm or okhttp-android per target (//third_party/okhttp); the
-        # common-metadata root would put a second copy of every class on the classpath.
+        # Everything uses okhttp-android (see //third_party/okhttp); the root artifact is the
+        # JVM variant under another name.
         "com.squareup.okhttp3:okhttp",
     ],
     fail_if_repin_required = True,

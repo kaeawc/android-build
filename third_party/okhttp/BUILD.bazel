@@ -1,22 +1,11 @@
-load("@rules_java//java:defs.bzl", "java_library")
-
 package(default_visibility = ["//visibility:public"])
 
-# OkHttp 5 publishes a JVM and an Android artifact with the same API, which Gradle picks per
-# platform. Bazel modules compile against :okhttp (the API, not packaged), JVM tests run with
-# :okhttp_jvm, and the app packages :okhttp_android.
-java_library(
+# OkHttp 5 publishes JVM and Android variants of one API, which Gradle picks per platform. Bazel
+# has one classpath, so every target uses the Android variant: the APK needs its Android platform
+# integration (PlatformRegistry, androidx.startup initializer), and JVM tests only use OkHttp's
+# plain model types. Never add okhttp-jvm next to it: Bazel merges duplicate classes first-wins,
+# and the JVM PlatformRegistry crashes the app at startup.
+alias(
     name = "okhttp",
-    neverlink = True,
-    exports = ["@maven//:com_squareup_okhttp3_okhttp_jvm"],
-)
-
-alias(
-    name = "okhttp_jvm",
-    actual = "@maven//:com_squareup_okhttp3_okhttp_jvm",
-)
-
-alias(
-    name = "okhttp_android",
     actual = "@maven//:com_squareup_okhttp3_okhttp_android",
 )

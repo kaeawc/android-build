@@ -36,7 +36,7 @@ repository root. It's git-ignored and imported by `.bazelrc`.
 | `bazel/kotlin/` | Kotlin toolchain (language 2.4, Java 25 bytecode, project-wide opt-ins) and compiler plugins (Compose, kotlinx.serialization, Metro) |
 | `bazel/jdk/` | Temurin 27 as `remotejdk_27`, and the Java compile toolchain that runs javac on it |
 | `bazel/scripts/align_androidx.py` | Repins `@maven` and aligns AndroidX versions (see below) |
-| `third_party/okhttp/` | Picks OkHttp's JVM or Android artifact per target |
+| `third_party/okhttp/` | OkHttp for every target: its Android variant (see below) |
 | `<module>/BUILD.bazel` | One per module: its dependencies and compiler plugins |
 
 A module's `BUILD.bazel` mirrors its `build.gradle.kts`. For example:
@@ -111,9 +111,10 @@ Notes on how dependencies resolve differently from Gradle:
   common metadata are listed by variant: `coil-compose-android`, `haze-android`,
   `metro:runtime-jvm`, `kotlinx-datetime-jvm`. AndroidX and most kotlinx roots already depend on
   the right variant.
-- **OkHttp** publishes `okhttp-jvm` and `okhttp-android` with one API. Modules compile against
-  `//third_party/okhttp` (not packaged), JVM unit tests run with `okhttp-jvm`, and the app packages
-  `okhttp-android`.
+- **OkHttp** publishes `okhttp-jvm` and `okhttp-android` with one API. Bazel has one classpath,
+  so every target uses `okhttp-android` (`//third_party/okhttp`); JVM unit tests only touch its
+  plain model types. Don't add `okhttp-jvm` beside it: Bazel merges duplicate classes
+  first-wins without an error, and the JVM `PlatformRegistry` crashes the app at startup.
 - **AndroidX version alignment.** AndroidX POMs pin sibling artifacts to exact versions
   (`[1.7.0,1.7.0]`). Gradle reconciles those with dependency constraints; rules_jvm_external's
   Maven resolver fails on them. `align_androidx.py` repins and, for each conflict, adds the

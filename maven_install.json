@@ -62,7 +62,6 @@
     "com.squareup.okhttp3:logging-interceptor": -1617595461,
     "com.squareup.okhttp3:okhttp": -1264927048,
     "com.squareup.okhttp3:okhttp-android": -1516912000,
-    "com.squareup.okhttp3:okhttp-jvm": -1060601678,
     "com.squareup.retrofit2:converter-kotlinx-serialization": -1906038759,
     "com.squareup.retrofit2:retrofit": -519203915,
     "dev.chrisbanes.haze:haze-android": 365289973,
