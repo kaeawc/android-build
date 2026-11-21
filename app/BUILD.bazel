@@ -51,6 +51,8 @@ kt_android_application(
         "//subsystem/analytics",
         "//subsystem/experimentation",
         "//subsystem/storage",
+        # Direct, so okhttp-android's manifest (its androidx.startup initializer) merges into the APK.
+        "//third_party/okhttp",
         "@maven//:androidx_activity_activity_compose",
         "@maven//:androidx_compose_foundation_foundation",
         "@maven//:androidx_compose_material3_material3",

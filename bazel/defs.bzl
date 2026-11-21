@@ -101,8 +101,7 @@ def _unit_tests(library, deps, plugins, extra_deps = [], excludes = []):
             name = name,
             size = "small",
             test_class = test_class,
-            # Modules compile against //third_party/okhttp (API only); tests run on the JVM one.
-            runtime_deps = [":test_lib", "//third_party/okhttp:okhttp_jvm"],
+            runtime_deps = [":test_lib"],
         )
         tests.append(":" + name)
     native.test_suite(name = "tests", tests = tests)
@@ -299,7 +298,7 @@ def kt_android_application(
             "//bazel/config:release": 1,
             "//conditions:default": 0,
         }),
-        deps = [":lib", "//third_party/okhttp:okhttp_android"],
+        deps = [":lib"],
     )
     _unit_tests(
         ":lib",
