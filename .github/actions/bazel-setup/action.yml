@@ -1,0 +1,27 @@
+name: "Bazel setup"
+description: "Installs the Android SDK packages the Bazel build needs and Bazelisk with GitHub-cached disk and repository caches."
+
+inputs:
+  disk-cache:
+    description: "Disk cache key (one per job kind, so jobs don't evict each other's entries)."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    # The runner image's SDK lacks the minor platform (compileSdk 37.2) and build-tools 37.
+    - name: "Install Android SDK packages"
+      shell: bash
+      run: |
+        # `yes` exits on SIGPIPE once sdkmanager stops reading, which pipefail would report.
+        (yes || true) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"
+
+    # Bazelisk reads .bazelversion. Caches are saved only from main so pull requests can't evict
+    # each other's entries; every run restores them.
+    - uses: bazel-contrib/setup-bazel@0.19.2
+      with:
+        bazelisk-cache: true
+        disk-cache: ${{ inputs.disk-cache }}
+        repository-cache: true
+        cache-save: ${{ github.event_name != 'pull_request' }}

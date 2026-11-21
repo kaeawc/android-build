@@ -1,5 +1,11 @@
 # Build Optimization Roadmap
 
+> **Historical.** This roadmap tracked the Gradle IDE-sync experiments (Spotlight, Artifact Swap,
+> Fastsync, dependency pre-fetching, the module graph assertion). They were retired when Bazel
+> became the primary build and Gradle was reduced to the Android Studio build; see
+> [bazel.md](bazel.md). The module graph rules live on as Bazel visibility in `bazel/defs.bzl`.
+> The code for each experiment is in git history (`git log -- docs/artifact-swap.md`, etc.).
+
 This repo is adopting the IDE-sync and build-scaling techniques from Block's
 [Shrinking Elephants](https://engineering.block.xyz/blog/shrinking-elephants) writeup. Most of
 those techniques only pay off once the build is a real module graph, so the work is sequenced:

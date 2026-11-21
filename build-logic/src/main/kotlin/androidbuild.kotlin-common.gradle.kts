@@ -32,14 +32,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-// Every Kotlin module also gets Fastsync (intransitive runtime classpaths during IDE
-// sync) and a prefetchDependencies task (dependency-cache warm-up); see
-// androidbuild.fastsync.gradle.kts and androidbuild.prefetch.gradle.kts.
-plugins {
-    id("androidbuild.fastsync")
-    id("androidbuild.prefetch")
-}
-
 // Shared Kotlin compiler configuration for every Kotlin module (JVM and Android):
 // the language version, JVM target, opt-in list, and Java toolchain, all sourced
 // from the single version catalog. Centralizing this here avoids re-declaring the
@@ -80,11 +72,3 @@ tasks.withType<KotlinCompile>().configureEach {
         )
     }
 }
-
-// Carries this project into the dev.jasonpearson.gradle.project(String) dependency
-// override (see SwappableProjectDependencies.kt) so it can consult Artifact Swap
-// state when rewriting project dependencies during IDE sync.
-dependencies.extensions.add(
-    dev.jasonpearson.gradle.SWAP_CONTEXT_EXTENSION,
-    dev.jasonpearson.gradle.SwapContext(project),
-)

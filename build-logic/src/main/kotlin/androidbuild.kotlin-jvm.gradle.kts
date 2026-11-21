@@ -34,7 +34,6 @@ import org.gradle.kotlin.dsl.withType
 plugins {
     id("org.jetbrains.kotlin.jvm")
     id("androidbuild.kotlin-common")
-    id("androidbuild.publish")
 }
 
 // The toolchain JDK is newer than the bytecode target; `release` makes javac emit (and

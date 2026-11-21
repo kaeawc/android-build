@@ -20,3 +20,16 @@ updates:
     registries:
       - maven-google
       - maven-central
+  # Bazel modules in MODULE.bazel (bazel_dep). Maven artifacts listed in MODULE.bazel mirror
+  # gradle/libs.versions.toml: when a Gradle update lands, bump the same artifact there and
+  # repin with bazel/scripts/align_androidx.py.
+  - package-ecosystem: "bazel"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"

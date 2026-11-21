@@ -22,8 +22,6 @@
  * SOFTWARE.
  */
 
-import dev.jasonpearson.gradle.projects
-
 plugins {
     id("androidbuild.android-compose")
     alias(libs.plugins.metro)

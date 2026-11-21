@@ -13,6 +13,8 @@ bazel_dep(name = "rules_jvm_external", version = "7.2")
 bazel_dep(name = "rules_android", version = "0.8.1")
 bazel_dep(name = "rules_kotlin", version = "2.4.21")
 
+bazel_dep(name = "buildifier_prebuilt", version = "10.2.0", dev_dependency = True)
+
 # Kotlin incremental compilation through the Build Tools API isn't in a tagged rules_kotlin
 # release yet. Until it is, build rules_kotlin from the incremental compilation stack
 # (bazel-contrib/rules_kotlin PRs via 0xLucasMarcal/rules_kotlin#1).
@@ -74,7 +76,7 @@ rules_kotlin_extensions.btapi_impl_version(
     tooling_core_sha256 = "5fc5db083803232857408ed5c25bcc307c703b04bdef6cb2c34ebf4db611a622",
     version = "2.4.21",
 )
-use_repo(rules_kotlin_extensions, "btapi_impl")
+use_repo(rules_kotlin_extensions, "btapi_impl", "com_github_google_ksp", "com_github_jetbrains_kotlin", "com_github_jetbrains_kotlin_git", "com_github_pinterest_ktlint", "jarjar", "kotlin_build_tools_api", "kotlinx_coroutines_core_jvm", "kotlinx_serialization_core_jvm", "kotlinx_serialization_json", "kotlinx_serialization_json_jvm")
 
 register_toolchains("//bazel/kotlin:kotlin_toolchain")
 

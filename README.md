@@ -1,51 +1,171 @@
-[![Commit](https://github.com/kaeawc/android-ci/actions/workflows/commit.yml/badge.svg)](https://github.com/kaeawc/android-ci/actions/workflows/commit.yml)
+[![Commit](https://github.com/kaeawc/android-build/actions/workflows/commit.yml/badge.svg)](https://github.com/kaeawc/android-build/actions/workflows/commit.yml)
 
-# Android Build Experiments
+# Android Build
 
-This is a repository for experimenting with Android Build options. Different providers, build tools, and methods are used to showcase the different options available as well as best practices for workflow and performance. I have no intention of building an actual UX of any kind in this repository. This is where I catch and solve bugs that arise from the Android, Gradle, and Kotlin ecosystems or try out build concepts.
+A modern, multi-module Android app and template repository: Jetpack Compose on Kotlin 2.4,
+built with **Bazel** (Kotlin incremental compilation, hermetic JDK 27) and opened in
+**Android Studio** through a Gradle build kept for the IDE. It's also where I try out build and CI
+techniques, so the repo carries notes on JVM tuning and CI along with the code.
 
-## Building
+The sample app is a companion app for [jasonpearson.dev](https://www.jasonpearson.dev): articles
+from a Ghost blog, talks, projects from GitHub, photography, and home-screen widgets. Replace the
+features with your own; the build, module structure and CI are the template.
 
-**Bazel** builds, tests and packages the app; Gradle is kept for Android Studio. See
-[docs/bazel.md](docs/bazel.md) for setup, the module macros, and Kotlin incremental compilation.
+## Start a new project from this template
+
+1. Click **Use this template** on GitHub (or clone the repository) and check out your copy.
+2. Rename the placeholders: the application id and root package `dev.jasonpearson.android`, the
+   app name "Android", and the project name `android-build`:
+
+   ```
+   scripts/rename_template.py --package com.example.myapp --app-name "My App" --project-name my-app
+   ```
+
+   It rewrites packages, source directories, namespaces, manifests and BUILD files in place (add
+   `--dry-run` to preview). Review with `git diff`, then commit.
+3. Build and test: `bazel build //app && bazel test //...` (requirements below).
+4. Open the directory in Android Studio. It syncs the Gradle build.
+5. Make the app yours: replace the sample features under `feature/`, `data/` and `client/`, the
+   Ghost settings in `app/BUILD.bazel` and `gradle.properties`, the launcher icon in
+   `app/src/main/res`, and the debug signing key `app/debug.keystore` (a standard debug key).
+
+## What's inside
+
+| | |
+|---|---|
+| Language & UI | Kotlin 2.4.21 (language 2.4), Jetpack Compose (BOM 2026.11.01), Material 3, [Haze](https://github.com/chrisbanes/haze) blur |
+| Architecture | Navigation 3, ViewModels, [Metro](https://github.com/ZacSweers/metro) compile-time DI, coroutines/Flow |
+| Data | Retrofit 3 + kotlinx.serialization, OkHttp 5, DataStore, Coil 3, Glance widgets |
+| Build | Bazel 9.3 (rules_android, rules_kotlin with incremental compilation, rules_jvm_external) for the CLI and CI; Gradle 9.9 / AGP 9.5 with convention plugins for Android Studio |
+| JDK & SDK | Temurin JDK 27 for every tool (Java 25 bytecode); compileSdk 37.2, targetSdk 37, minSdk 27 |
+| Quality | Unit tests on every layer, an instrumentation test APK, Android Lint, ktfmt, buildifier, the module graph enforced by Bazel visibility |
+| CI | GitHub Actions: Bazel build/test with cached disk and repository caches, APK diffing (Diffuse), UI tests on emulator.wtf, Dependabot |
+
+## Project structure
 
 ```
-bazel build //app        # debug APK: bazel-bin/app/app.apk
-bazel test //...         # every unit test
+app/            the application: Activity, navigation shell, DI graph, BuildConfig
+feature/*       screens (Compose): articles, talks, projects, photography, saved, settings, about, widget
+data/*          repositories: caching, pagination, offline fallback
+client/*        API clients: Ghost, GitHub
+subsystem/*     cross-cutting services: analytics, experimentation, storage
+foundation/*    design system, design assets, navigation keys and deep links
+core/*          models, DI scopes, networking, common utilities (pure Kotlin)
+bazel/          Bazel macros, toolchains (Kotlin, JDK 27) and scripts; see docs/bazel.md
+build-logic/    Gradle convention plugins (Android Studio build)
 ```
 
-## JVM Args
+Each module has a `BUILD.bazel` (Bazel) and a `build.gradle.kts` (Android Studio) over the same
+`src/main/kotlin`, `src/test/kotlin` and `src/main/res` sources. The allowed dependencies between
+layers are enforced by Bazel visibility (`bazel/defs.bzl`), so a dependency the architecture
+doesn't allow fails the build:
 
-### -XX:+UseG1GC
+```
+app        -> anything
+feature    -> data, client, subsystem, foundation, core
+data       -> client, subsystem, core
+client     -> core
+subsystem  -> foundation, core
+foundation -> foundation, core
+core       -> core
+```
+
+## Building and testing
+
+**Requirements:** [Bazelisk](https://github.com/bazelbuild/bazelisk) installed as `bazel`, and an
+Android SDK in `$ANDROID_HOME` with `platforms;android-37.2` and `build-tools;37.0.0`. Bazel
+downloads its own JDK 27. Android Studio (Gradle) also uses JDK 27 and downloads it if missing.
+
+| What | Command |
+|---|---|
+| Debug APK | `bazel build //app` → `bazel-bin/app/app.apk` |
+| Release APK (R8, resource shrinking) | `bazel build -c opt //app` |
+| Install | `adb install bazel-bin/app/app.apk` |
+| All unit tests | `bazel test //...` |
+| One module's tests | `bazel test //data/articles:tests` |
+| Instrumentation test APK | `bazel build //app:instrumentation_tests_apk` |
+| Format BUILD files | `bazel run //bazel:buildifier` |
+| Android Lint | `./gradlew :app:lintRelease` |
+
+Kotlin compiles incrementally in Bazel's persistent workers: after an edit, only the affected
+sources of a module recompile. `bazel build --config=ic-summary //app` prints what each Kotlin
+compilation did. [docs/bazel.md](docs/bazel.md) covers the Bazel setup, the module macros,
+adding dependencies and modules, and the trade-offs behind them.
+
+### Adding a module
+
+Create the directory with the usual `src/main/kotlin` layout, then:
+
+1. add a `BUILD.bazel` using `kt_jvm_module` or `kt_android_module` (copy a sibling's);
+2. add a `build.gradle.kts` applying the matching convention plugin, and `include` it in
+   `settings.gradle.kts`, so Android Studio sees it;
+3. if it's a new top-level layer, give it a visibility rule in `bazel/defs.bzl`.
+
+### Dependencies
+
+Versions live in `MODULE.bazel` (Bazel) and `gradle/libs.versions.toml` (Android Studio); bump
+both together. After changing Maven artifacts, repin with `bazel/scripts/align_androidx.py`.
+Dependabot opens update PRs for the Gradle catalog, Bazel modules and GitHub Actions.
+
+## CI
+
+[`.github/workflows/commit.yml`](.github/workflows/commit.yml) runs on every pull request and on
+`main`, fanned out so each check reports as soon as it can:
+
+| Job | What it checks |
+|---|---|
+| Build APK | `bazel build //app`, uploads the debug APK |
+| Build Base APK | the same for the PR's base commit, for the APK diff |
+| Build Test APK | `bazel build //app:instrumentation_tests_apk` |
+| Unit Tests | `bazel test //...` |
+| Module Graph Check | Bazel analysis of `//...` (layer visibility) and buildifier |
+| Android Platform | the Gradle build (what Android Studio syncs) still configures |
+| Android Lint | Android Lint on the release variant (Gradle), as HTML and SARIF |
+| ktfmt, Validate XML, Validate Shell Scripts | formatting and static checks |
+| Diff APK from Base | [Diffuse](https://github.com/JakeWharton/diffuse) report commented on the PR |
+| Android UI Tests | the instrumentation tests on [emulator.wtf](https://emulator.wtf) |
+| AutoMobile JUnit Tests | [AutoMobile](https://github.com/kaeawc/auto-mobile) device tests |
+
+Bazel's disk and repository caches are restored from GitHub's cache on every run and saved from
+`main`. Jobs that need the `EW_API_TOKEN` secret skip themselves where it isn't available
+(Dependabot runs, forks).
+
+## Build and IDE tuning notes
+
+These notes cover the JVM, Gradle and Android Studio settings this repo uses, and why.
+
+### JVM args
+
+#### -XX:+UseG1GC
 
 Every project's performance on G1GC vs ParallelGC seems to have slightly or significant characteristics. It is impossible to reliably test these algorithms with caching enabled due to the variances in network and IO bottlenecks, so I test these algorithms on clean builds with no caching. Android projects have a complicated memory footprint that can grow very quickly and as of JDK 17 most of the issues with G1GC have been fixed. This means that G1GC is the reliable option for returning memory and a good default for Android projects to stick with who aren't going to delve into JVM tuning. Also every JDK version since 17 has released iterations to improve upon G1GC to bring it closer and closer to Parallel's throughput performance levels. I still recommend testing GC algorithms on a case-by-case basis for JVM tuning.
 
-### -Xmx and -Xms
+#### -Xmx and -Xms
 
 Since we're on the [GitHub actions free tier we have roughly 16GB of memory available](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories) in the worker. We therefore have plenty of resources available to us, but profiling shows we just don't use much in this build.
 
-### -XX:SoftRefLRUPolicyMSPerMB=1
+#### -XX:SoftRefLRUPolicyMSPerMB=1
 
 Read my article about [SoftRefLRUPolicyMSPerMB in JVM Builds](https://www.jasonpearson.dev/softreflrupolicymspermb-in-jvm-builds/)
 
-### No Metaspace Settings
+#### No Metaspace Settings
 
 Read my article about [Metaspace in JVM Builds](https://www.jasonpearson.dev/metaspace-in-jvm-builds/) for my reasoning and approach metaspace.
 
-### -XX:ReservedCodeCacheSize
+#### -XX:ReservedCodeCacheSize
 
 Read my articles about [CodeCache for JVM Builds](https://www.jasonpearson.dev/codecache-in-jvm-builds/) and [Kotlin JVM arg Inheritance & Defaults](https://www.jasonpearson.dev/kotlin-jvm-args-inheritance-and-defaults/).
 
-### -XX:+HeapDumpOnOutOfMemoryError
+#### -XX:+HeapDumpOnOutOfMemoryError
 
 If your build does have an OOM and you want to analyze why it happened you're going to want the heap dump file. Of course you'd have to setup saving this file as a job artifact to make it accessible.
 
-## Gradle Properties
+### Gradle properties
 
 The full set lives in [gradle.properties](gradle.properties) with inline commentary. The
 performance-relevant choices break down into three groups.
 
-### Caching
+#### Caching
 
 - `org.gradle.caching=true` — the local (and, if configured, remote) build cache. Every task with
   deterministic outputs for the same inputs is skipped on subsequent builds.
@@ -54,7 +174,7 @@ performance-relevant choices break down into three groups.
 - `org.gradle.configuration-cache.parallel=true` — loads config cache entries in parallel (Gradle
   8.11+).
 
-### Parallelism and isolation
+#### Parallelism and isolation
 
 - `org.gradle.parallel=true` — runs decoupled projects in parallel.
 - `org.gradle.tooling.parallel=true` — turns on the IDE's parallel model fetch during sync
@@ -68,7 +188,7 @@ performance-relevant choices break down into three groups.
 - `kotlin.compiler.execution.strategy=daemon` and `kotlin.incremental=true` — daemon reuse and
   incremental Kotlin compilation.
 
-### Android / R8
+#### Android / R8
 
 - `android.nonTransitiveRClass=true` — each library's `R` class holds only its own resources,
   shrinking the generated `R` classes across a module graph.
@@ -79,10 +199,11 @@ performance-relevant choices break down into three groups.
 - `android.lint.useK2Uast=true` and the disabled `buildfeatures` (resvalues, shaders) trim work
   this project never needs.
 
-## Compiler Flags
+### Compiler flags
 
-Kotlin compilation is configured once per module (see [app/build.gradle.kts](app/build.gradle.kts),
-and once the module graph lands, the `androidbuild.kotlin-common` convention plugin):
+Kotlin compilation is configured once for every module: by the `androidbuild.kotlin-common`
+convention plugin for Gradle, and by the toolchain in [bazel/kotlin](bazel/kotlin/BUILD.bazel)
+for Bazel.
 
 - `languageVersion` and `jvmTarget` are pinned from the version catalog
   ([gradle/libs.versions.toml](gradle/libs.versions.toml)) rather than the developer's default JDK,
@@ -98,35 +219,11 @@ and once the module graph lands, the `androidbuild.kotlin-common` convention plu
 - `coreLibraryDesugaring` is enabled so the app can target a modern JDK while still running on the
   project's `minSdk`.
 
-# CI Setup
-
-This project includes a comprehensive CI setup that showcases typical automated checks with a focus on speed. I use a fan-in approach where it makes sense so the commit workflow on a PR quickly checks and provides as much feedback as possible on the change being tested. This is not overly resource intensive due to the combination of caching every part of the Gradle build process possible (build cache, dependency cache, and configuration cache) as well as the performance tuning. I'm also showing how to easily integrate with Emulator.wtf which is currently the fastest and most reliable Android UI test platform.
-
-<img width="600" alt="Current CI Flow" src="https://github.com/user-attachments/assets/201b25ef-0d13-44f8-a784-00f8df85d409">
-
-Build APK: Generates an artifact for debug build that could be shared within a development team and dependency for UI test job.
-
-Build Base APK: Checks out source from base commit and builds a debug build artifact.
-
-Build Test APK: Dependency for UI test job, no artifact.
-
-Unit Tests: Regular Android JVM Unit tests.
-
-Spotless: Performs all configured Spotless plugin checks. This mostly validates that copyright headers have been applied to source files.
-
-Module Graph: Validates the module graph, checks that it adheres to the existing rules and limits the depth of the graph.
-
-Android Lint: Runs an Android Lint check on the Release variant. Exports in HTML and SARIF formats.
-
-Android UI Tests: Runs Build & Test APKs on Emulator.wtf.
-
-Diff APK from Base: Uses Diffuse against the current and base APK artifacts and comments on the relevant PR.
-
-## Android Studio
+### Android Studio tuning
 
 [studio.vmoptions](studio.vmoptions): I've included a sample file in this repo with some decent options. Since this is not the only project I work on with Android Studio I set my heap size a bit higher, but otherwise it matches the Gradle & Kotlin Daemon JVM args.
 
-### IDE Sync
+#### IDE sync
 
 The single biggest sync win is **parallel model fetch**: the IDE fetches each project's Tooling
 API model in parallel instead of serially. Block reported a ~57% reduction in sync duration from
@@ -139,102 +236,11 @@ compatible, which this one is; Patch 1 lifted the requirement.) It pairs natural
 Isolated Projects flag documented above.
 
 Beyond that, sync cost scales with how many Gradle projects the IDE has to configure and how much
-dependency resolution each one triggers. The techniques for cutting that down at scale — project
-focusing, pre-compiled artifact substitution, and intransitive sync — are all adopted in this repo
-and tracked in [docs/build-optimization-roadmap.md](docs/build-optimization-roadmap.md). Artifact
-substitution is live: see [docs/artifact-swap.md](docs/artifact-swap.md) for how unchanged modules
-are swapped for pre-compiled GitHub-Packages artifacts during IDE sync, and what that took on a
-Kotlin-DSL build.
+dependency resolution each one triggers. This repo measured project focusing (Spotlight),
+pre-compiled artifact substitution (Artifact Swap), intransitive sync (Fastsync) and dependency
+pre-fetching while Gradle was its only build; the write-ups and numbers are in
+[docs/gradle-ide-sync-experiments.md](docs/gradle-ide-sync-experiments.md).
 
-#### Project focusing (Spotlight)
+## License
 
-The [Spotlight](https://github.com/joshfriend/spotlight) Gradle plugin moves the project
-`include`s out of [settings.gradle.kts](settings.gradle.kts) into a flat
-[gradle/all-projects.txt](gradle/all-projects.txt) and computes the dependency graph by parsing
-build scripts. To load only the projects you're working on into the IDE, list them in
-`gradle/ide-projects.txt` (git-ignored, per-developer) and re-sync — Spotlight resolves their
-transitive dependencies for you, so the IDE configures a focused subset instead of all 28 projects
-(focusing `:feature:talks` brings in its 10-project closure; a simulated-sync cold configuration
-drops from 1.5–2.3 s for the full graph to 0.85 s, best of three).
-Install the companion [IDE plugin](https://plugins.jetbrains.com/plugin/27451-spotlight) to manage
-the focus set from the UI. `./gradlew :checkAllProjectsList` guards that no stray `include`s creep
-back into the settings file.
-
-#### Intransitive sync (Fastsync)
-
-IDE code completion only needs each module's *compile* classpath, but the Gradle model the IDE
-builds during sync also resolves every variant's *runtime* classpath — for a large graph, that is
-most of the dependency-resolution work in a sync. Block's
-[Fastsync](https://github.com/joshfriend/fastsync) trick is to make runtime classpaths
-non-transitive during sync. This repo implements it as the `androidbuild.fastsync` convention
-plugin ([build-logic](build-logic/src/main/kotlin/androidbuild.fastsync.gradle.kts)), applied to
-every module through `androidbuild.kotlin-common`: when the `idea.sync.active` system property is
-set, every resolvable `*RuntimeClasspath` configuration is marked `isTransitive = false` and
-resolved consistently with its `*CompileClasspath` twin (which keeps BOM-managed versions intact).
-It matches by name suffix rather than walking the JVM `SourceSetContainer` the way the upstream
-plugin does, because AGP's variant classpaths (`debugRuntimeClasspath`,
-`debugUnitTestRuntimeClasspath`, …) never appear in that container.
-
-Command-line builds and CI are byte-identical — nothing keys off anything but the sync property.
-Simulate a sync from the terminal with `-Didea.sync.active=true`; opt out for a session with
-`-Pfastsync.enabled=false` (Compose previews and the debugger use the runtime classpath, so if one
-of those stops finding a transitively-provided class, that is the switch). Measured on this repo
-(normal clone, simulated sync, best of three; "cold" is `--no-configuration-cache`):
-
-| Simulated sync (`-Didea.sync.active=true`) | 17 modules: on | off | 28 modules: on | off |
-|---|---|---|---|---|
-| Cold configuration (`help`) | 1.5 s | 1.5 s | 1.50 s | 1.65 s |
-| Warm (configuration-cache hit) | 0.9 s | 0.9 s | 1.15 s | 0.78 s |
-| Every module's `:dependencies` (resolves all configurations) | — | — | 4.59 s | 3.92 s |
-| `:app` `debugRuntimeClasspath` report, lines | 80 | 909 | 164 | 1,670 |
-| All-modules dependency report, lines | — | — | 89,616 | 132,943 |
-
-The graph shrinks exactly as intended: at 28 modules the whole-build report is a third smaller and
-`:app`'s runtime classpath is a tenth the size. It stays fully resolved too, with zero `FAILED`
-entries, including under an Artifact-Swap-active sync where swapped modules resolve to
-content-hash artifacts. The 28-module run is what caught the androidTest case:
-[#444](https://github.com/kaeawc/android-build/pull/444) fixed a test-only BOM-managed dependency
-that AGP had left unresolved. The wall-clock win is still zero. The warm and all-modules rows are
-sub-second noise in both directions, and with a warm dependency cache, resolution is not where
-sync time goes at this size. Block's 94% came from thousands of modules where it is. This repo is
-the reference implementation of the mechanism; the honest numbers are the point. (These local
-runs had Isolated Projects off via a machine-wide `~/.gradle/gradle.properties` override; the
-repo's own setting is on.)
-
-#### Dependency pre-fetching
-
-The last sync cost that none of the above touches is the network: the first sync on a freshly
-checked-out branch still downloads whatever dependencies changed since the last one. Block's fix
-is to warm the Gradle dependency cache in the background, from a git `post-checkout` hook and on
-a schedule, so the sync finds everything already on disk. This repo's version:
-
-- `./gradlew prefetchDependencies` — a task on every module (`androidbuild.prefetch`, applied via
-  `androidbuild.kotlin-common`) whose only input is an artifact view of the *external* half of
-  each compile and runtime classpath. Declaring those as task inputs makes Gradle download them
-  (and run the AAR transforms) before the action runs; project dependencies are filtered out so
-  nothing compiles. It has no outputs, so it always re-resolves, which is cheap once warm.
-- [scripts/prefetch-dependencies.sh](scripts/prefetch-dependencies.sh) runs it quietly with a
-  `mkdir` lock so rapid branch hops don't stack Gradle invocations.
-- [.githooks/post-checkout](.githooks/post-checkout) runs the script in the background after
-  *branch* checkouts only (the `$3 = 1` contract the Artifact Swap refresh already uses), when
-  `prefetch.onCheckout=true` is set in `gradle.properties` (repo or `~/.gradle`). It is opt-in and
-  off by default; CI restores its dependency cache instead.
-
-Measured on this repo (fresh `GRADLE_USER_HOME`, wrapper and plugins already downloaded, so the
-numbers isolate `modules-2`):
-
-| Fresh `modules-2`, then… | 17 modules: without | with | 28 modules: without | with |
-|---|---|---|---|---|
-| `prefetchDependencies` (background, cold) | — | 60.8 s (+134 MB) | — | 78.7 s (+126 MB) |
-| First `:app:dependencies` on the branch (resolves every `:app` configuration) | 92.7 s | 24.4 s | 131.2 s | 35.6 s |
-| Warm re-run | 1.1 s | 1.1 s | 3–18 s | 3–19 s |
-
-A 74% cut in the first-resolve wait at 17 modules and 73% at 28, in the same ballpark as Block's
-83% (theirs is Develocity telemetry across a fleet; each of these is one machine, one run). At 28
-modules the warm re-runs vary with daemon start-up and are the same with or without prefetch. The
-28-module runs had Isolated Projects off, to match the other local measurements. The ~30 s that remains is what the proxy
-resolves beyond the compile/runtime classpaths: lint and Kotlin-compiler classpaths, annotation
-processors, and the report's own metadata fetches. On this repo the dependency set is small and CI
-already restores its cache, so the value here is the pattern: the task, the lock-guarded script, and
-the hook contract are what transfer to a build where a branch switch really does mean minutes of
-downloads.
+[MIT](LICENSE)

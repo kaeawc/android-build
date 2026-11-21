@@ -27,6 +27,15 @@ indent_size = 2
 [*.md]
 trim_trailing_whitespace = false
 
+# Bazel (formatted by buildifier: bazel run //bazel:buildifier)
+[{BUILD,BUILD.bazel,MODULE.bazel,*.bzl,.bazelrc}]
+indent_style = space
+indent_size = 4
+
+[*.py]
+indent_style = space
+indent_size = 4
+
 [*.xml]
 indent_style = space
 indent_size = 2
