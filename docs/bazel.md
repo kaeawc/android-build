@@ -122,10 +122,8 @@ Notes on how dependencies resolve differently from Gradle:
   common metadata are listed by variant: `coil-compose-android`, `haze-android`,
   `metro:runtime-jvm`, `kotlinx-datetime-jvm`. AndroidX and most kotlinx roots already depend on
   the right variant.
-- **OkHttp** publishes `okhttp-jvm` and `okhttp-android` with one API. Bazel has one classpath,
-  so every target uses `okhttp-android` (`//third_party/okhttp`); JVM unit tests only touch its
-  plain model types. Don't add `okhttp-jvm` beside it: Bazel merges duplicate classes
-  first-wins without an error, and the JVM `PlatformRegistry` crashes the app at startup.
+- **OkHttp** publishes `okhttp-jvm` and `okhttp-android` with one API. Modules compile against
+  `okhttp-android` (`//third_party/okhttp`), and unit tests run on `okhttp-jvm` (see below).
 - **Versions come from Gradle.** rules_jvm_external's Maven resolver resolves a transitive
   conflict to the *nearest* version, not the highest as Gradle does. It can't reconcile AndroidX's
   exact-version ranges (`[1.7.0,1.7.0]`), and it doesn't fetch the `-android` variants that some
@@ -135,6 +133,12 @@ Notes on how dependencies resolve differently from Gradle:
   every artifact Bazel would resolve differently in `GRADLE_ALIGNMENT` in `MODULE.bazel`. It
   fails if an artifact listed in `MODULE.bazel` is older than what Gradle resolves, which means
   the two version lists drifted.
+- **One variant per library in the APK.** Bazel merges duplicate classes first-wins, without an
+  error. `repin.py` redirects `-jvm` variants that Gradle replaces with `-android` ones
+  (`GRADLE_VARIANTS`), for example `okhttp-jvm`, which `logging-interceptor` depends on.
+  JVM unit tests still need those `-jvm` jars, because the Android variants call Android APIs.
+  `//third_party/jvm_test_variants` (`JVM_TEST_VARIANTS`) puts them first on every unit test's
+  classpath.
 - **Unit tests of Android modules** run on the plain JVM against `android.jar`, like Gradle's
   local unit tests without Robolectric.
 
