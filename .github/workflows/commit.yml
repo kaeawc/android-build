@@ -210,11 +210,45 @@ jobs:
         with:
           disk-cache: apk
 
-      - name: "Build APK from PR base SHA"
+      # A base commit from before the Bazel migration has no MODULE.bazel. Bazel run in base/
+      # would then walk up to the PR checkout's workspace and build the PR head instead, so
+      # such a base is built with the Gradle build it had.
+      - name: "Detect the base commit's build system"
+        id: base-build
+        run: |
+          if [ -f base/MODULE.bazel ]; then
+            echo "system=bazel" >> "$GITHUB_OUTPUT"
+          else
+            echo "system=gradle" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: "Build APK from PR base SHA (Bazel)"
+        if: steps.base-build.outputs.system == 'bazel'
         working-directory: base
         run: |
           bazel build --config=ci //app
           mkdir -p ../out && cp bazel-bin/app/app.apk ../out/app-base-debug.apk
+
+      - name: "Install JDK"
+        if: steps.base-build.outputs.system == 'gradle'
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'zulu'
+          java-version: '27'
+
+      - name: "Setup Gradle"
+        if: steps.base-build.outputs.system == 'gradle'
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+          validate-wrappers: true
+
+      - name: "Build APK from PR base SHA (Gradle)"
+        if: steps.base-build.outputs.system == 'gradle'
+        working-directory: base
+        run: |
+          ./gradlew assembleDebug --stacktrace
+          mkdir -p ../out && cp app/build/outputs/apk/debug/app-debug.apk ../out/app-base-debug.apk
 
       - name: "Store Base APK"
         uses: actions/upload-artifact@v7
