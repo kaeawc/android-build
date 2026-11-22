@@ -27,6 +27,39 @@ _PLUGINS = {
     "serialization": "//bazel/kotlin:serialization",
 }
 
+# The module graph: who may depend on each layer (top-level directory). Bazel enforces it through
+# visibility, so `bazel build` fails on a dependency the architecture doesn't allow:
+#
+#   app        -> anything
+#   feature    -> data, client, subsystem, foundation, core
+#   data       -> client, subsystem, core
+#   client     -> core
+#   subsystem  -> foundation, core
+#   foundation -> foundation, core
+#   core       -> core
+_LAYER_VISIBILITY = {
+    "client": ["//app:__pkg__", "//data:__subpackages__", "//feature:__subpackages__"],
+    "core": ["//visibility:public"],
+    "data": ["//app:__pkg__", "//feature:__subpackages__"],
+    "feature": ["//app:__pkg__"],
+    "foundation": [
+        "//app:__pkg__",
+        "//feature:__subpackages__",
+        "//foundation:__subpackages__",
+        "//subsystem:__subpackages__",
+    ],
+    "subsystem": ["//app:__pkg__", "//data:__subpackages__", "//feature:__subpackages__"],
+}
+
+def _layer_visibility():
+    layer = native.package_name().split("/")[0]
+    if layer not in _LAYER_VISIBILITY:
+        fail("%s isn't in a known layer (%s); add it to _LAYER_VISIBILITY in bazel/defs.bzl" % (
+            native.package_name(),
+            ", ".join(sorted(_LAYER_VISIBILITY)),
+        ))
+    return _LAYER_VISIBILITY[layer]
+
 def _plugins(names):
     return [_PLUGINS[name] for name in names]
 
@@ -80,7 +113,7 @@ def kt_jvm_module(
         exports = [],
         plugins = [],
         test_deps = [],
-        visibility = ["//visibility:public"]):
+        visibility = None):
     """A pure Kotlin/JVM module (androidbuild.kotlin-jvm).
 
     Args:
@@ -89,7 +122,7 @@ def kt_jvm_module(
       exports: api dependencies (also compiled against).
       plugins: compiler plugins by name: "metro", "serialization".
       test_deps: extra testImplementation dependencies.
-      visibility: visibility of the library.
+      visibility: who may depend on the library; defaults to the layer's rule above.
     """
     name = name or _module_name()
     kt_jvm_library(
@@ -100,7 +133,7 @@ def kt_jvm_module(
         plugins = _plugins(plugins),
         exports = exports,
         deps = deps + exports,
-        visibility = visibility,
+        visibility = visibility or _layer_visibility(),
     )
     _unit_tests(":" + name, deps + exports + test_deps, _plugins(plugins))
 
@@ -112,7 +145,7 @@ def kt_android_module(
         plugins = [],
         compose = False,
         test_deps = [],
-        visibility = ["//visibility:public"]):
+        visibility = None):
     """An Android library module (androidbuild.android-library / android-compose).
 
     Args:
@@ -123,7 +156,7 @@ def kt_android_module(
       plugins: compiler plugins by name: "metro", "serialization".
       compose: whether the module uses Jetpack Compose (applies the Compose compiler).
       test_deps: extra testImplementation dependencies.
-      visibility: visibility of the library.
+      visibility: who may depend on the library; defaults to the layer's rule above.
     """
     name = name or _module_name()
     plugin_names = plugins + (["compose"] if compose else [])
@@ -147,7 +180,7 @@ def kt_android_module(
         plugins = _plugins(plugin_names),
         exports = exports,
         deps = deps + exports,
-        visibility = visibility,
+        visibility = visibility or _layer_visibility(),
     )
 
     # Like Gradle's Android unit tests: plain JVM tests that compile against android.jar.

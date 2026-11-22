@@ -1,8 +1,9 @@
 # Bazel build
 
-Bazel builds and tests every module and the app; CI runs it in [`.github/workflows/bazel.yml`](../.github/workflows/bazel.yml).
-The Gradle build stays for Android Studio, which syncs Gradle projects. Both builds read the same
-sources (the Gradle `src/main/kotlin`, `src/test/kotlin`, `src/main/res` layout).
+Bazel builds, tests and packages every module and the app, on the command line and in CI
+([`commit.yml`](../.github/workflows/commit.yml)). The Gradle build stays for Android Studio, which
+syncs Gradle projects, and for Android Lint. Both builds read the same sources (the Gradle
+`src/main/kotlin`, `src/test/kotlin`, `src/main/res` layout).
 
 ## Requirements
 
@@ -22,6 +23,7 @@ sources (the Gradle `src/main/kotlin`, `src/test/kotlin`, `src/main/res` layout)
 | One module's tests | `bazel test //data/articles:tests` |
 | One test class | `bazel test //data/articles:CacheModelsTest` |
 | Everything CI builds | `bazel build //... && bazel test //...` |
+| Format and lint BUILD / .bzl / MODULE.bazel | `bazel run //bazel:buildifier` (CI runs `//bazel:buildifier_check`) |
 
 Put machine-specific settings (cache locations, `--jobs`, worker limits) in `user.bazelrc` at the
 repository root. It's git-ignored and imported by `.bazelrc`.
@@ -57,6 +59,14 @@ kt_android_module(
 
 `api(...)` dependencies go in `exports`, `testImplementation(...)` ones in `test_deps`. The library
 target is named after the directory (`//feature/photography`), and `:tests` runs every `*Test.kt`.
+
+## Module graph
+
+Each top-level directory is a layer, and `bazel/defs.bzl` gives every module its layer's
+visibility, so Bazel's analysis rejects a dependency the architecture doesn't allow (for example
+`//feature/saved` depending on `//feature/articles`). This replaces the Gradle module graph
+assertion plugin; CI's Module Graph Check runs `bazel build --nobuild //...`. A new top-level
+directory needs an entry in `_LAYER_VISIBILITY`.
 
 ## Kotlin incremental compilation
 
@@ -99,7 +109,7 @@ Maven artifacts are listed in `MODULE.bazel` and pinned in `maven_install.json`.
 match `gradle/libs.versions.toml`; bump both together.
 
 **After changing artifacts, repin** (not plain `bazel run @maven//:pin`; see the alignment note
-below). `--check` reports differences without changing anything:
+below). CI's Dependency Versions job runs it with `--check`:
 
 ```
 bazel/scripts/repin.py
@@ -135,7 +145,7 @@ Notes on how dependencies resolve differently from Gradle:
 ## Not covered by Bazel
 
 - **AutoMobile tests** (`app/src/test/.../automobiletest`) drive a device through the AutoMobile
-  daemon; CI runs them with Gradle.
+  daemon; CI runs them with Gradle against the Bazel-built APK.
 - **Android Lint** runs on the Gradle build.
 - **Android Studio** syncs the Gradle build. The [Bazel plugin for IntelliJ](https://github.com/bazelbuild/intellij)
   can import this workspace too, but isn't set up here.

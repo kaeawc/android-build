@@ -1,1 +1,21 @@
-# Shared Bazel configuration: module macros (defs.bzl), toolchains and patches.
+load("@buildifier_prebuilt//:rules.bzl", "buildifier")
+
+# Shared Bazel configuration: module macros (defs.bzl), toolchains, and scripts.
+
+_BUILDIFIER_EXCLUDES = ["./bazel-*/*"]
+
+# Formats and lint-fixes every BUILD, .bzl and MODULE.bazel file: bazel run //bazel:buildifier
+buildifier(
+    name = "buildifier",
+    exclude_patterns = _BUILDIFIER_EXCLUDES,
+    lint_mode = "fix",
+    mode = "fix",
+)
+
+# CI's check (Module Graph Check job): fails on unformatted files or lint warnings.
+buildifier(
+    name = "buildifier_check",
+    exclude_patterns = _BUILDIFIER_EXCLUDES,
+    lint_mode = "warn",
+    mode = "check",
+)
