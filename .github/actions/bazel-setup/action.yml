@@ -1,5 +1,5 @@
 name: "Bazel setup"
-description: "Installs the Android SDK packages the Bazel build needs and Bazelisk, and restores the repository cache and the shared disk cache from main."
+description: "Installs the Android SDK packages the Bazel build needs and Bazelisk, and restores the repository cache and the disk cache main saved."
 
 inputs:
   disk-cache:
@@ -18,18 +18,45 @@ runs:
         (yes || true) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
         "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"
 
-    # Bazelisk reads .bazelversion. The repository cache (downloads, keyed by MODULE.bazel) is saved
-    # only from main so pull requests can't evict each other's entries; every run restores it.
+    # Bazelisk reads .bazelversion. Its cache is saved only from main.
     - uses: bazel-contrib/setup-bazel@0.19.2
       with:
         bazelisk-cache: true
-        repository-cache: true
         cache-save: ${{ github.event_name != 'pull_request' }}
 
-    # The disk cache isn't setup-bazel's: that one is keyed by the BUILD files alone and never
-    # re-saved while they're unchanged, so main's cache went stale with every source change.
-    # Instead every Bazel job restores the newest cache main saved, and the Unit Tests job, which
-    # builds all of //..., saves a fresh one on each push to main (bazel-cache-save).
+    # Both caches are restored here and saved by bazel-cache-save, which only the Unit Tests job
+    # runs, on pushes to main: it builds all of //..., so its caches serve every job, and pull
+    # requests can't evict each other's entries. The Actions cache holds 10 GB per repository.
+    #
+    # The repository cache (downloads) is keyed by the files that pin them. The disk cache (action
+    # outputs) changes with every commit, so each job restores the newest one main saved.
+    - name: "Cache keys"
+      shell: bash
+      run: |
+        echo "BAZEL_REPOSITORY_CACHE_KEY=bazel-repo-v1-$RUNNER_OS-${{ hashFiles('MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', 'maven_jvm_test_variants_install.json', 'bazel/jdk/extensions.bzl') }}" >> "$GITHUB_ENV"
+        echo "BAZEL_DISK_CACHE_KEY=bazel-disk-v1-$RUNNER_OS-$GITHUB_SHA" >> "$GITHUB_ENV"
+
+    # Downloads only: Bazel 9 also keeps every fetched repository extracted in <repository
+    # cache>/contents, which doubles the cache (2.2 GB instead of 1.3 GB) to save ~7 s of unpacking
+    # in a job, less than restoring the extra gigabyte takes.
+    - name: "Point Bazel at the repository cache"
+      shell: bash
+      run: |
+        echo "common --repository_cache=$HOME/.cache/bazel-repo" >> "$HOME/.bazelrc"
+        echo "common --repo_contents_cache=" >> "$HOME/.bazelrc"
+
+    - name: "Restore repository cache"
+      id: repository-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.cache/bazel-repo
+        key: ${{ env.BAZEL_REPOSITORY_CACHE_KEY }}
+        restore-keys: bazel-repo-v1-${{ runner.os }}-
+
+    - name: "Record repository cache hit"
+      shell: bash
+      run: echo "BAZEL_REPOSITORY_CACHE_HIT=${{ steps.repository-cache.outputs.cache-hit }}" >> "$GITHUB_ENV"
+
     - name: "Point Bazel at the disk cache"
       if: inputs.disk-cache == 'true'
       shell: bash
@@ -40,12 +67,11 @@ runs:
       uses: actions/cache/restore@v5
       with:
         path: ~/.cache/bazel-disk
-        key: bazel-disk-v1-${{ runner.os }}-${{ github.sha }}
+        key: ${{ env.BAZEL_DISK_CACHE_KEY }}
         restore-keys: bazel-disk-v1-${{ runner.os }}-
 
-    # Bazel refreshes the mtime of every disk cache entry it reads or writes, so entries older
-    # than this marker when the job ends weren't used by the build (bazel-cache-save prunes them).
+    # Bazel refreshes the mtime of every cache entry it reads or writes, so entries older than this
+    # marker when the job ends weren't used by the build (bazel-cache-save prunes them).
     - name: "Mark the start of the build"
-      if: inputs.disk-cache == 'true'
       shell: bash
-      run: touch "$RUNNER_TEMP/bazel-disk-cache-marker"
+      run: touch "$RUNNER_TEMP/bazel-cache-marker"

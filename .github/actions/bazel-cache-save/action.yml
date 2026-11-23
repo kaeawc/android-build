@@ -1,21 +1,59 @@
 name: "Bazel cache save"
-description: "Saves the disk cache restored by bazel-setup, pruned to the entries this job's build used."
+description: "Saves the caches bazel-setup restored, pruned to the entries this job's build used, and deletes the ones they supersede. The job needs the actions: write permission."
 
 runs:
   using: "composite"
   steps:
-    # Keeps the cache at the build's working set: entries for outputs that changed since are
-    # dropped instead of accumulating in every save.
+    # Keeps the caches at the build's working set: entries for outputs that changed since, or for
+    # downloads no longer pinned, are dropped instead of accumulating in every save.
     - name: "Prune unused disk cache entries"
       shell: bash
       run: |
         cache="$HOME/.cache/bazel-disk"
         echo "Before: $(du -sh "$cache" | cut -f1)"
-        find "$cache" -type f ! -newer "$RUNNER_TEMP/bazel-disk-cache-marker" -delete
+        find "$cache" -type f ! -newer "$RUNNER_TEMP/bazel-cache-marker" -delete
         echo "After: $(du -sh "$cache" | cut -f1)"
 
     - name: "Save disk cache"
       uses: actions/cache/save@v5
       with:
         path: ~/.cache/bazel-disk
-        key: bazel-disk-v1-${{ runner.os }}-${{ github.sha }}
+        key: ${{ env.BAZEL_DISK_CACHE_KEY }}
+
+    # A download is a directory holding the file and zero-byte id-* markers. Bazel needs the
+    # markers but refreshes only the file's mtime, so a directory goes when its file is stale.
+    - name: "Prune unused repository cache entries"
+      if: env.BAZEL_REPOSITORY_CACHE_HIT != 'true'
+      shell: bash
+      run: |
+        cache="$HOME/.cache/bazel-repo"
+        echo "Before: $(du -sh "$cache" | cut -f1)"
+        find "$cache/content_addressable" -name file ! -newer "$RUNNER_TEMP/bazel-cache-marker" -printf '%h\0' | xargs -0 -r rm -rf
+        echo "After: $(du -sh "$cache" | cut -f1)"
+
+    - name: "Save repository cache"
+      if: env.BAZEL_REPOSITORY_CACHE_HIT != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.cache/bazel-repo
+        key: ${{ env.BAZEL_REPOSITORY_CACHE_KEY }}
+
+    # Each save is a new entry (a cache key can't be overwritten), so the previous ones would
+    # otherwise stay until the Actions cache evicts them, taking the 10 GB other caches need.
+    # Main's runs don't overlap (the workflow's concurrency group), so no other run is saving.
+    - name: "Delete superseded caches"
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: |
+        for key in "$BAZEL_DISK_CACHE_KEY" "$BAZEL_REPOSITORY_CACHE_KEY"; do
+          prefix="${key%-*}-"
+          # Nothing is deleted unless the new entry exists: a failed save is only a warning.
+          gh cache list --ref "$GITHUB_REF" --key "$prefix" --limit 100 --json id,key \
+            --jq "if any(.[]; .key == \"$key\") then .[] | select(.key != \"$key\") | \"\(.id) \(.key)\" else empty end" |
+            while read -r id old_key; do
+              echo "Deleting $old_key"
+              gh cache delete "$id"
+            done
+        done
