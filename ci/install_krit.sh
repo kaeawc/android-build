@@ -4,12 +4,13 @@
 # release asset that changes after review fails the install.
 #
 # To update: bump KRIT_VERSION and replace the checksums with the release's checksums.txt entries.
-# Pinned to v0.2.0, the only release (kaeawc/krit#1057); an official setup action
-# (kaeawc/krit#1058) would replace this script and let Dependabot bump the version.
+# An official setup action (kaeawc/krit#1058) would replace this script and let Dependabot bump
+# the version. After a bump, regenerate the baseline (ci/validate_krit.sh --update-baseline): its
+# entries include each finding's message, which can change between releases.
 
 set -euo pipefail
 
-KRIT_VERSION="0.2.0"
+KRIT_VERSION="0.3.0"
 KRIT_INSTALL_DIR=${KRIT_INSTALL_DIR:-"$HOME/.cache/krit/$KRIT_VERSION"}
 
 libc=""
@@ -18,11 +19,11 @@ if [[ "$(uname -s)" == "Linux" ]] && ldd --version 2>&1 | grep -qi musl; then
 fi
 
 case "$(uname -s)$libc-$(uname -m)" in
-  Linux-musl-x86_64) platform="linux_musl_amd64"; sha256="9f5a9abf83455438ebc00b841dc4a661d009efc2e4976adea79caf779a86d084" ;;
-  Linux-x86_64) platform="linux_amd64"; sha256="ccb39239e547e4141db7f73ec434f09cc3a9b99ed23a3779f586c05d5680408d" ;;
-  Linux-aarch64 | Linux-arm64) platform="linux_arm64"; sha256="3006918a2da8f4e1c6cfe032d2688f138748cc6d0a7497686dfa9a3ad58a1f12" ;;
-  Darwin-arm64) platform="darwin_arm64"; sha256="00e2170d07aa0aa53fce0dd8a4cc9a8a4f93b0f7858b38fb2bd2d8158c1b8151" ;;
-  Darwin-x86_64) platform="darwin_amd64"; sha256="8c80fdbdd8267fc800e082bd58ef16362e375c861496a1579e48d22b430fb096" ;;
+  Linux-musl-x86_64) platform="linux_musl_amd64"; sha256="d99abf5ce2d45300d1c1b294d86069116eb17e2249d5afe04478909609195711" ;;
+  Linux-x86_64) platform="linux_amd64"; sha256="0bde297c7a32b125e9cd7f88381dbb60e068ed52501199639a9a4c926b5f4d43" ;;
+  Linux-aarch64 | Linux-arm64) platform="linux_arm64"; sha256="d8421a9172f6cf6785d2524695da37a15070154123a1b3cfc35b99aa50adcc90" ;;
+  Darwin-arm64) platform="darwin_arm64"; sha256="b29218c662bae30ecd24bda9aef86fdcd388c64fbb02e9cebcb649b72e6ea600" ;;
+  Darwin-x86_64) platform="darwin_amd64"; sha256="d230704b6f91bced637f30a639ad3a6a07ba28c6cb480000cce860cd3f1abf74" ;;
   *)
     echo "No Krit $KRIT_VERSION release for $(uname -s) $(uname -m)" >&2
     exit 1
