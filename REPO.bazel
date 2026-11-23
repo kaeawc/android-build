@@ -1,0 +1,3 @@
+# Bazel's convenience symlinks (bazel-bin, bazel-out, bazel-<workspace>, ...) point into the
+# output base; without this, the second `bazel build //...` walks into them as packages.
+ignore_directories(["bazel-*"])

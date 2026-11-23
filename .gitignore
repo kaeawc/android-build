@@ -54,3 +54,6 @@ taskOutputs/
 # Bazel
 /bazel-*
 user.bazelrc
+
+# Krit analysis caches (krit.yml configures it; ci/validate_krit.sh runs it)
+.krit/

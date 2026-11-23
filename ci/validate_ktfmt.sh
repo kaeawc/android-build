@@ -4,6 +4,10 @@ INSTALL_KTFMT_WHEN_MISSING=${INSTALL_KTFMT_WHEN_MISSING:-false}
 ONLY_TOUCHED_FILES=${ONLY_TOUCHED_FILES:-true}
 ONLY_CHANGED_SINCE_SHA=${ONLY_CHANGED_SINCE_SHA:-""}
 
+# Files per ktfmt process: one JVM per file spent most of the check starting JVMs (~2.5 min
+# for 240 files on CI). Batches run in parallel, one per core.
+KTFMT_BATCH_SIZE=${KTFMT_BATCH_SIZE:-100}
+
 # Check if ktfmt is installed
 if ! command -v ktfmt &>/dev/null; then
     echo "ktfmt missing"
@@ -52,7 +56,7 @@ if [[ -n "$ONLY_CHANGED_SINCE_SHA" ]]; then
   fi
   
   # Run ktfmt check on the modified files
-  errors=$(echo "$unique_files" | PATH="$PATH" xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
+  errors=$(echo "$unique_files" | PATH="$PATH" xargs -n "$KTFMT_BATCH_SIZE" -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
 elif [[ "${ONLY_TOUCHED_FILES}" == "true" ]]; then
   # use git so we are only checking changed kotlin source files
   echo "Checking only git touched Kotlin files..."
@@ -69,7 +73,7 @@ elif [[ "${ONLY_TOUCHED_FILES}" == "true" ]]; then
   fi
   
   # Run ktfmt check on the modified files
-  errors=$(echo "$unique_files" | PATH="$PATH" xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
+  errors=$(echo "$unique_files" | PATH="$PATH" xargs -n "$KTFMT_BATCH_SIZE" -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
 else
   # simply apply ktfmt to all kotlin source files
   echo "Checking all Kotlin files in the project..."
@@ -83,7 +87,7 @@ else
   fi
   
   # Run ktfmt check on all Kotlin files
-  errors=$(echo "$files" | PATH="$PATH" xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
+  errors=$(echo "$files" | PATH="$PATH" xargs -n "$KTFMT_BATCH_SIZE" -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style --dry-run 2>&1)
 fi
 
 # Calculate total elapsed time

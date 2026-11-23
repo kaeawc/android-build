@@ -1,10 +1,11 @@
 name: "Bazel setup"
-description: "Installs the Android SDK packages the Bazel build needs and Bazelisk with GitHub-cached disk and repository caches."
+description: "Installs the Android SDK packages the Bazel build needs and Bazelisk, and restores the repository cache and the shared disk cache from main."
 
 inputs:
   disk-cache:
-    description: "Disk cache key (one per job kind, so jobs don't evict each other's entries)."
-    required: true
+    description: "Restore the disk cache (action outputs). Analysis-only jobs don't need it."
+    required: false
+    default: "true"
 
 runs:
   using: "composite"
@@ -17,11 +18,34 @@ runs:
         (yes || true) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
         "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"
 
-    # Bazelisk reads .bazelversion. Caches are saved only from main so pull requests can't evict
-    # each other's entries; every run restores them.
+    # Bazelisk reads .bazelversion. The repository cache (downloads, keyed by MODULE.bazel) is saved
+    # only from main so pull requests can't evict each other's entries; every run restores it.
     - uses: bazel-contrib/setup-bazel@0.19.2
       with:
         bazelisk-cache: true
-        disk-cache: ${{ inputs.disk-cache }}
         repository-cache: true
         cache-save: ${{ github.event_name != 'pull_request' }}
+
+    # The disk cache isn't setup-bazel's: that one is keyed by the BUILD files alone and never
+    # re-saved while they're unchanged, so main's cache went stale with every source change.
+    # Instead every Bazel job restores the newest cache main saved, and the Unit Tests job, which
+    # builds all of //..., saves a fresh one on each push to main (bazel-cache-save).
+    - name: "Point Bazel at the disk cache"
+      if: inputs.disk-cache == 'true'
+      shell: bash
+      run: echo "build --disk_cache=$HOME/.cache/bazel-disk" >> "$HOME/.bazelrc"
+
+    - name: "Restore disk cache"
+      if: inputs.disk-cache == 'true'
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.cache/bazel-disk
+        key: bazel-disk-v1-${{ runner.os }}-${{ github.sha }}
+        restore-keys: bazel-disk-v1-${{ runner.os }}-
+
+    # Bazel refreshes the mtime of every disk cache entry it reads or writes, so entries older
+    # than this marker when the job ends weren't used by the build (bazel-cache-save prunes them).
+    - name: "Mark the start of the build"
+      if: inputs.disk-cache == 'true'
+      shell: bash
+      run: touch "$RUNNER_TEMP/bazel-disk-cache-marker"

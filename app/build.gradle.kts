@@ -109,26 +109,6 @@ android {
         viewBinding = false
     }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
-
-    lint {
-        sarifOutput = file("${layout.buildDirectory.get()}/reports/lint-results.sarif")
-        htmlOutput = file("${layout.buildDirectory.get()}/reports/lint-results.html")
-        abortOnError = true
-        checkDependencies = true
-        ignoreTestSources = true
-
-        // Detect command line arguments
-        val customLintConfig = project.findProperty("lint-config") as? String ?: "default"
-
-        val lintConfigFile = file("../android-lint/${customLintConfig}-lint.xml")
-        if (!lintConfigFile.exists()) {
-            throw GradleException("Lint config file not found: ${lintConfigFile.absolutePath}")
-        } else {
-            println("Using ${lintConfigFile.absolutePath} for lint config")
-        }
-
-        lintConfig = lintConfigFile
-    }
 }
 
 dependencies {

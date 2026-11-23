@@ -1,0 +1,21 @@
+# Krit (https://github.com/kaeawc/krit) is the project's static analysis: Kotlin, Compose,
+# coroutines, AndroidManifest and resource rules in one pass of a few seconds, in place of
+# Android Lint and detekt. Run it with ci/validate_krit.sh; findings that predate Krit are listed
+# in ci/krit-baseline.xml, so CI fails only on new ones.
+# Options: https://kaeawc.github.io/krit/configuration/ (krit --generate-schema prints them all).
+
+naming:
+  # detekt's defaults (Krit's built-in fallback is stricter): Compose design tokens are PascalCase
+  # (val Primary = Color(...)) and private top-level constants SCREAMING_CASE.
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][_A-Za-z0-9]*'
+    propertyPattern: '[A-Za-z][_A-Za-z0-9]*'
+    privatePropertyPattern: '_?[A-Za-z][_A-Za-z0-9]*'
+
+android-lint:
+  # versionCode / versionName and minSdk / targetSdk come from the build (app/BUILD.bazel and
+  # app/build.gradle.kts), which merges them into the manifest.
+  MissingVersionManifest:
+    active: false
+  UsesSdkManifest:
+    active: false

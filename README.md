@@ -38,7 +38,7 @@ features with your own; the build, module structure and CI are the template.
 | Data | Retrofit 3 + kotlinx.serialization, OkHttp 5, DataStore, Coil 3, Glance widgets |
 | Build | Bazel 9.3 (rules_android, rules_kotlin with incremental compilation, rules_jvm_external) for the CLI and CI; Gradle 9.9 / AGP 9.5 with convention plugins for Android Studio |
 | JDK & SDK | Temurin JDK 27 for every tool (Java 25 bytecode); compileSdk 37.2, targetSdk 37, minSdk 27 |
-| Quality | Unit tests on every layer, an instrumentation test APK, Android Lint, ktfmt, buildifier, the module graph enforced by Bazel visibility |
+| Quality | Unit tests on every layer, an instrumentation test APK, [Krit](https://github.com/kaeawc/krit) static analysis, ktfmt, buildifier, the module graph enforced by Bazel visibility |
 | CI | GitHub Actions: Bazel build/test with cached disk and repository caches, APK diffing (Diffuse), UI tests on emulator.wtf, Dependabot |
 
 ## Project structure
@@ -85,7 +85,7 @@ downloads its own JDK 27. Android Studio (Gradle) also uses JDK 27 and downloads
 | One module's tests | `bazel test //data/articles:tests` |
 | Instrumentation test APK | `bazel build //app:instrumentation_tests_apk` |
 | Format BUILD files | `bazel run //bazel:buildifier` |
-| Android Lint | `./gradlew :app:lintRelease` |
+| Static analysis ([Krit](https://github.com/kaeawc/krit), `krit.yml`) | `ci/validate_krit.sh` |
 
 Kotlin compiles incrementally in Bazel's persistent workers: after an edit, only the affected
 sources of a module recompile. `bazel build --config=ic-summary //app` prints what each Kotlin
@@ -118,18 +118,21 @@ Dependabot opens update PRs for the Gradle catalog, Bazel modules and GitHub Act
 | Build APK | `bazel build //app`, uploads the debug APK |
 | Build Base APK | the same for the PR's base commit, for the APK diff |
 | Build Test APK | `bazel build //app:instrumentation_tests_apk` |
-| Unit Tests | `bazel test //...` |
+| Unit Tests | `bazel test //...` (pull requests: `--build_tests_only`) |
 | Module Graph Check | Bazel analysis of `//...` (layer visibility) and buildifier |
 | Dependency Versions | Bazel resolves the same library versions as Gradle (`bazel/scripts/repin.py --check`) |
 | Android Platform | the Gradle build (what Android Studio syncs) still configures |
-| Android Lint | Android Lint on the release variant (Gradle), as HTML and SARIF |
+| Krit | [Krit](https://github.com/kaeawc/krit) static analysis (Kotlin, Compose, manifest and resource rules) in a few seconds; findings not in `ci/krit-baseline.xml` fail the check and show as code scanning annotations |
 | ktfmt, Validate XML, Validate Shell Scripts | formatting and static checks |
 | Diff APK from Base | [Diffuse](https://github.com/JakeWharton/diffuse) report commented on the PR |
 | Android UI Tests | the instrumentation tests on [emulator.wtf](https://emulator.wtf) |
 | AutoMobile JUnit Tests | [AutoMobile](https://github.com/kaeawc/auto-mobile) device tests |
 
-Bazel's disk and repository caches are restored from GitHub's cache on every run and saved from
-`main`. Jobs that need the `EW_API_TOKEN` secret skip themselves where it isn't available
+Every Bazel job restores the disk cache (action outputs) that the last `main` run saved, so a pull
+request rebuilds only what it changed. On each push to `main` the Unit Tests job builds all of
+`//...` and saves a fresh disk cache, pruned to the entries that build used; the repository cache
+(downloads) is saved from `main` when `MODULE.bazel` changes. protoc comes prebuilt rather than
+compiled from C++ sources. A new push to a pull request cancels its previous run. Jobs that need the `EW_API_TOKEN` secret skip themselves where it isn't available
 (Dependabot runs, forks).
 
 ## Build and IDE tuning notes
@@ -198,8 +201,7 @@ performance-relevant choices break down into three groups.
   the one module (`:app`) that enables `BuildConfig` (off by default since AGP 9).
 - `android.r8.maxWorkers=2` — bounds R8 parallelism so it coexists with parallel Gradle tasks
   without over-committing memory. R8 full mode is the AGP 9.0+ default.
-- `android.lint.useK2Uast=true` and the disabled `buildfeatures` (resvalues, shaders) trim work
-  this project never needs.
+- The disabled `buildfeatures` (resvalues, shaders) trim work this project never needs.
 
 ### Compiler flags
 
