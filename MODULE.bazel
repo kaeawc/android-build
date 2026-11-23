@@ -8,6 +8,11 @@ module(name = "android_build")
 
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "bazel_skylib", version = "1.9.2")
+
+# Not used directly: named so .bazelrc can switch the build's protoc to the prebuilt release
+# binary (--@protobuf//bazel/toolchains:prefer_prebuilt_protoc) instead of compiling it, and
+# abseil, from C++ sources. The version is the one rules_java / rules_kotlin already resolve.
+bazel_dep(name = "protobuf", version = "33.4")
 bazel_dep(name = "rules_java", version = "9.9.0")
 bazel_dep(name = "rules_jvm_external", version = "7.2")
 bazel_dep(name = "rules_android", version = "0.8.1")

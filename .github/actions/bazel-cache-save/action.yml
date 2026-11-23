@@ -1,0 +1,21 @@
+name: "Bazel cache save"
+description: "Saves the disk cache restored by bazel-setup, pruned to the entries this job's build used."
+
+runs:
+  using: "composite"
+  steps:
+    # Keeps the cache at the build's working set: entries for outputs that changed since are
+    # dropped instead of accumulating in every save.
+    - name: "Prune unused disk cache entries"
+      shell: bash
+      run: |
+        cache="$HOME/.cache/bazel-disk"
+        echo "Before: $(du -sh "$cache" | cut -f1)"
+        find "$cache" -type f ! -newer "$RUNNER_TEMP/bazel-disk-cache-marker" -delete
+        echo "After: $(du -sh "$cache" | cut -f1)"
+
+    - name: "Save disk cache"
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.cache/bazel-disk
+        key: bazel-disk-v1-${{ runner.os }}-${{ github.sha }}

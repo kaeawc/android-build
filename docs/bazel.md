@@ -2,7 +2,7 @@
 
 Bazel builds, tests and packages every module and the app, on the command line and in CI
 ([`commit.yml`](../.github/workflows/commit.yml)). The Gradle build stays for Android Studio, which
-syncs Gradle projects, and for Android Lint. Both builds read the same sources (the Gradle
+syncs Gradle projects. Both builds read the same sources (the Gradle
 `src/main/kotlin`, `src/test/kotlin`, `src/main/res` layout).
 
 ## Requirements
@@ -146,6 +146,7 @@ Notes on how dependencies resolve differently from Gradle:
 
 - **AutoMobile tests** (`app/src/test/.../automobiletest`) drive a device through the AutoMobile
   daemon; CI runs them with Gradle against the Bazel-built APK.
-- **Android Lint** runs on the Gradle build.
+- **Static analysis** is [Krit](https://github.com/kaeawc/krit) (`ci/validate_krit.sh`), which reads
+  the sources directly: no build needed.
 - **Android Studio** syncs the Gradle build. The [Bazel plugin for IntelliJ](https://github.com/bazelbuild/intellij)
   can import this workspace too, but isn't set up here.

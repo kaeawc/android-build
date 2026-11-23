@@ -19,7 +19,6 @@ workflow:
 .aliases:
   - &artifacts_apk_path "app/build/outputs/apk/debug/app-debug.apk"
   - &artifacts_test_apk_path "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
-  - &reports_lint_path "app/build/reports/lint-results-release.html"
   - &artifacts_release_aab_path "build/outputs/bundle/**/*.aab"
   - &reports_config_cache_path "build/reports/configuration-cache/**/*.html"
 
@@ -162,16 +161,11 @@ validate_shell_scripts:
   script:
     - ci/validate_shell_scripts.sh
 
-android_lint:
-  extends: .android_sdk_job
+krit:
+  extends: .alpine_tools_job
   stage: basic
   script:
-    - ./gradlew :app:lintRelease
-  artifacts:
-    paths:
-      - *reports_lint_path
-      - *reports_config_cache_path
-    expire_in: 1 week
+    - ci/validate_krit.sh
 
 android_ui_tests:
   extends: .alpine_jdk_job

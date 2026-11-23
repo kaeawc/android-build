@@ -3,6 +3,10 @@
 INSTALL_KTFMT_WHEN_MISSING=${INSTALL_KTFMT_WHEN_MISSING:-false}
 ONLY_TOUCHED_FILES=${ONLY_TOUCHED_FILES:-true}
 
+# Files per ktfmt process: one JVM per file spent most of the check starting JVMs (~2.5 min
+# for 240 files on CI). Batches run in parallel, one per core.
+KTFMT_BATCH_SIZE=${KTFMT_BATCH_SIZE:-100}
+
 # Check if ktfmt is installed
 if ! command -v ktfmt &>/dev/null; then
     echo "ktfmt missing"
@@ -49,7 +53,7 @@ if [[ "${ONLY_TOUCHED_FILES}" == "true" ]]; then
   
   # Apply ktfmt to the modified files (without --dry-run)
   echo "Formatting $(echo "$unique_files" | wc -l | xargs) files..."
-  errors=$(echo "$unique_files" | PATH="$PATH" xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style 2>&1)
+  errors=$(echo "$unique_files" | PATH="$PATH" xargs -n "$KTFMT_BATCH_SIZE" -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style 2>&1)
   # Filter out "Done formatting" messages which are not actual errors
   errors=$(echo "$errors" | grep -v "^Done formatting" || echo "")
 
@@ -67,7 +71,7 @@ else
   
   # Apply ktfmt to all kotlin files (without --dry-run)
   echo "Formatting $(echo "$files" | wc -l | xargs) files..."
-  errors=$(echo "$files" | PATH="$PATH" xargs -n 1 -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style 2>&1)
+  errors=$(echo "$files" | PATH="$PATH" xargs -n "$KTFMT_BATCH_SIZE" -P "$(nproc 2>/dev/null || echo 4)" ktfmt --kotlinlang-style 2>&1)
   # Filter out "Done formatting" messages which are not actual errors
   errors=$(echo "$errors" | grep -v "^Done formatting" || echo "")
 

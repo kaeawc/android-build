@@ -28,6 +28,12 @@ build --worker_multiplex
 #   bazel build --config=ic-summary //app
 build:ic-summary --worker_extra_flag=KotlinCompile=--experimental_incremental_compilation_summary
 
+# --- Protobuf ----------------------------------------------------------------------------------
+# rules_kotlin's and rules_android's tools generate code with protoc. Use protobuf's prebuilt
+# protoc release instead of compiling protoc and abseil from C++ sources: ~1,500 fewer actions
+# (most of a cold build's first ten minutes on CI) and a smaller disk cache.
+common --@protobuf//bazel/toolchains:prefer_prebuilt_protoc
+
 # --- General -----------------------------------------------------------------------------------
 build --incompatible_strict_action_env
 build --experimental_reuse_sandbox_directories
