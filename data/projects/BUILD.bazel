@@ -1,0 +1,20 @@
+load("//bazel:defs.bzl", "kt_jvm_module")
+
+kt_jvm_module(
+    plugins = [
+        "metro",
+        "serialization",
+    ],
+    exports = [
+        "//core/model",
+        "//core/network",
+    ],
+    deps = [
+        "//client/github",
+        "//core/di",
+        "//subsystem/storage",
+        "@maven//:dev_zacsweers_metro_runtime_jvm",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_serialization_json",
+    ],
+)

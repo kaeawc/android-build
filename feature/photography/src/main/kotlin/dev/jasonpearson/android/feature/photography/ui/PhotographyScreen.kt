@@ -83,6 +83,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.blur.hazeBlur
+import dev.chrisbanes.haze.blur.materials.HazeMaterials
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import dev.jasonpearson.android.data.photography.GalleryPhoto
 import dev.jasonpearson.android.data.photography.PhotographyRepository
 import dev.jasonpearson.android.foundation.designsystem.components.EmptyContent
@@ -195,6 +200,11 @@ private fun GalleryViewer(gallery: List<GalleryPhoto>, initialPage: Int, onDismi
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
     var chromeVisible by remember { mutableStateOf(true) }
     val context = LocalContext.current
+    // The pager is the Haze source; the top bar and caption blur the photo behind them
+    // (frosted glass on Android 12+, a translucent scrim on older releases).
+    val hazeState = rememberHazeState()
+    val chromeInput = HazeInput.Sources(hazeState)
+    val chromeStyle = HazeMaterials.ultraThin(containerColor = Color.Black)
 
     LaunchedEffect(pagerState.currentPage) {
         scale = 1f
@@ -209,7 +219,7 @@ private fun GalleryViewer(gallery: List<GalleryPhoto>, initialPage: Int, onDismi
         Box(Modifier.fillMaxSize().background(Color.Black)) {
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().hazeSource(hazeState),
                 userScrollEnabled = scale == 1f,
             ) { page ->
                 val photo = photos[page]
@@ -299,7 +309,7 @@ private fun GalleryViewer(gallery: List<GalleryPhoto>, initialPage: Int, onDismi
                 Row(
                     modifier =
                         Modifier.fillMaxWidth()
-                            .background(Color.Black.copy(alpha = 0.55f))
+                            .hazeBlur(input = chromeInput, style = chromeStyle)
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -353,7 +363,7 @@ private fun GalleryViewer(gallery: List<GalleryPhoto>, initialPage: Int, onDismi
                     overflow = TextOverflow.Ellipsis,
                     modifier =
                         Modifier.fillMaxWidth()
-                            .background(Color.Black.copy(alpha = 0.55f))
+                            .hazeBlur(input = chromeInput, style = chromeStyle)
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                 )
             }

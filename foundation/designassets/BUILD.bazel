@@ -1,0 +1,5 @@
+load("//bazel:defs.bzl", "kt_android_module")
+
+kt_android_module(
+    custom_package = "dev.jasonpearson.android.foundation.designassets",
+)

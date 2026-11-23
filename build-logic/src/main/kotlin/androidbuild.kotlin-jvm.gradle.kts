@@ -22,6 +22,11 @@
  * SOFTWARE.
  */
 
+import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.withType
+
 // Convention for platform-agnostic, pure-Kotlin/JVM modules -- the bottom `:core`
 // layer of the module graph. Applies the Kotlin JVM plugin plus the shared
 // compiler configuration so these modules stay Android-free but consistent with
@@ -29,8 +34,20 @@
 plugins {
     id("org.jetbrains.kotlin.jvm")
     id("androidbuild.kotlin-common")
-    id("androidbuild.publish")
 }
+
+// The toolchain JDK is newer than the bytecode target; `release` makes javac emit (and
+// link against) the target level so it matches kotlinc's jvmTarget.
+val javaTarget =
+    extensions
+        .getByType<VersionCatalogsExtension>()
+        .named("libs")
+        .findVersion("build-java-target")
+        .get()
+        .requiredVersion
+        .toInt()
+
+tasks.withType<JavaCompile>().configureEach { options.release.set(javaTarget) }
 
 tasks.register("testDebugUnitTest") {
     group = "verification"

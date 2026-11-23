@@ -62,10 +62,10 @@ runs:
   using: "composite"
   steps:
   - name: "Install JDK"
-    uses: actions/setup-java@v4
+    uses: actions/setup-java@v6
     with:
       distribution: 'zulu'
-      java-version: '21'
+      java-version: '27'
 
   - name: "Set up jemalloc"
     if: ${{ inputs.malloc-replacement == 'jemalloc' }}
@@ -153,7 +153,7 @@ runs:
       echo "ANDROID_HOME: $ANDROID_HOME"
 
   - name: "Setup Gradle"
-    uses: gradle/actions/setup-gradle@v4
+    uses: gradle/actions/setup-gradle@v6
     with:
       gradle-version: ${{ steps.eval_gradle.outputs.version }}
       cache-encryption-key: ${{ inputs.gradle-encryption-key }}
@@ -163,7 +163,7 @@ runs:
 
   - name: "Restore Android SDK Cache"
     id: cache-android-sdk
-    uses: actions/cache/restore@v4
+    uses: actions/cache/restore@v5
     with:
       path: |
         ~/.android
@@ -175,7 +175,7 @@ runs:
     uses: android-actions/setup-android@v4
 
   - name: "Save Android SDK Cache"
-    uses: actions/cache/save@v4
+    uses: actions/cache/save@v5
     if: steps.cache-android-sdk.outputs.cache-hit != 'true'
     with:
       path: |
@@ -201,7 +201,7 @@ runs:
       files: "**/build/test-results/testDebugUnitTest/TEST-*.xml"
 
   - name: "Publish Test Report"
-    uses: mikepenz/action-junit-report@v4
+    uses: mikepenz/action-junit-report@v6
     if: steps.junit-reports-exist.outputs.files_exists == 'true'
     with:
       report_paths: '**/build/test-results/testDebugUnitTest/TEST-*.xml'
@@ -220,7 +220,7 @@ runs:
       fi
 
   - name: "Store Config Cache Report"
-    uses: actions/upload-artifact@v4.4.0
+    uses: actions/upload-artifact@v7
     if: success()
     with:
       name: config-cache-report-${{ steps.sanitize-name.outputs.sanitized_name }}

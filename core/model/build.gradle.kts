@@ -21,8 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import dev.jasonpearson.gradle.projects
-
 plugins { id("androidbuild.kotlin-jvm") }
 
 dependencies {

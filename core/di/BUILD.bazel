@@ -1,0 +1,5 @@
+load("//bazel:defs.bzl", "kt_jvm_module")
+
+kt_jvm_module(
+    deps = ["@maven//:dev_zacsweers_metro_runtime_jvm"],
+)

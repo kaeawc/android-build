@@ -1,0 +1,15 @@
+load("//bazel:defs.bzl", "kt_android_module")
+
+kt_android_module(
+    compose = True,
+    custom_package = "dev.jasonpearson.android.feature.widget",
+    deps = [
+        "//core/model",
+        "//core/network",
+        "//data/articles",
+        "//data/photography",
+        "@maven//:androidx_glance_glance_appwidget",
+        "@maven//:androidx_glance_glance_material3",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core",
+    ],
+)

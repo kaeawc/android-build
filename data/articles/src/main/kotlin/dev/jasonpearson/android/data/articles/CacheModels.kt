@@ -27,7 +27,7 @@ import dev.jasonpearson.android.core.model.Article
 import dev.jasonpearson.android.core.model.Author
 import dev.jasonpearson.android.core.model.SearchEntry
 import dev.jasonpearson.android.core.model.Tag
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable

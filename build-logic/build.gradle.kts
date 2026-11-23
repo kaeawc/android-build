@@ -21,30 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins { `kotlin-dsl` }
 
 // Precompiled convention plugins need the Kotlin Gradle plugin and AGP on the
-// classpath so they can reference KotlinCompile and the Android extensions. The
-// Kotlin DSL compiles on the build's JDK; pin its toolchain to the project's Java
-// target for consistency with the modules these plugins configure.
-kotlin { jvmToolchain(libs.versions.build.java.target.get().toInt()) }
+// classpath so they can reference KotlinCompile and the Android extensions. Like the
+// modules these plugins configure, build-logic compiles on the project's toolchain
+// JDK but emits bytecode for the project's Java target.
+val javaTarget = libs.versions.build.java.target.get().toInt()
+
+kotlin {
+    jvmToolchain(libs.versions.build.java.toolchain.get().toInt())
+    compilerOptions { jvmTarget.set(JvmTarget.fromTarget(javaTarget.toString())) }
+}
+
+tasks.withType<JavaCompile>().configureEach { options.release.set(javaTarget) }
 
 dependencies {
     implementation(libs.kgp)
     implementation(libs.agp)
     // Lets androidbuild.android-compose apply the Compose compiler plugin by id.
     implementation(libs.compose.compiler.plugin)
-    // Artifact Swap's publish plugin, applied per-module by androidbuild.publish. Its
-    // settings plugin can auto-apply this, but that needs the class on the settings
-    // classpath; applying it manually via a convention plugin is the supported
-    // alternative and keeps it on the module classpath where it belongs.
-    implementation(libs.artifactswap.publish.plugin)
-    // gradle-plugin provides xyz.block.gradle.isArtifactSwapActive and the BOM build
-    // service, both used by SwappableProjectDependencies; it also satisfies the publish
-    // plugin's compileOnly references at runtime.
-    implementation(libs.artifactswap.gradle.plugin)
-    // gradle-utils provides the artifactSwapCoordinates path->artifactId helper, imported
-    // by SwappableProjectDependencies so consumer coordinates stay in lockstep with what
-    // upstream's publish plugin and BOM use.
-    implementation(libs.artifactswap.gradle.utils)
 }

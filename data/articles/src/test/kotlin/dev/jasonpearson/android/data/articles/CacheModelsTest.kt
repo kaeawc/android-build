@@ -26,7 +26,7 @@ package dev.jasonpearson.android.data.articles
 import dev.jasonpearson.android.core.model.Article
 import dev.jasonpearson.android.core.model.Author
 import dev.jasonpearson.android.core.model.Tag
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

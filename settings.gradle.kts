@@ -30,36 +30,16 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-
-        // Uncomment to pin R8 version from the R8 releases repo
-        // exclusiveContent {
-        //     forRepository {
-        //         maven("https://storage.googleapis.com/r8-releases/raw") { name = "R8-releases" }
-        //     }
-        //     filter { includeModule("com.android.tools", "r8") }
-        // }
-    }
-
-    plugins {
-        id("com.gradle.develocity") version "4.5.1"
-        id("com.fueledbycaffeine.spotlight") version "1.8.0"
-        id("xyz.block.artifactswap.settings") version "0.1.14"
     }
 }
 
-// Spotlight moves the project `include`s into gradle/all-projects.txt and computes the
-// dependency graph by parsing build scripts, so the IDE can sync a focused subset of
-// projects (gradle/ide-projects.txt). Artifact Swap builds on top of it: for projects
-// outside the focused set that are unchanged vs the BOM branch, it swaps the local
-// project for a pre-compiled artifact so Gradle never configures it. Artifact Swap
-// applies Spotlight itself, so Spotlight is declared here with `apply false`.
+// The Gradle build exists so Android Studio can sync and run the project; Bazel is the build
+// used on the command line and in CI (see docs/bazel.md). Keep both in step: a module added
+// here also needs a BUILD.bazel.
 plugins {
-    // Artifact Swap's settings plugin references the Develocity build-scan API, so the
-    // Develocity plugin must be on the settings classpath. Applied without a server, it
-    // only provides the classes -- no build scans are published.
-    id("com.gradle.develocity")
-    id("com.fueledbycaffeine.spotlight") apply false
-    id("xyz.block.artifactswap.settings")
+    // Lets Gradle download the JDK toolchain (build-java-toolchain) and the daemon JVM
+    // (gradle/gradle-daemon-jvm.properties) when no matching local JDK is installed.
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 dependencyResolutionManagement {
@@ -69,17 +49,37 @@ dependencyResolutionManagement {
     }
 }
 
-// Gradle's generated type-safe project accessors (TYPESAFE_PROJECT_ACCESSORS) are
-// intentionally NOT enabled: they require every referenced project to exist in the
-// build, while Artifact Swap excludes swapped projects during IDE sync. Modules use
-// the hand-maintained, swap-aware `projects.*` accessors from
-// build-logic (dev.jasonpearson.gradle.SwappableProjectDependencies) instead --
-// same call-site syntax, but each accessor resolves to the real project or a
-// pre-compiled artifact as appropriate. See docs/artifact-swap.md.
-rootProject.name =
-    "android-build"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-// Project `include`s live in gradle/all-projects.txt, managed by the Spotlight
-// plugin applied above. Add or remove projects there (or via ./gradlew
-// :fixAllProjectsList), not here. `./gradlew :checkAllProjectsList` verifies this
-// file contains no stray `include`s.
+rootProject.name = "android-build"
+
+include(
+    ":app",
+    ":client:ghost",
+    ":client:github",
+    ":core:common",
+    ":core:di",
+    ":core:model",
+    ":core:network",
+    ":data:about",
+    ":data:articles",
+    ":data:bookmarks",
+    ":data:photography",
+    ":data:projects",
+    ":data:settings",
+    ":data:talks",
+    ":feature:about",
+    ":feature:articles",
+    ":feature:photography",
+    ":feature:projects",
+    ":feature:saved",
+    ":feature:settings",
+    ":feature:talks",
+    ":feature:widget",
+    ":foundation:designassets",
+    ":foundation:designsystem",
+    ":foundation:navigation",
+    ":subsystem:analytics",
+    ":subsystem:experimentation",
+    ":subsystem:storage",
+)

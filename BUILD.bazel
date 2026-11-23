@@ -1,0 +1,3 @@
+# Root package. Module macros, toolchains and repository setup live in //bazel; see docs/bazel.md.
+
+exports_files(["maven_install.json"])

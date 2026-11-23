@@ -24,7 +24,7 @@
 package dev.jasonpearson.android.data.projects
 
 import dev.jasonpearson.android.core.model.Project
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 
 /** String dates keep the cache independent of serializers for the core model. */

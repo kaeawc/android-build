@@ -1,0 +1,21 @@
+load("//bazel:defs.bzl", "kt_jvm_module")
+
+kt_jvm_module(
+    plugins = [
+        "metro",
+        "serialization",
+    ],
+    exports = [
+        "//third_party/okhttp",
+        "@maven//:com_squareup_retrofit2_converter_kotlinx_serialization",
+        "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_serialization_json",
+    ],
+    deps = [
+        "//core/common",
+        "//core/di",
+        "@maven//:com_squareup_okhttp3_logging_interceptor",
+        "@maven//:dev_zacsweers_metro_runtime_jvm",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core",
+    ],
+)

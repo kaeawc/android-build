@@ -23,7 +23,6 @@
  */
 package dev.jasonpearson.android.core.network
 
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dev.jasonpearson.android.core.di.AppScope
 import dev.jasonpearson.android.core.di.SingleIn
 import dev.zacsweers.metro.ContributesTo
@@ -32,6 +31,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 @ContributesTo(AppScope::class)
 interface NetworkModule {

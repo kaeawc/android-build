@@ -22,8 +22,6 @@
  * SOFTWARE.
  */
 
-import dev.jasonpearson.gradle.projects
-
 plugins {
     id("androidbuild.android-compose")
     alias(libs.plugins.metro)
@@ -42,6 +40,9 @@ dependencies {
     implementation(libs.bundles.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material.icons)
+    implementation(libs.haze)
+    implementation(libs.haze.blur)
+    implementation(libs.haze.blur.materials)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.metro.runtime)
 

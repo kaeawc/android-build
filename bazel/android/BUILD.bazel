@@ -1,0 +1,11 @@
+load("@rules_java//java:defs.bzl", "java_import")
+
+package(default_visibility = ["//visibility:public"])
+
+# The compile SDK's android.jar for the unit tests of Android modules, like Gradle's local unit
+# tests: framework classes load, and calling a framework method throws ("Stub!").
+java_import(
+    name = "android_jar_for_tests",
+    testonly = True,
+    jars = ["@rules_android//tools/android:android_jar"],
+)

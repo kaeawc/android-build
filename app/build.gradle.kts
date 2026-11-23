@@ -21,61 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import com.github.triplet.gradle.androidpublisher.ReleaseStatus
-import dev.jasonpearson.gradle.projects
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("androidbuild.kotlin-common")
     alias(libs.plugins.android.application)
-    alias(libs.plugins.graphAssertion)
-    alias(libs.plugins.publish)
-    alias(libs.plugins.sortDependencies)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.metro)
-}
-
-moduleGraphAssert {
-    maxHeight = 8
-    allowed =
-        arrayOf(
-            ":app -> :.*",
-            ":client:.* -> :core:.*",
-            ":data:.* -> :client:.*",
-            ":data:.* -> :core:.*",
-            ":data:.* -> :subsystem:.*",
-            ":feature:.* -> :data:.*",
-            ":feature:.* -> :client:.*",
-            ":feature:.* -> :core:.*",
-            ":feature:.* -> :subsystem:.*",
-            ":feature:.* -> :foundation:.*",
-            ":subsystem:.* -> :foundation:.*",
-            ":subsystem:.* -> :core:.*",
-            ":foundation:.* -> :foundation:.*",
-            ":foundation:.* -> :core:.*",
-            ":core:.* -> :core:.*",
-        )
-    configurations = setOf("api", "implementation")
-    assertOnAnyBuild = false
-}
-
-play {
-    track.set("internal")
-    releaseStatus.set(ReleaseStatus.COMPLETED)
-    userFraction.set(1.0)
-    defaultToAppBundles.set(true)
-    serviceAccountCredentials.set(file("google-play-publishing-service-account.json"))
-    resolutionStrategy.set(com.github.triplet.gradle.androidpublisher.ResolutionStrategy.IGNORE)
-    // Play Publisher is only applied to this single module, so it never needs to reach across
-    // to the root project to register its shared "commit edit" task. Isolated Projects (enabled
-    // via org.gradle.unsafe.isolated-projects) forbids that cross-project access; this flag
-    // makes the plugin register the task on this project instead, which is also compatible.
-    isolatedSingleProject.set(true)
 }
 
 android {
     namespace = "dev.jasonpearson.android"
     compileSdk = libs.versions.build.android.compileSdk.get().toInt()
+    compileSdkMinor = libs.versions.build.android.compileSdkMinor.get().toInt()
     buildToolsVersion = libs.versions.build.android.buildTools.get()
 
     defaultConfig {
@@ -175,8 +132,6 @@ android {
 }
 
 dependencies {
-    // Needed for reading Java 19+ class files due to JVM target higher than 11
-    implementation(platform(libs.asm.bom))
     implementation(platform(libs.compose.bom))
     implementation(projects.client.ghost)
     implementation(projects.client.github)
@@ -244,36 +199,6 @@ tasks.withType<Test>().configureEach {
         filter.excludeTestsMatching("dev.jasonpearson.android.automobiletest.*")
     }
 }
-
-// Kill the Kotlin compile daemon after release compilation finishes so R8 runs with
-// the memory it held fully returned to the OS (~14-15% peak memory savings per the
-// blog post: https://dev.to/cdsap/what-happens-when-you-kill-the-kotlin-daemon-before-r8-el7).
-// Scoped to release only to avoid circular task dependency on debug/test builds.
-val killKotlinCompileDaemon by tasks.registering {
-    doLast {
-        val process =
-            ProcessBuilder(
-                    "sh",
-                    "-c",
-                    "jps | grep KotlinCompileDaemon | awk '{print $1}' | xargs kill -9 2>/dev/null || true",
-                )
-                .start()
-        process.waitFor()
-        logger.lifecycle("Kill Kotlin compile daemon command executed")
-    }
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-    if (name.contains("Release") && !name.contains("Test")) {
-        finalizedBy(killKotlinCompileDaemon)
-    }
-}
-
-tasks
-    .matching { it.name.startsWith("minify") && it.name.endsWith("WithR8") }
-    .configureEach {
-        dependsOn(killKotlinCompileDaemon)
-    }
 
 // Kotlin language version, JVM target, and the project-wide opt-in list are applied
 // by the androidbuild.kotlin-common convention plugin.

@@ -1,0 +1,40 @@
+# Bazel 9 settings for android-build. Put machine-specific settings (caches, output base) in
+# user.bazelrc, which is git-ignored.
+
+common --enable_platform_specific_config
+
+# --- Java: JDK 27 runs every tool; Java and Kotlin sources compile to Java 25 bytecode ---------
+# remotejdk_27 is defined in //bazel/jdk (rules_java's remote JDKs stop at 25). The bytecode level
+# is capped at 25 by rules_android's dexer (R8 9.3), which rejects Java 26 class files.
+common --java_runtime_version=remotejdk_27
+common --tool_java_runtime_version=remotejdk_27
+common --java_language_version=25
+common --tool_java_language_version=25
+
+# --- Android -----------------------------------------------------------------------------------
+# compileSdk 37, minor release 2.
+common --@androidsdk//:api_level=37.2
+
+# --- Kotlin ------------------------------------------------------------------------------------
+# Compile Kotlin through the Build Tools API, and let the persistent worker compile
+# incrementally: an edit recompiles only the affected sources of a target instead of the
+# whole target. The worker flag is not part of action keys, so incremental and clean builds
+# share (remote/disk) cache entries.
+build --@rules_kotlin//kotlin/settings:experimental_build_tools_api=true
+build --worker_extra_flag=KotlinCompile=--experimental_incremental_compilation
+build --strategy=KotlinCompile=worker
+build --worker_multiplex
+# Print one line per Kotlin compilation (incremental / full and the sources recompiled):
+#   bazel build --config=ic-summary //app
+build:ic-summary --worker_extra_flag=KotlinCompile=--experimental_incremental_compilation_summary
+
+# --- General -----------------------------------------------------------------------------------
+build --incompatible_strict_action_env
+build --experimental_reuse_sandbox_directories
+test --test_output=errors
+
+# CI: compact, colored logs. (CI compiles each target once, so incremental state is never created.)
+build:ci --show_progress_rate_limit=30
+build:ci --color=yes
+
+try-import %workspace%/user.bazelrc

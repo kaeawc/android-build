@@ -25,7 +25,7 @@ package dev.jasonpearson.android.client.github.mapper
 
 import dev.jasonpearson.android.client.github.dto.GitHubRepoDto
 import dev.jasonpearson.android.core.model.Project
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 fun GitHubRepoDto.toProject(): Project =
     Project(
