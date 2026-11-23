@@ -1,0 +1,47 @@
+load("@rules_kotlin//kotlin:core.bzl", "define_kt_toolchain", "kt_compiler_plugin", "kt_kotlinc_options")
+
+package(default_visibility = ["//visibility:public"])
+
+# Project-wide compiler options, the Bazel side of build-logic's androidbuild.kotlin-common.
+kt_kotlinc_options(
+    name = "kotlinc_options",
+    x_optin = [
+        "kotlin.time.ExperimentalTime",
+        "kotlin.RequiresOptIn",
+        "kotlinx.coroutines.ExperimentalCoroutinesApi",
+        "kotlin.ExperimentalUnsignedTypes",
+        "kotlinx.coroutines.FlowPreview",
+    ],
+)
+
+# Kotlin 2.4 targeting Java 25 bytecode (see .bazelrc), compiled through the Build Tools API so the persistent
+# worker can compile incrementally (enabled in .bazelrc).
+define_kt_toolchain(
+    name = "kotlin_toolchain",
+    api_version = "2.4",
+    experimental_build_tools_api = True,
+    jvm_target = "25",
+    kotlinc_options = ":kotlinc_options",
+    language_version = "2.4",
+)
+
+kt_compiler_plugin(
+    name = "compose",
+    id = "androidx.compose.compiler.plugins.kotlin",
+    target_embedded_compiler = True,
+    deps = ["@maven//:org_jetbrains_kotlin_kotlin_compose_compiler_plugin_embeddable"],
+)
+
+kt_compiler_plugin(
+    name = "serialization",
+    compile_phase = True,
+    id = "org.jetbrains.kotlin.serialization",
+    stubs_phase = True,
+    deps = ["@rules_kotlin//kotlin/compiler:kotlinx-serialization-compiler-plugin"],
+)
+
+kt_compiler_plugin(
+    name = "metro",
+    id = "dev.zacsweers.metro.compiler",
+    deps = ["@maven//:dev_zacsweers_metro_compiler"],
+)

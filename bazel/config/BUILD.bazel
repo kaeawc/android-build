@@ -1,0 +1,8 @@
+package(default_visibility = ["//visibility:public"])
+
+# `bazel build -c opt //app` is the release build: BuildConfig.DEBUG = false, R8 and resource
+# shrinking. Everything else is a debug build.
+config_setting(
+    name = "release",
+    values = {"compilation_mode": "opt"},
+)

@@ -1,0 +1,22 @@
+load("//bazel:defs.bzl", "kt_android_module")
+
+kt_android_module(
+    compose = True,
+    custom_package = "dev.jasonpearson.android.foundation.designsystem",
+    deps = [
+        "//foundation/designassets",
+        "@maven//:androidx_activity_activity_compose",
+        "@maven//:androidx_browser_browser",
+        "@maven//:androidx_compose_foundation_foundation",
+        "@maven//:androidx_compose_material3_material3",
+        "@maven//:androidx_compose_ui_ui",
+        "@maven//:androidx_compose_ui_ui_graphics",
+        "@maven//:androidx_compose_ui_ui_tooling",
+        "@maven//:androidx_compose_ui_ui_tooling_preview",
+        "@maven//:androidx_compose_ui_ui_util",
+        "@maven//:androidx_core_core_ktx",
+        "@maven//:io_coil_kt_coil3_coil_compose_android",
+        "@maven//:io_coil_kt_coil3_coil_network_okhttp_android",
+        "@maven//:io_coil_kt_coil3_coil_svg_android",
+    ],
+)

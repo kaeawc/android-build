@@ -1,0 +1,8 @@
+load("//bazel:defs.bzl", "kt_jvm_module")
+
+kt_jvm_module(
+    exports = [
+        "//core/common",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_datetime_jvm",
+    ],
+)

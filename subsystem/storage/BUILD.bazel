@@ -1,0 +1,15 @@
+load("//bazel:defs.bzl", "kt_jvm_module")
+
+kt_jvm_module(
+    plugins = ["metro"],
+    exports = [
+        "//core/model",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_datetime_jvm",
+    ],
+    deps = [
+        "//core/di",
+        "@maven//:androidx_datastore_datastore_preferences_core",
+        "@maven//:dev_zacsweers_metro_runtime_jvm",
+    ],
+)

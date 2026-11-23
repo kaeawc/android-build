@@ -50,3 +50,7 @@ tools/artifactswap/
 artifactswapHashes/
 # Artifact Swap CLI task-finder output
 taskOutputs/
+
+# Bazel
+/bazel-*
+user.bazelrc

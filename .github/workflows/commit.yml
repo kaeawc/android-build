@@ -15,6 +15,10 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Bazel builds, tests and packages the app; Gradle stays for Android Studio (Android Platform),
+  # Android Lint, and the AutoMobile device tests. Job names are the required checks of the
+  # "Green Main" ruleset, so they stay stable.
+
   android-platform:
     name: "Android Platform"
     runs-on: ubuntu-latest
@@ -22,16 +26,12 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
+      # The Gradle build is what Android Studio syncs: realizing every task proves it still
+      # configures on the current AGP / Kotlin / JDK.
       - uses: ./.github/actions/gradle-task-run
         with:
-          # Run task enumeration with Isolated Projects disabled. The module-graph
-          # assertion plugin (com.jraska.module.graph.assertion, latest 2.9.1)
-          # accesses other projects' configurations when registering its
-          # generateModulesGraphvizText task, which Gradle 9.7's Isolated Projects
-          # forbids. Real build/test jobs keep IP on; only whole-graph task
-          # realization needs it off. Mirrors the Module Graph Check job.
           gradle-tasks: "tasks"
-          reuse-configuration-cache: false
+          reuse-configuration-cache: true
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   unit-tests:
@@ -41,11 +41,19 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
-      - uses: ./.github/actions/gradle-task-run
+      - uses: ./.github/actions/bazel-setup
         with:
-          gradle-tasks: "testDebugUnitTest -PexcludeAutoMobileTests"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          disk-cache: unit-tests
+
+      - name: "bazel test //..."
+        run: bazel test --config=ci //...
+
+      - name: "Store test logs"
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-testlogs
+          path: bazel-testlogs/**/test.log
 
   validate-xml:
     name: "Validate XML"
@@ -92,11 +100,39 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
-      - uses: ./.github/actions/gradle-task-run
+      - uses: ./.github/actions/bazel-setup
         with:
-          # checkSortDependencies enforces com.squareup.sort-dependencies ordering in app/build.gradle.kts
-          gradle-tasks: "assertModuleGraph :app:checkSortDependencies"
-          reuse-configuration-cache: false
+          disk-cache: module-graph
+
+      # bazel/defs.bzl gives each layer a visibility, so analysis fails on a dependency the
+      # module graph doesn't allow (e.g. feature -> feature).
+      - name: "Analyze the module graph"
+        run: bazel build --config=ci --nobuild //...
+
+      # Formatting, lint, and sorted dependency lists in BUILD / .bzl / MODULE.bazel files.
+      - name: "buildifier"
+        run: bazel run --config=ci //bazel:buildifier_check
+
+  dependency-versions:
+    name: "Dependency Versions"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: "zulu"
+          java-version: "27"
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      # Bazel must resolve the versions Gradle does (bazel/scripts/repin.py): fails when an
+      # artifact resolves older in maven_install.json, or MODULE.bazel and the catalog drifted.
+      - name: "Bazel and Gradle resolve the same versions"
+        run: python3 bazel/scripts/repin.py --check
 
   android-lint:
     name: "Android Lint"
@@ -139,46 +175,86 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
-      - uses: ./.github/actions/gradle-task-run
+      - uses: ./.github/actions/bazel-setup
         with:
-          gradle-tasks: "assembleDebug"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          disk-cache: apk
+
+      - name: "bazel build //app"
+        run: |
+          bazel build --config=ci //app
+          mkdir -p out && cp bazel-bin/app/app.apk out/app-debug.apk
 
       - name: "Store APK"
         uses: actions/upload-artifact@v7
         with:
           name: apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: out/app-debug.apk
 
   build-base-apk:
     name: "Build Base APK"
     if: github.ref_name != 'main'
     runs-on: ubuntu-latest
     steps:
+      # The PR's checkout provides the CI actions; the base commit is built in base/.
       - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - name: "Git Checkout (PR base)"
         uses: actions/checkout@v7
         with:
           submodules: true
           ref: ${{ github.event.pull_request.base.sha }}
+          path: base
 
-      - name: "Build APK from PR base SHA"
-        uses: ./.github/actions/gradle-task-run
+      - uses: ./.github/actions/bazel-setup
         with:
-          gradle-tasks: "assembleDebug -Dbase.apk=true"
-          reuse-configuration-cache: false
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          disk-cache: apk
 
-      - name: "Change APK file name"
-        shell: "bash"
+      # A base commit from before the Bazel migration has no MODULE.bazel. Bazel run in base/
+      # would then walk up to the PR checkout's workspace and build the PR head instead, so
+      # such a base is built with the Gradle build it had.
+      - name: "Detect the base commit's build system"
+        id: base-build
         run: |
-          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-base-debug.apk
+          if [ -f base/MODULE.bazel ]; then
+            echo "system=bazel" >> "$GITHUB_OUTPUT"
+          else
+            echo "system=gradle" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: "Build APK from PR base SHA (Bazel)"
+        if: steps.base-build.outputs.system == 'bazel'
+        working-directory: base
+        run: |
+          bazel build --config=ci //app
+          mkdir -p ../out && cp bazel-bin/app/app.apk ../out/app-base-debug.apk
+
+      - name: "Install JDK"
+        if: steps.base-build.outputs.system == 'gradle'
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'zulu'
+          java-version: '27'
+
+      - name: "Setup Gradle"
+        if: steps.base-build.outputs.system == 'gradle'
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+          validate-wrappers: true
+
+      - name: "Build APK from PR base SHA (Gradle)"
+        if: steps.base-build.outputs.system == 'gradle'
+        working-directory: base
+        run: |
+          ./gradlew assembleDebug --stacktrace
+          mkdir -p ../out && cp app/build/outputs/apk/debug/app-debug.apk ../out/app-base-debug.apk
 
       - name: "Store Base APK"
         uses: actions/upload-artifact@v7
         with:
           name: base-apk
-          path: app/build/outputs/apk/debug/app-base-debug.apk
+          path: out/app-base-debug.apk
 
   build-test-apk:
     name: "Build Test APK"
@@ -187,20 +263,20 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
-      - uses: ./.github/actions/gradle-task-run
+      - uses: ./.github/actions/bazel-setup
         with:
-          # Only :app has androidTest sources, and only its test APK is uploaded below. Building
-          # every library module's (empty) androidTest APK in parallel ran D8 dex merges that
-          # exhausted the 2 GiB daemon heap.
-          gradle-tasks: ":app:assembleAndroidTest"
-          reuse-configuration-cache: false
-          optional-suffix: "-test"
+          disk-cache: apk
+
+      - name: "bazel build //app:instrumentation_tests_apk"
+        run: |
+          bazel build --config=ci //app:instrumentation_tests_apk
+          mkdir -p out && cp bazel-bin/app/instrumentation_tests_apk.apk out/app-debug-androidTest.apk
 
       - name: "Store Test APK"
         uses: actions/upload-artifact@v7
         with:
           name: test-apk
-          path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+          path: out/app-debug-androidTest.apk
 
   diff-apk-from-base:
     name: "Diff APK from Base"

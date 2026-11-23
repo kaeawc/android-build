@@ -6,24 +6,16 @@ build-android-compileSdkMinor = "2"
 build-android-minSdk = "27"
 build-android-targetSdk = "37"
 build-android-agp = "9.5.2"
-# Uncomment to pin R8 version (e.g. for dev versions needed for kotlin metadata)
-# build-android-r8 = "9.0.32"
 build-android-desugar = "2.1.5"
 build-kotlin = "2.4.21"
 build-kotlin-language = "2.4"
 build-kotlin-coroutines = "1.11.0"
 build-kotlin-datetime = "0.8.0"
-build-java-asm = "9.11.1"
 # JDK that runs the build and compiles every module (Gradle daemon + javac/kotlinc toolchain).
 build-java-toolchain = "27"
-# Bytecode level emitted by javac/kotlinc. Kotlin 2.4.x tops out at JVM 26 (JVM 27 needs Kotlin 2.5).
-build-java-target = "26"
-build-gradle-dependencyAnalysis = "3.20.4"
-build-gradle-graphAssertion = "2.9.1"
-build-gradle-doctor = "0.12.1"
-build-gradle-sortDependencies = "0.21.0"
-build-gradle-triplet-play = "4.1.2"
-build-artifactswap = "0.1.15"
+# Bytecode level emitted by javac/kotlinc, the same in the Bazel build (.bazelrc). Capped at 25 by
+# rules_android's dexer (R8 9.3); Kotlin 2.4 itself could emit 26.
+build-java-target = "25"
 androidx-core = "1.19.1"
 androidx-activity-compose = "1.13.0"
 androidx-compose-bom = "2026.11.01"
@@ -49,11 +41,6 @@ metro = "1.6.0"
 haze = "2.1.0"
 
 [plugins]
-dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "build-gradle-dependencyAnalysis" }
-sortDependencies = { id = "com.squareup.sort-dependencies", version.ref = "build-gradle-sortDependencies" }
-doctor = { id = "com.osacky.doctor", version.ref = "build-gradle-doctor" }
-graphAssertion = { id = "com.jraska.module.graph.assertion", version.ref = "build-gradle-graphAssertion" }
-publish = { id = "com.github.triplet.play", version.ref = "build-gradle-triplet-play" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "build-kotlin" }
 android-library = { id = "com.android.library", version.ref = "build-android-agp" }
 android-application = { id = "com.android.application", version.ref = "build-android-agp" }
@@ -65,12 +52,6 @@ kgp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "bui
 agp = { module = "com.android.tools.build:gradle", version.ref = "build-android-agp" }
 # Compose compiler Gradle plugin as a library so build-logic convention plugins can apply it by id.
 compose-compiler-plugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "build-kotlin" }
-artifactswap-publish-plugin = { module = "xyz.block.artifactswap:gradle-publish-plugin", version.ref = "build-artifactswap" }
-artifactswap-gradle-plugin = { module = "xyz.block.artifactswap:gradle-plugin", version.ref = "build-artifactswap" }
-artifactswap-gradle-utils = { module = "xyz.block.artifactswap:gradle-utils", version.ref = "build-artifactswap" }
-# Uncomment to pin R8 version
-# r8 = { module = "com.android.tools:r8", version.ref = "build-android-r8" }
-kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "build-kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "build-kotlin-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "build-kotlin-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "build-kotlin-datetime" }
@@ -98,7 +79,6 @@ haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 haze-blur = { module = "dev.chrisbanes.haze:haze-blur", version.ref = "haze" }
 haze-blur-materials = { module = "dev.chrisbanes.haze:haze-blur-materials", version.ref = "haze" }
 
-asm-bom = { module = "org.ow2.asm:asm-bom", version.ref = "build-java-asm" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "build-android-desugar" }
 
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
@@ -133,7 +113,6 @@ androidx-espresso = { module = "androidx.test.espresso:espresso-core", version.r
 
 [bundles]
 kotlin = [
-    "kotlin-stdlib-jdk8",
     "kotlinx-coroutines-core",
     "kotlinx-datetime"
 ]
