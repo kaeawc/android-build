@@ -115,24 +115,23 @@ Dependabot opens update PRs for the Gradle catalog, Bazel modules and GitHub Act
 
 | Job | What it checks |
 |---|---|
-| Build APK | `bazel build //app`, uploads the debug APK |
-| Build Base APK | the same for the PR's base commit, for the APK diff |
-| Build Test APK | `bazel build //app:instrumentation_tests_apk` |
+| Build APK | `bazel build //app //app:instrumentation_tests_apk`, uploads the debug and test APKs |
 | Unit Tests | `bazel test //...` (pull requests: `--build_tests_only`) |
 | Module Graph Check | Bazel analysis of `//...` (layer visibility) and buildifier |
 | Dependency Versions | Bazel resolves the same library versions as Gradle (`bazel/scripts/repin.py --check`) |
 | Android Platform | the Gradle build (what Android Studio syncs) still configures |
 | Krit | [Krit](https://github.com/kaeawc/krit) static analysis (Kotlin, Compose, manifest and resource rules) in a few seconds; findings not in `ci/krit-baseline.xml` fail the check and show as code scanning annotations |
 | ktfmt, Validate XML, Validate Shell Scripts | formatting and static checks |
-| Diff APK from Base | [Diffuse](https://github.com/JakeWharton/diffuse) report commented on the PR |
+| Diff APK from Base | [Diffuse](https://github.com/JakeWharton/diffuse) report commented on the PR, against the APK `main`'s run built for the PR's base commit |
 | Android UI Tests | the instrumentation tests on [emulator.wtf](https://emulator.wtf) |
 | AutoMobile JUnit Tests | [AutoMobile](https://github.com/kaeawc/auto-mobile) device tests |
 
-Every Bazel job restores the disk cache (action outputs) that the last `main` run saved, so a pull
-request rebuilds only what it changed. On each push to `main` the Unit Tests job builds all of
-`//...` and saves a fresh disk cache, pruned to the entries that build used; the repository cache
-(downloads) is saved from `main` when `MODULE.bazel` changes. protoc comes prebuilt rather than
-compiled from C++ sources. A new push to a pull request cancels its previous run. Jobs that need the `EW_API_TOKEN` secret skip themselves where it isn't available
+Every Bazel job restores the disk cache (action outputs) and the repository cache (downloads) that
+the last `main` run saved, so a pull request rebuilds only what it changed. On each push to `main`
+the Unit Tests job builds all of `//...`, saves a fresh disk cache, and a fresh repository cache
+when the files pinning the downloads changed, each pruned to the entries that build used, then
+deletes the entries they replace: GitHub keeps 10 GB of Actions cache per repository, and the two
+come to about 2.3 GB. protoc comes prebuilt rather than compiled from C++ sources. A new push to a pull request cancels its previous run. Jobs that need the `EW_API_TOKEN` secret skip themselves where it isn't available
 (Dependabot runs, forks).
 
 ## Build and IDE tuning notes

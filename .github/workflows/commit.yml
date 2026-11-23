@@ -25,8 +25,8 @@ jobs:
   # and the AutoMobile device tests; Krit is the static analysis. Job names are the required
   # checks of the "Green Main" ruleset, so they stay stable.
   #
-  # Every Bazel job restores the disk cache main last saved (.github/actions/bazel-setup), so a
-  # pull request rebuilds only what it changed.
+  # Every Bazel job restores the caches main last saved (.github/actions/bazel-setup), so a pull
+  # request rebuilds only what it changed. Two Bazel jobs build: Unit Tests and Build APK.
 
   android-platform:
     name: "Android Platform"
@@ -46,14 +46,21 @@ jobs:
   unit-tests:
     name: "Unit Tests"
     runs-on: ubuntu-latest
+    # A cold build takes ~17 minutes. A hung one would otherwise hold main's concurrency group (and
+    # every run queued behind it) for GitHub's default 6 hours.
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      # bazel-cache-save deletes the caches it supersedes.
+      actions: write
     steps:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
       - uses: ./.github/actions/bazel-setup
 
-      # Pull requests build only what the tests need (Build APK and Build Test APK package the app
-      # in parallel). On main this builds all of //..., so the disk cache it saves serves every job.
+      # Pull requests build only what the tests need (Build APK packages the app in parallel). On
+      # main this builds all of //..., so the caches it saves serve every job.
       - name: "bazel test //..."
         run: bazel test --config=ci ${{ github.event_name == 'pull_request' && '--build_tests_only' || '' }} //...
 
@@ -169,19 +176,23 @@ jobs:
           sarif_file: build/reports/krit.sarif
           category: krit
 
+  # The app and the instrumentation tests APK in one build: they share most of their actions.
   build-apk:
     name: "Build APK"
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
       - uses: ./.github/actions/bazel-setup
 
-      - name: "bazel build //app"
+      - name: "bazel build //app //app:instrumentation_tests_apk"
         run: |
-          bazel build --config=ci //app
-          mkdir -p out && cp bazel-bin/app/app.apk out/app-debug.apk
+          bazel build --config=ci //app //app:instrumentation_tests_apk
+          mkdir -p out
+          cp bazel-bin/app/app.apk out/app-debug.apk
+          cp bazel-bin/app/instrumentation_tests_apk.apk out/app-debug-androidTest.apk
 
       - name: "Store APK"
         uses: actions/upload-artifact@v7
@@ -189,121 +200,81 @@ jobs:
           name: apk
           path: out/app-debug.apk
 
-  build-base-apk:
-    name: "Build Base APK"
-    if: github.ref_name != 'main'
-    runs-on: ubuntu-latest
-    steps:
-      # The PR's checkout provides the CI actions; the base commit is built in base/.
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - name: "Git Checkout (PR base)"
-        uses: actions/checkout@v7
-        with:
-          submodules: true
-          ref: ${{ github.event.pull_request.base.sha }}
-          path: base
-
-      - uses: ./.github/actions/bazel-setup
-
-      # A base commit from before the Bazel migration has no MODULE.bazel. Bazel run in base/
-      # would then walk up to the PR checkout's workspace and build the PR head instead, so
-      # such a base is built with the Gradle build it had.
-      - name: "Detect the base commit's build system"
-        id: base-build
-        run: |
-          if [ -f base/MODULE.bazel ]; then
-            echo "system=bazel" >> "$GITHUB_OUTPUT"
-          else
-            echo "system=gradle" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: "Build APK from PR base SHA (Bazel)"
-        if: steps.base-build.outputs.system == 'bazel'
-        working-directory: base
-        run: |
-          bazel build --config=ci //app
-          mkdir -p ../out && cp bazel-bin/app/app.apk ../out/app-base-debug.apk
-
-      - name: "Install JDK"
-        if: steps.base-build.outputs.system == 'gradle'
-        uses: actions/setup-java@v6
-        with:
-          distribution: 'zulu'
-          java-version: '27'
-
-      - name: "Setup Gradle"
-        if: steps.base-build.outputs.system == 'gradle'
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          cache-read-only: true
-          validate-wrappers: true
-
-      - name: "Build APK from PR base SHA (Gradle)"
-        if: steps.base-build.outputs.system == 'gradle'
-        working-directory: base
-        run: |
-          ./gradlew assembleDebug --stacktrace
-          mkdir -p ../out && cp app/build/outputs/apk/debug/app-debug.apk ../out/app-base-debug.apk
-
-      - name: "Store Base APK"
-        uses: actions/upload-artifact@v7
-        with:
-          name: base-apk
-          path: out/app-base-debug.apk
-
-  build-test-apk:
-    name: "Build Test APK"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - uses: ./.github/actions/bazel-setup
-
-      - name: "bazel build //app:instrumentation_tests_apk"
-        run: |
-          bazel build --config=ci //app:instrumentation_tests_apk
-          mkdir -p out && cp bazel-bin/app/instrumentation_tests_apk.apk out/app-debug-androidTest.apk
-
       - name: "Store Test APK"
         uses: actions/upload-artifact@v7
         with:
           name: test-apk
           path: out/app-debug-androidTest.apk
 
+  # The base APK isn't rebuilt: it's the apk artifact of the Commit run on main for the pull
+  # request's base commit.
   diff-apk-from-base:
     name: "Diff APK from Base"
     runs-on: ubuntu-latest
-    if: github.secret_source == 'Actions' && github.ref_name != 'main'
+    if: github.event_name == 'pull_request' && github.secret_source == 'Actions'
+    permissions:
+      actions: read
+      pull-requests: write
     needs:
       - build-apk
-      - build-base-apk
     steps:
       - uses: actions/download-artifact@v8
         with:
           name: apk
 
+      # Waits for a base run still in progress to upload its APK. A base without a run that built
+      # one (a base branch other than main, a failed or expired build) skips the diff.
+      - name: "Find the base commit's APK"
+        id: base-run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          runs="repos/$GITHUB_REPOSITORY/actions/workflows/commit.yml/runs?head_sha=$BASE_SHA&event=push"
+          for _ in $(seq 40); do
+            run=$(gh api "$runs" --jq '.workflow_runs[0] // empty | "\(.id) \(.status)"')
+            if [ -z "$run" ]; then
+              echo "::notice::No Commit run on main for the base commit $BASE_SHA, so there's no APK to diff against."
+              exit 0
+            fi
+            read -r run_id status <<< "$run"
+            artifacts=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts?name=apk" --jq '.artifacts | map(select(.expired | not)) | length')
+            if [ "$artifacts" -gt 0 ]; then
+              echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ "$status" = "completed" ]; then
+              echo "::notice::The base commit's run ($run_id) has no APK, so there's nothing to diff against."
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "::notice::The base commit's run ($run_id) didn't build its APK within 20 minutes."
+
       - uses: actions/download-artifact@v8
+        if: steps.base-run.outputs.run-id
         with:
-          name: base-apk
+          name: apk
+          path: base
+          run-id: ${{ steps.base-run.outputs.run-id }}
+          github-token: ${{ github.token }}
 
       - id: diffuse
+        if: steps.base-run.outputs.run-id
         uses: usefulness/diffuse-action@v1
         with:
-          old-file-path: app-base-debug.apk
+          old-file-path: base/app-debug.apk
           new-file-path: app-debug.apk
 
       - uses: peter-evans/find-comment@v4
         id: find-comment
-        if: ${{ github.event.pull_request }}
+        if: steps.base-run.outputs.run-id
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body-includes: Diffuse output
 
       - uses: peter-evans/create-or-update-comment@v5
-        if: ${{ github.event.pull_request }}
+        if: steps.base-run.outputs.run-id
         with:
           body: |
             Diffuse output:
@@ -315,6 +286,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/upload-artifact@v7
+        if: steps.base-run.outputs.run-id
         with:
           name: diffuse-output
           path: ${{ steps.diffuse.outputs.diff-file }}
@@ -326,7 +298,6 @@ jobs:
     if: github.secret_source == 'Actions'
     needs:
       - build-apk
-      - build-test-apk
     steps:
       - name: "Git Checkout"
         uses: actions/checkout@v7
