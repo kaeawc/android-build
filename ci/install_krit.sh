@@ -4,6 +4,8 @@
 # release asset that changes after review fails the install.
 #
 # To update: bump KRIT_VERSION and replace the checksums with the release's checksums.txt entries.
+# Pinned to v0.2.0, the only release (kaeawc/krit#1057); an official setup action
+# (kaeawc/krit#1058) would replace this script and let Dependabot bump the version.
 
 set -euo pipefail
 
