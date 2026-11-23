@@ -34,6 +34,10 @@ build:ic-summary --worker_extra_flag=KotlinCompile=--experimental_incremental_co
 # (most of a cold build's first ten minutes on CI) and a smaller disk cache.
 common --@protobuf//bazel/toolchains:prefer_prebuilt_protoc
 
+# --- Downloads ---------------------------------------------------------------------------------
+# Maven Central artifacts come from its Cloud Storage mirror first, then Central (see the file).
+common --downloader_config=bazel/downloader.cfg
+
 # --- General -----------------------------------------------------------------------------------
 build --incompatible_strict_action_env
 build --experimental_reuse_sandbox_directories
