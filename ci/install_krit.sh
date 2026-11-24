@@ -3,14 +3,16 @@
 # prints the binary's path. The tarball is verified against the checksum pinned here, so a
 # release asset that changes after review fails the install.
 #
-# To update: bump KRIT_VERSION and replace the checksums with the release's checksums.txt entries.
-# An official setup action (kaeawc/krit#1058) would replace this script and let Dependabot bump
-# the version. After a bump, regenerate the baseline (ci/validate_krit.sh --update-baseline): its
-# entries include each finding's message, which can change between releases.
+# CI installs Krit with the kaeawc/krit action instead (.github/workflows/commit.yml); this script
+# is for local runs. Keep KRIT_VERSION in step with that action and with the
+# dev.jasonpearson.krit.settings plugin in settings.gradle.kts. To update: bump all three, replace
+# the checksums below with the release's checksums.txt entries, and regenerate the baseline
+# (ci/validate_krit.sh --update-baseline): its entries include each finding's message, which can
+# change between releases.
 
 set -euo pipefail
 
-KRIT_VERSION="0.3.0"
+KRIT_VERSION="0.4.0"
 KRIT_INSTALL_DIR=${KRIT_INSTALL_DIR:-"$HOME/.cache/krit/$KRIT_VERSION"}
 
 libc=""
@@ -19,11 +21,11 @@ if [[ "$(uname -s)" == "Linux" ]] && ldd --version 2>&1 | grep -qi musl; then
 fi
 
 case "$(uname -s)$libc-$(uname -m)" in
-  Linux-musl-x86_64) platform="linux_musl_amd64"; sha256="d99abf5ce2d45300d1c1b294d86069116eb17e2249d5afe04478909609195711" ;;
-  Linux-x86_64) platform="linux_amd64"; sha256="0bde297c7a32b125e9cd7f88381dbb60e068ed52501199639a9a4c926b5f4d43" ;;
-  Linux-aarch64 | Linux-arm64) platform="linux_arm64"; sha256="d8421a9172f6cf6785d2524695da37a15070154123a1b3cfc35b99aa50adcc90" ;;
-  Darwin-arm64) platform="darwin_arm64"; sha256="b29218c662bae30ecd24bda9aef86fdcd388c64fbb02e9cebcb649b72e6ea600" ;;
-  Darwin-x86_64) platform="darwin_amd64"; sha256="d230704b6f91bced637f30a639ad3a6a07ba28c6cb480000cce860cd3f1abf74" ;;
+  Linux-musl-x86_64) platform="linux_musl_amd64"; sha256="8a3d61da217d77297b13ca61d248918ad53103bcecdfe5647d876633975220ab" ;;
+  Linux-x86_64) platform="linux_amd64"; sha256="4720196534b41a41a211103382289eeff1cabbd65522d6055fb81fe9d42944a7" ;;
+  Linux-aarch64 | Linux-arm64) platform="linux_arm64"; sha256="843849a0f1aca85279b40cc6020eb7d9fc1302f2585e5da5050b597edffa59b1" ;;
+  Darwin-arm64) platform="darwin_arm64"; sha256="0f34caa35c36a2d188e65d7138bf6fedae272dc414b825835ae924744d8b8cef" ;;
+  Darwin-x86_64) platform="darwin_amd64"; sha256="40407614695e9c01176cb4f7006a583d824c489ebe1b8a7eeef68c75a8aed44e" ;;
   *)
     echo "No Krit $KRIT_VERSION release for $(uname -s) $(uname -m)" >&2
     exit 1

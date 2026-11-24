@@ -40,6 +40,15 @@ plugins {
     // Lets Gradle download the JDK toolchain (build-java-toolchain) and the daemon JVM
     // (gradle/gradle-daemon-jvm.properties) when no matching local JDK is installed.
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+    // Krit (krit.yml) on every module. CI runs its kritExportModel task: each module's source
+    // sets, compile classpath and Kotlin compiler plugins, which Krit's FIR checks compile
+    // against. Keep the version in step with kaeawc/krit in .github/workflows/commit.yml.
+    id("dev.jasonpearson.krit.settings") version "0.4.0"
+}
+
+krit {
+    config = file("krit.yml")
+    baseline = file("ci/krit-baseline.xml")
 }
 
 dependencyResolutionManagement {

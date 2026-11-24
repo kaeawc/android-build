@@ -163,16 +163,111 @@ jobs:
   krit:
     name: "Krit"
     runs-on: ubuntu-latest
+    env:
+      # Krit's analysis caches: parse trees, the cross-file and type indexes, FIR verdicts and
+      # krit-fir's incremental state, from main's last run. Restored at another commit, each gives
+      # the findings a cold run does. .krit/cache is left out: restored from another commit, it
+      # replays that commit's findings (kaeawc/krit#1521).
+      KRIT_ANALYSIS_CACHES: |
+        .krit/android-findings-cache
+        .krit/cross-file-cache
+        .krit/cross-findings-cache
+        .krit/findings-bundle-cache
+        .krit/fir-cache
+        .krit/fir-incremental
+        .krit/librarymodel-cache
+        .krit/parse-cache
+        .krit/resource-cache
+        .krit/type-index-cache
+      # krit-fir's jar and its JVM AOT cache, which take a FIR run from ~34 s to ~15 s. They depend
+      # only on the Krit release and the JDK build. The JVM builds the AOT cache over two runs: the
+      # first records a training configuration (.aotconf), the next builds the cache (.aot).
+      KRIT_JVM_CACHES: |
+        ~/.krit/jars
+        ~/.krit/cache/*.aot
+        ~/.krit/cache/*.aot.meta.json
+        ~/.krit/cache/*.aotconf
     steps:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
-      # Kotlin, Compose, coroutines, manifest and resource rules (krit.yml) in a few seconds; fails
-      # on findings not in ci/krit-baseline.xml.
+      # Krit's FIR checks run the Kotlin compiler, which needs Java 21 or newer.
+      - uses: actions/setup-java@v6
+        id: java
+        with:
+          distribution: "zulu"
+          java-version: "27"
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      # Each module's source sets, compile classpath and Kotlin compiler plugins, in
+      # .krit/gradle-model/: what the FIR checks compile against (dev.jasonpearson.krit.settings,
+      # settings.gradle.kts).
+      - name: "Export the Gradle model"
+        run: ./gradlew kritExportModel
+
+      # The release this action is pinned to, checksum-verified, with the binary cached; Dependabot
+      # bumps the action and the CLI together.
+      - name: "Install Krit"
+        id: krit
+        uses: kaeawc/krit@v0.4.0
+
+      # The built AOT cache, or else the training configuration to build it from.
+      - name: "Restore Krit's JVM caches"
+        id: krit-jvm-caches
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.KRIT_JVM_CACHES }}
+          key: krit-jvm-${{ runner.os }}-${{ steps.krit.outputs.version }}-java-${{ steps.java.outputs.version }}-aot
+          restore-keys: krit-jvm-${{ runner.os }}-${{ steps.krit.outputs.version }}-java-${{ steps.java.outputs.version }}-
+
+      - name: "Restore Krit's analysis caches"
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.KRIT_ANALYSIS_CACHES }}
+          key: krit-analysis-${{ runner.os }}-${{ steps.krit.outputs.version }}-${{ github.sha }}
+          restore-keys: krit-analysis-${{ runner.os }}-${{ steps.krit.outputs.version }}-
+
+      # Kotlin, Compose, coroutines, manifest and resource rules (krit.yml), with the FIR checks;
+      # fails on findings not in ci/krit-baseline.xml, and when the FIR checks can't run.
       - name: "Run Krit"
         env:
+          KRIT: ${{ steps.krit.outputs.path }}/krit
+          KRIT_FIR: "1"
           KRIT_SARIF: build/reports/krit.sarif
         run: ci/validate_krit.sh
+
+      # Main saves the caches pull requests restore. The JVM caches are saved at the stage this run
+      # reached: the AOT cache without its training configuration (120 MB it no longer needs), or
+      # the training configuration when nothing was restored.
+      - name: "Krit's JVM cache stage"
+        id: krit-jvm-stage
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && steps.krit-jvm-caches.outputs.cache-hit != 'true' }}
+        env:
+          RESTORED: ${{ steps.krit-jvm-caches.outputs.cache-matched-key }}
+        run: |
+          if compgen -G "$HOME/.krit/cache/*.aot" >/dev/null; then
+            rm -f "$HOME"/.krit/cache/*.aotconf
+            echo "stage=aot" >>"$GITHUB_OUTPUT"
+          elif [[ -z "$RESTORED" ]] && compgen -G "$HOME/.krit/cache/*.aotconf" >/dev/null; then
+            echo "stage=train" >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: "Save Krit's JVM caches"
+        if: ${{ !cancelled() && steps.krit-jvm-stage.outputs.stage != '' }}
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.KRIT_JVM_CACHES }}
+          key: krit-jvm-${{ runner.os }}-${{ steps.krit.outputs.version }}-java-${{ steps.java.outputs.version }}-${{ steps.krit-jvm-stage.outputs.stage }}
+
+      - name: "Save Krit's analysis caches"
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.KRIT_ANALYSIS_CACHES }}
+          key: krit-analysis-${{ runner.os }}-${{ steps.krit.outputs.version }}-${{ github.sha }}
 
       # Findings as code scanning alerts and pull request annotations. Dependabot's token can't
       # upload them.

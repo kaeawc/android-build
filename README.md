@@ -86,6 +86,7 @@ downloads its own JDK 27. Android Studio (Gradle) also uses JDK 27 and downloads
 | Instrumentation test APK | `bazel build //app:instrumentation_tests_apk` |
 | Format BUILD files | `bazel run //bazel:buildifier` |
 | Static analysis ([Krit](https://github.com/kaeawc/krit), `krit.yml`) | `ci/validate_krit.sh` |
+| Static analysis with Krit's FIR checks, as CI runs it | `./gradlew kritExportModel && KRIT_FIR=1 ci/validate_krit.sh` |
 
 Kotlin compiles incrementally in Bazel's persistent workers: after an edit, only the affected
 sources of a module recompile. `bazel build --config=ic-summary //app` prints what each Kotlin
@@ -134,7 +135,7 @@ Dependabot opens update PRs for the Gradle catalog, Bazel modules and GitHub Act
 | Module Graph Check | Bazel analysis of `//...` (layer visibility) and buildifier |
 | Dependency Versions | Bazel resolves the same library versions as Gradle (`bazel/scripts/repin.py --check`) |
 | Android Platform | the Gradle build (what Android Studio syncs) still configures |
-| Krit | [Krit](https://github.com/kaeawc/krit) static analysis (Kotlin, Compose, manifest and resource rules) in a few seconds; findings not in `ci/krit-baseline.xml` fail the check and show as code scanning annotations |
+| Krit | [Krit](https://github.com/kaeawc/krit) static analysis (Kotlin, Compose, manifest and resource rules), with its FIR checks compiling against the Gradle model (`kritExportModel`); findings not in `ci/krit-baseline.xml` fail the check and show as code scanning annotations. Krit's JVM and analysis caches are restored from `main` |
 | ktfmt, Validate XML, Validate Shell Scripts | formatting and static checks |
 | Diff APK from Base | [Diffuse](https://github.com/JakeWharton/diffuse) report commented on the PR, against the APK `main`'s run built for the PR's base commit |
 | Android UI Tests | the instrumentation tests on [emulator.wtf](https://emulator.wtf) |
