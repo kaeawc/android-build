@@ -1,6 +1,5 @@
 name: "Commit"
 
-
 on:
   pull_request:
     branches:
@@ -27,154 +26,9 @@ jobs:
   #
   # Every Bazel job restores the caches main last saved (.github/actions/bazel-setup), so a pull
   # request rebuilds only what it changed. Two Bazel jobs build: Unit Tests and Build APK.
-
-  android-platform:
-    name: "Android Platform"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      # The Gradle build is what Android Studio syncs: realizing every task proves it still
-      # configures on the current AGP / Kotlin / JDK.
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "tasks"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-
-  unit-tests:
-    name: "Unit Tests"
-    runs-on: ubuntu-latest
-    # A cold build takes ~17 minutes. A hung one would otherwise hold main's concurrency group (and
-    # every run queued behind it) for GitHub's default 6 hours.
-    timeout-minutes: 45
-    permissions:
-      contents: read
-      # bazel-cache-save deletes the caches it supersedes.
-      actions: write
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - uses: ./.github/actions/bazel-setup
-
-      # Pull requests build only what the tests need (Build APK packages the app in parallel). On
-      # main this builds all of //..., so the caches it saves serve every job.
-      - name: "bazel test //..."
-        run: bazel test --config=ci ${{ github.event_name == 'pull_request' && '--build_tests_only' || '' }} //...
-
-      - uses: ./.github/actions/bazel-cache-save
-        if: github.event_name == 'push'
-
-      - name: "Store test logs"
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: bazel-testlogs
-          path: bazel-testlogs/**/test.log
-
-  validate-xml:
-    name: "Validate XML"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - name: "Run XMLStarlet"
-        shell: "bash"
-        run: |
-          sudo apt-get update
-          sudo apt-get install xmlstarlet
-          ci/validate_xml.sh
-
-  ktfmt:
-    name: "ktfmt"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - name: "Run ktfmt"
-        shell: "bash"
-        run: |
-          INSTALL_KTFMT_WHEN_MISSING=true ONLY_TOUCHED_FILES=false ci/validate_ktfmt.sh
-
-  validate-shell-scripts:
-    name: "Validate Shell Scripts"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - name: "Run ShellCheck"
-        shell: "bash"
-        run: |
-          ci/validate_shell_scripts.sh
-
-  module-graph:
-    name: "Module Graph Check"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - uses: ./.github/actions/bazel-setup
-        with:
-          disk-cache: false
-
-      # bazel/defs.bzl gives each layer a visibility, so analysis fails on a dependency the
-      # module graph doesn't allow (e.g. feature -> feature).
-      - name: "Analyze the module graph"
-        run: bazel build --config=ci --nobuild //...
-
-      # Formatting, lint, and sorted dependency lists in BUILD / .bzl / MODULE.bazel files.
-      - name: "buildifier"
-        run: bazel run --config=ci //bazel:buildifier_check
-
-  dependency-versions:
-    name: "Dependency Versions"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - uses: actions/setup-java@v6
-        with:
-          distribution: "zulu"
-          java-version: "27"
-
-      - uses: gradle/actions/setup-gradle@v6
-        with:
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
-
-      # Bazel must resolve the versions Gradle does (bazel/scripts/repin.py): fails when an
-      # artifact resolves older in maven_install.json, or MODULE.bazel and the catalog drifted.
-      - name: "Bazel and Gradle resolve the same versions"
-        run: python3 bazel/scripts/repin.py --check
-
-  krit:
-    name: "Krit"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      # Kotlin, Compose, coroutines, manifest and resource rules (krit.yml) in a few seconds; fails
-      # on findings not in ci/krit-baseline.xml.
-      - name: "Run Krit"
-        env:
-          KRIT_SARIF: build/reports/krit.sarif
-        run: ci/validate_krit.sh
-
-      # Findings as code scanning alerts and pull request annotations. Dependabot's token can't
-      # upload them.
-      - name: "Upload Krit SARIF"
-        if: ${{ !cancelled() && github.secret_source == 'Actions' && hashFiles('build/reports/krit.sarif') != '' }}
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: build/reports/krit.sarif
-          category: krit
+  #
+  # Jobs are listed critical path first (Build APK, then the device tests that wait for it): when
+  # runners are scarce, jobs tend to start in this order, and the short checks can wait.
 
   # The app and the instrumentation tests APK in one build: they share most of their actions.
   build-apk:
@@ -216,125 +70,36 @@ jobs:
           name: automobile-tests
           path: out/automobile-tests.jar
 
-  # The base APK isn't rebuilt: it's the apk artifact of the Commit run on main for the pull
-  # request's base commit.
-  diff-apk-from-base:
-    name: "Diff APK from Base"
+  unit-tests:
+    name: "Unit Tests"
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.secret_source == 'Actions'
+    # A cold build takes ~17 minutes. A hung one would otherwise hold main's concurrency group (and
+    # every run queued behind it) for GitHub's default 6 hours.
+    timeout-minutes: 45
     permissions:
-      actions: read
-      pull-requests: write
-    needs:
-      - build-apk
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: apk
-
-      # Waits for a base run still in progress to upload its APK. A base without a run that built
-      # one (a base branch other than main, a failed or expired build) skips the diff.
-      - name: "Find the base commit's APK"
-        id: base-run
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          runs="repos/$GITHUB_REPOSITORY/actions/workflows/commit.yml/runs?head_sha=$BASE_SHA&event=push"
-          for _ in $(seq 40); do
-            run=$(gh api "$runs" --jq '.workflow_runs[0] // empty | "\(.id) \(.status)"')
-            if [ -z "$run" ]; then
-              echo "::notice::No Commit run on main for the base commit $BASE_SHA, so there's no APK to diff against."
-              exit 0
-            fi
-            read -r run_id status <<< "$run"
-            artifacts=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts?name=apk" --jq '.artifacts | map(select(.expired | not)) | length')
-            if [ "$artifacts" -gt 0 ]; then
-              echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            if [ "$status" = "completed" ]; then
-              echo "::notice::The base commit's run ($run_id) has no APK, so there's nothing to diff against."
-              exit 0
-            fi
-            sleep 30
-          done
-          echo "::notice::The base commit's run ($run_id) didn't build its APK within 20 minutes."
-
-      - uses: actions/download-artifact@v8
-        if: steps.base-run.outputs.run-id
-        with:
-          name: apk
-          path: base
-          run-id: ${{ steps.base-run.outputs.run-id }}
-          github-token: ${{ github.token }}
-
-      - id: diffuse
-        if: steps.base-run.outputs.run-id
-        uses: usefulness/diffuse-action@v1
-        with:
-          old-file-path: base/app-debug.apk
-          new-file-path: app-debug.apk
-
-      - uses: peter-evans/find-comment@v4
-        id: find-comment
-        if: steps.base-run.outputs.run-id
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body-includes: Diffuse output
-
-      - uses: peter-evans/create-or-update-comment@v5
-        if: steps.base-run.outputs.run-id
-        with:
-          body: |
-            Diffuse output:
-
-            ${{ steps.diffuse.outputs.diff-gh-comment }}
-          edit-mode: replace
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/upload-artifact@v7
-        if: steps.base-run.outputs.run-id
-        with:
-          name: diffuse-output
-          path: ${{ steps.diffuse.outputs.diff-file }}
-
-  ui-tests:
-    name: "Android UI Tests"
-    runs-on: ubuntu-latest
-    # emulator.wtf needs the EW_API_TOKEN secret, which Dependabot-triggered runs do not receive, so this job is skipped there.
-    if: github.secret_source == 'Actions'
-    needs:
-      - build-apk
+      contents: read
+      # bazel-cache-save deletes the caches it supersedes.
+      actions: write
     steps:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v8
-        with:
-          name: apk
+      - uses: ./.github/actions/bazel-setup
 
-      - uses: actions/download-artifact@v8
-        with:
-          name: test-apk
+      # Pull requests build only what the tests need (Build APK packages the app in parallel). On
+      # main this builds all of //..., so the caches it saves serve every job.
+      - name: "bazel test //..."
+        run: bazel test --config=ci ${{ github.event_name == 'pull_request' && '--build_tests_only' || '' }} //...
 
-      - name: "Run tests on emulator.wtf"
-        uses: emulator-wtf/run-tests@v1
-        with:
-          api-token: ${{ secrets.EW_API_TOKEN }}
-          app: app-debug.apk
-          test: app-debug-androidTest.apk
-          outputs-dir: build/test-results
-          record-video: true
+      - uses: ./.github/actions/bazel-cache-save
+        if: github.event_name == 'push'
 
-      - name: "Publish Test Report"
-        uses: mikepenz/action-junit-report@v6
-        if: always() # always run even if the tests fail
+      - name: "Store test logs"
+        if: failure()
+        uses: actions/upload-artifact@v7
         with:
-          check_name: "UI Test Report"
-          report_paths: 'build/test-results/**/*.xml'
+          name: bazel-testlogs
+          path: bazel-testlogs/**/test.log
 
   auto-mobile-tests:
     name: "AutoMobile JUnit Tests"
@@ -470,3 +235,239 @@ jobs:
         with:
           check_name: "AutoMobile Test Report"
           report_paths: 'build/test-results/automobile/test.xml'
+  ui-tests:
+    name: "Android UI Tests"
+    runs-on: ubuntu-latest
+    # emulator.wtf needs the EW_API_TOKEN secret, which Dependabot-triggered runs do not receive, so this job is skipped there.
+    if: github.secret_source == 'Actions'
+    needs:
+      - build-apk
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: apk
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: test-apk
+
+      - name: "Run tests on emulator.wtf"
+        uses: emulator-wtf/run-tests@v1
+        with:
+          api-token: ${{ secrets.EW_API_TOKEN }}
+          app: app-debug.apk
+          test: app-debug-androidTest.apk
+          outputs-dir: build/test-results
+          record-video: true
+
+      - name: "Publish Test Report"
+        uses: mikepenz/action-junit-report@v6
+        if: always() # always run even if the tests fail
+        with:
+          check_name: "UI Test Report"
+          report_paths: 'build/test-results/**/*.xml'
+
+  # The base APK isn't rebuilt: it's the apk artifact of the Commit run on main for the pull
+  # request's base commit.
+  diff-apk-from-base:
+    name: "Diff APK from Base"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.secret_source == 'Actions'
+    permissions:
+      actions: read
+      pull-requests: write
+    needs:
+      - build-apk
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: apk
+
+      # Waits for a base run still in progress to upload its APK. A base without a run that built
+      # one (a base branch other than main, a failed or expired build) skips the diff.
+      - name: "Find the base commit's APK"
+        id: base-run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          runs="repos/$GITHUB_REPOSITORY/actions/workflows/commit.yml/runs?head_sha=$BASE_SHA&event=push"
+          for _ in $(seq 40); do
+            run=$(gh api "$runs" --jq '.workflow_runs[0] // empty | "\(.id) \(.status)"')
+            if [ -z "$run" ]; then
+              echo "::notice::No Commit run on main for the base commit $BASE_SHA, so there's no APK to diff against."
+              exit 0
+            fi
+            read -r run_id status <<< "$run"
+            artifacts=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts?name=apk" --jq '.artifacts | map(select(.expired | not)) | length')
+            if [ "$artifacts" -gt 0 ]; then
+              echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ "$status" = "completed" ]; then
+              echo "::notice::The base commit's run ($run_id) has no APK, so there's nothing to diff against."
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "::notice::The base commit's run ($run_id) didn't build its APK within 20 minutes."
+
+      - uses: actions/download-artifact@v8
+        if: steps.base-run.outputs.run-id
+        with:
+          name: apk
+          path: base
+          run-id: ${{ steps.base-run.outputs.run-id }}
+          github-token: ${{ github.token }}
+
+      - id: diffuse
+        if: steps.base-run.outputs.run-id
+        uses: usefulness/diffuse-action@v1
+        with:
+          old-file-path: base/app-debug.apk
+          new-file-path: app-debug.apk
+
+      - uses: peter-evans/find-comment@v4
+        id: find-comment
+        if: steps.base-run.outputs.run-id
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: Diffuse output
+
+      - uses: peter-evans/create-or-update-comment@v5
+        if: steps.base-run.outputs.run-id
+        with:
+          body: |
+            Diffuse output:
+
+            ${{ steps.diffuse.outputs.diff-gh-comment }}
+          edit-mode: replace
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v7
+        if: steps.base-run.outputs.run-id
+        with:
+          name: diffuse-output
+          path: ${{ steps.diffuse.outputs.diff-file }}
+
+  module-graph:
+    name: "Module Graph Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/bazel-setup
+        with:
+          disk-cache: false
+
+      # bazel/defs.bzl gives each layer a visibility, so analysis fails on a dependency the
+      # module graph doesn't allow (e.g. feature -> feature).
+      - name: "Analyze the module graph"
+        run: bazel build --config=ci --nobuild //...
+
+      # Formatting, lint, and sorted dependency lists in BUILD / .bzl / MODULE.bazel files.
+      - name: "buildifier"
+        run: bazel run --config=ci //bazel:buildifier_check
+
+  dependency-versions:
+    name: "Dependency Versions"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: "zulu"
+          java-version: "27"
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      # Bazel must resolve the versions Gradle does (bazel/scripts/repin.py): fails when an
+      # artifact resolves older in maven_install.json, or MODULE.bazel and the catalog drifted.
+      - name: "Bazel and Gradle resolve the same versions"
+        run: python3 bazel/scripts/repin.py --check
+
+  android-platform:
+    name: "Android Platform"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      # The Gradle build is what Android Studio syncs: realizing every task proves it still
+      # configures on the current AGP / Kotlin / JDK.
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "tasks"
+          reuse-configuration-cache: true
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+  krit:
+    name: "Krit"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      # Kotlin, Compose, coroutines, manifest and resource rules (krit.yml) in a few seconds; fails
+      # on findings not in ci/krit-baseline.xml.
+      - name: "Run Krit"
+        env:
+          KRIT_SARIF: build/reports/krit.sarif
+        run: ci/validate_krit.sh
+
+      # Findings as code scanning alerts and pull request annotations. Dependabot's token can't
+      # upload them.
+      - name: "Upload Krit SARIF"
+        if: ${{ !cancelled() && github.secret_source == 'Actions' && hashFiles('build/reports/krit.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: build/reports/krit.sarif
+          category: krit
+
+  ktfmt:
+    name: "ktfmt"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - name: "Run ktfmt"
+        shell: "bash"
+        run: |
+          INSTALL_KTFMT_WHEN_MISSING=true ONLY_TOUCHED_FILES=false ci/validate_ktfmt.sh
+
+  validate-xml:
+    name: "Validate XML"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - name: "Run XMLStarlet"
+        shell: "bash"
+        run: |
+          sudo apt-get update
+          sudo apt-get install xmlstarlet
+          ci/validate_xml.sh
+
+  validate-shell-scripts:
+    name: "Validate Shell Scripts"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - name: "Run ShellCheck"
+        shell: "bash"
+        run: |
+          ci/validate_shell_scripts.sh
