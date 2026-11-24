@@ -1,5 +1,6 @@
 name: "Commit"
 
+
 on:
   pull_request:
     branches:
@@ -26,9 +27,161 @@ jobs:
   #
   # Every Bazel job restores the caches main last saved (.github/actions/bazel-setup), so a pull
   # request rebuilds only what it changed. Two Bazel jobs build: Unit Tests and Build APK.
-  #
-  # Jobs are listed critical path first (Build APK, then the device tests that wait for it): when
-  # runners are scarce, jobs tend to start in this order, and the short checks can wait.
+
+  android-platform:
+    name: "Android Platform"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      # The Gradle build is what Android Studio syncs: realizing every task proves it still
+      # configures on the current AGP / Kotlin / JDK.
+      - uses: ./.github/actions/gradle-task-run
+        with:
+          gradle-tasks: "tasks"
+          reuse-configuration-cache: true
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+  unit-tests:
+    name: "Unit Tests"
+    runs-on: ubuntu-latest
+    # A cold build takes ~17 minutes. A hung one would otherwise hold main's concurrency group (and
+    # every run queued behind it) for GitHub's default 6 hours.
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      # bazel-cache-save deletes the caches it supersedes.
+      actions: write
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/bazel-setup
+
+      # Pull requests build only what the tests need (Build APK packages the app in parallel). On
+      # main this builds all of //..., so the caches it saves serve every job.
+      - name: "bazel test //..."
+        run: bazel test --config=ci ${{ github.event_name == 'pull_request' && '--build_tests_only' || '' }} //...
+
+      - name: "Store Bazel profile"
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-profile-unit-tests
+          path: ~/.bazel/command.profile.gz
+
+      - uses: ./.github/actions/bazel-cache-save
+        if: github.event_name == 'push'
+
+      - name: "Store test logs"
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-testlogs
+          path: bazel-testlogs/**/test.log
+
+  validate-xml:
+    name: "Validate XML"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - name: "Run XMLStarlet"
+        shell: "bash"
+        run: |
+          sudo apt-get update
+          sudo apt-get install xmlstarlet
+          ci/validate_xml.sh
+
+  ktfmt:
+    name: "ktfmt"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - name: "Run ktfmt"
+        shell: "bash"
+        run: |
+          INSTALL_KTFMT_WHEN_MISSING=true ONLY_TOUCHED_FILES=false ci/validate_ktfmt.sh
+
+  validate-shell-scripts:
+    name: "Validate Shell Scripts"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - name: "Run ShellCheck"
+        shell: "bash"
+        run: |
+          ci/validate_shell_scripts.sh
+
+  module-graph:
+    name: "Module Graph Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - uses: ./.github/actions/bazel-setup
+        with:
+          disk-cache: false
+
+      # bazel/defs.bzl gives each layer a visibility, so analysis fails on a dependency the
+      # module graph doesn't allow (e.g. feature -> feature).
+      - name: "Analyze the module graph"
+        run: bazel build --config=ci --nobuild //...
+
+      # Formatting, lint, and sorted dependency lists in BUILD / .bzl / MODULE.bazel files.
+      - name: "buildifier"
+        run: bazel run --config=ci //bazel:buildifier_check
+
+  dependency-versions:
+    name: "Dependency Versions"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: "zulu"
+          java-version: "27"
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      # Bazel must resolve the versions Gradle does (bazel/scripts/repin.py): fails when an
+      # artifact resolves older in maven_install.json, or MODULE.bazel and the catalog drifted.
+      - name: "Bazel and Gradle resolve the same versions"
+        run: python3 bazel/scripts/repin.py --check
+
+  krit:
+    name: "Krit"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Git Checkout"
+        uses: actions/checkout@v7
+
+      # Kotlin, Compose, coroutines, manifest and resource rules (krit.yml) in a few seconds; fails
+      # on findings not in ci/krit-baseline.xml.
+      - name: "Run Krit"
+        env:
+          KRIT_SARIF: build/reports/krit.sarif
+        run: ci/validate_krit.sh
+
+      # Findings as code scanning alerts and pull request annotations. Dependabot's token can't
+      # upload them.
+      - name: "Upload Krit SARIF"
+        if: ${{ !cancelled() && github.secret_source == 'Actions' && hashFiles('build/reports/krit.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: build/reports/krit.sarif
+          category: krit
 
   # The app and the instrumentation tests APK in one build: they share most of their actions.
   build-apk:
@@ -77,243 +230,6 @@ jobs:
         with:
           name: bazel-profile-build-apk
           path: ~/.bazel/command.profile.gz
-
-  unit-tests:
-    name: "Unit Tests"
-    runs-on: ubuntu-latest
-    # A cold build takes ~17 minutes. A hung one would otherwise hold main's concurrency group (and
-    # every run queued behind it) for GitHub's default 6 hours.
-    timeout-minutes: 45
-    permissions:
-      contents: read
-      # bazel-cache-save deletes the caches it supersedes.
-      actions: write
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - uses: ./.github/actions/bazel-setup
-
-      # Pull requests build only what the tests need (Build APK packages the app in parallel). On
-      # main this builds all of //..., so the caches it saves serve every job.
-      - name: "bazel test //..."
-        run: bazel test --config=ci ${{ github.event_name == 'pull_request' && '--build_tests_only' || '' }} //...
-
-      - name: "Store Bazel profile"
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: bazel-profile-unit-tests
-          path: ~/.bazel/command.profile.gz
-
-      - uses: ./.github/actions/bazel-cache-save
-        if: github.event_name == 'push'
-
-      - name: "Store test logs"
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: bazel-testlogs
-          path: bazel-testlogs/**/test.log
-
-  auto-mobile-tests:
-    name: "AutoMobile JUnit Tests"
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    # emulator.wtf needs the EW_API_TOKEN secret, which Dependabot-triggered runs do not receive, so this job is skipped there.
-    if: github.secret_source == 'Actions'
-    # Requires EW_API_TOKEN secret for the emulator.wtf adb session (closed alpha feature).
-    # Contact support@emulator.wtf to request access to start-session.
-    #
-    # Not `needs: build-apk`: the job starts with the run and sets up while Build APK builds, then
-    # waits for its artifacts. With `needs`, it queued for a runner only once Build APK finished
-    # (minutes, when runners are scarce) and only then set up, all on the critical path.
-    permissions:
-      actions: read # the run's artifacts and jobs, while waiting
-      checks: write # the test report
-      contents: read
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - name: "Setup Bun"
-        uses: oven-sh/setup-bun@v2
-
-      - name: "Install auto-mobile"
-        shell: "bash"
-        # Pin to match auto-mobile-junit-runner in gradle/libs.versions.toml and @maven_automobile
-        # in MODULE.bazel.
-        # The daemon/CLI and the runner must be the same version: a mismatch makes
-        # the daemon disable the executePlan tool (version-compatibility gate) and
-        # every AutoMobile plan fails. Bump both together.
-        run: npm install -g @kaeawc/auto-mobile@0.0.67 --ignore-scripts
-
-      - name: "Copy auto-mobile schema to workspace"
-        shell: "bash"
-        run: |
-          mkdir -p "$GITHUB_WORKSPACE/schemas"
-          cp /usr/local/lib/node_modules/@kaeawc/auto-mobile/schemas/test-plan.schema.json \
-            "$GITHUB_WORKSPACE/schemas/test-plan.schema.json"
-
-      # The JDK Bazel runs tests on.
-      - uses: actions/setup-java@v6
-        with:
-          distribution: "zulu"
-          java-version: "27"
-
-      - name: "Add Android platform tools to PATH"
-        shell: "bash"
-        run: echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-
-      - name: "Install ew-cli"
-        shell: "bash"
-        run: |
-          curl -fsSL \
-            https://maven.emulator.wtf/releases/ew-cli \
-            -o /usr/local/bin/ew-cli
-          chmod +x /usr/local/bin/ew-cli
-
-      - name: "Wait for Build APK's artifacts"
-        shell: "bash"
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          run="repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          while true; do
-            if gh api "$run/artifacts" --jq '[.artifacts[].name] | index("apk") and index("automobile-tests")' | grep -qx true; then
-              break
-            fi
-            state=$(gh api "$run/attempts/$GITHUB_RUN_ATTEMPT/jobs" --jq '.jobs[] | select(.name == "Build APK") | .status')
-            if [[ "$state" == completed ]]; then
-              echo "::error::Build APK finished without uploading the APK and the AutoMobile tests."
-              exit 1
-            fi
-            sleep 5
-          done
-
-      # Boots while the artifacts download; "Wait for the device" waits for it.
-      - name: "Start emulator.wtf ADB session"
-        shell: "bash"
-        env:
-          EW_API_TOKEN: ${{ secrets.EW_API_TOKEN }}
-        run: |
-          ew-cli start-session \
-            --device model=Pixel2,version=33 \
-            --adb \
-            --max-time-limit 20m &
-          echo "EW_SESSION_PID=$!" >> "$GITHUB_ENV"
-
-      - name: "Download app APK"
-        uses: actions/download-artifact@v8
-        with:
-          name: apk
-
-      # //app:automobile_tests as a deploy jar (Build APK builds it), with Bazel's JUnit runner.
-      - name: "Download AutoMobile tests"
-        uses: actions/download-artifact@v8
-        with:
-          name: automobile-tests
-
-      - name: "Wait for the device"
-        shell: "bash"
-        run: |
-          adb wait-for-device
-          # Single quotes on purpose: the loop runs in the device's shell.
-          # shellcheck disable=SC2016
-          adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done'
-
-      - name: "Install app APK on emulator"
-        shell: "bash"
-        run: adb install app-debug.apk
-
-      - name: "Start auto-mobile daemon"
-        shell: "bash"
-        run: |
-          auto-mobile --daemon-mode &
-          echo "AUTOMOBILE_DAEMON_PID=$!" >> "$GITHUB_ENV"
-          sleep 3
-
-      - name: "Pre-install CtrlProxy via observe"
-        shell: "bash"
-        run: auto-mobile --cli observe --platform android
-
-      # Launch, lifecycle, and tab-navigation plans exercise the Nav3 shell of the jasonpearson.dev app.
-      # Assertions target the bottom-nav chrome, not network content (CI has no Ghost key).
-      # What `bazel test --config=device //app:automobile_tests` runs: the runner opens the plans
-      # relative to the working directory (test-plans/), and writes the report to XML_OUTPUT_FILE.
-      - name: "Run AutoMobile JUnit Tests"
-        working-directory: app/src/test/resources
-        env:
-          XML_OUTPUT_FILE: ${{ github.workspace }}/build/test-results/automobile/test.xml
-        run: |
-          mkdir -p "$(dirname "$XML_OUTPUT_FILE")"
-          java -Djunit.parallel.forks=1 \
-            -Dbazel.test_suite=dev.jasonpearson.android.automobiletest.AutoMobileTests \
-            -jar "$GITHUB_WORKSPACE/automobile-tests.jar"
-
-      - name: "Dump app launch diagnostics on failure"
-        if: failure()
-        shell: "bash"
-        run: |
-          echo "::group::crash buffer"
-          adb logcat -d -b crash || true
-          echo "::endgroup::"
-          echo "::group::direct launch"
-          adb shell am start -W -n dev.jasonpearson.android/.MainActivity || true
-          sleep 5
-          adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
-          echo "::endgroup::"
-          echo "::group::logcat (AndroidRuntime / app)"
-          adb logcat -d -b main,system,crash | grep -iE "AndroidRuntime|FATAL|jasonpearson|ActivityTaskManager" | tail -n 300 || true
-          echo "::endgroup::"
-
-      - name: "Stop emulator.wtf session and daemon"
-        if: always()
-        shell: "bash"
-        run: |
-          kill "$AUTOMOBILE_DAEMON_PID" 2>/dev/null || true
-          kill "$EW_SESSION_PID" 2>/dev/null || true
-
-      - name: "Publish Test Report"
-        uses: mikepenz/action-junit-report@v6
-        if: always()
-        with:
-          check_name: "AutoMobile Test Report"
-          report_paths: 'build/test-results/automobile/test.xml'
-  ui-tests:
-    name: "Android UI Tests"
-    runs-on: ubuntu-latest
-    # emulator.wtf needs the EW_API_TOKEN secret, which Dependabot-triggered runs do not receive, so this job is skipped there.
-    if: github.secret_source == 'Actions'
-    needs:
-      - build-apk
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: apk
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: test-apk
-
-      - name: "Run tests on emulator.wtf"
-        uses: emulator-wtf/run-tests@v1
-        with:
-          api-token: ${{ secrets.EW_API_TOKEN }}
-          app: app-debug.apk
-          test: app-debug-androidTest.apk
-          outputs-dir: build/test-results
-          record-video: true
-
-      - name: "Publish Test Report"
-        uses: mikepenz/action-junit-report@v6
-        if: always() # always run even if the tests fail
-        with:
-          check_name: "UI Test Report"
-          report_paths: 'build/test-results/**/*.xml'
 
   # The base APK isn't rebuilt: it's the apk artifact of the Commit run on main for the pull
   # request's base commit.
@@ -400,119 +316,177 @@ jobs:
           name: diffuse-output
           path: ${{ steps.diffuse.outputs.diff-file }}
 
-  module-graph:
-    name: "Module Graph Check"
+  ui-tests:
+    name: "Android UI Tests"
     runs-on: ubuntu-latest
+    # emulator.wtf needs the EW_API_TOKEN secret, which Dependabot-triggered runs do not receive, so this job is skipped there.
+    if: github.secret_source == 'Actions'
+    needs:
+      - build-apk
     steps:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
-      - uses: ./.github/actions/bazel-setup
+      - uses: actions/download-artifact@v8
         with:
-          disk-cache: false
+          name: apk
 
-      # bazel/defs.bzl gives each layer a visibility, so analysis fails on a dependency the
-      # module graph doesn't allow (e.g. feature -> feature).
-      - name: "Analyze the module graph"
-        run: bazel build --config=ci --nobuild //...
+      - uses: actions/download-artifact@v8
+        with:
+          name: test-apk
 
-      # Formatting, lint, and sorted dependency lists in BUILD / .bzl / MODULE.bazel files.
-      - name: "buildifier"
-        run: bazel run --config=ci //bazel:buildifier_check
+      - name: "Run tests on emulator.wtf"
+        uses: emulator-wtf/run-tests@v1
+        with:
+          api-token: ${{ secrets.EW_API_TOKEN }}
+          app: app-debug.apk
+          test: app-debug-androidTest.apk
+          outputs-dir: build/test-results
+          record-video: true
 
-  dependency-versions:
-    name: "Dependency Versions"
+      - name: "Publish Test Report"
+        uses: mikepenz/action-junit-report@v6
+        if: always() # always run even if the tests fail
+        with:
+          check_name: "UI Test Report"
+          report_paths: 'build/test-results/**/*.xml'
+
+  auto-mobile-tests:
+    name: "AutoMobile JUnit Tests"
     runs-on: ubuntu-latest
+    # emulator.wtf needs the EW_API_TOKEN secret, which Dependabot-triggered runs do not receive, so this job is skipped there.
+    if: github.secret_source == 'Actions'
+    # Requires EW_API_TOKEN secret for the emulator.wtf adb session (closed alpha feature).
+    # Contact support@emulator.wtf to request access to start-session.
+    needs:
+      - build-apk
     steps:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
+      - name: "Add Android platform tools to PATH"
+        shell: "bash"
+        run: echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+
+      - name: "Install ew-cli"
+        shell: "bash"
+        run: |
+          curl -fsSL \
+            https://maven.emulator.wtf/releases/ew-cli \
+            -o /usr/local/bin/ew-cli
+          chmod +x /usr/local/bin/ew-cli
+
+      # First, so the device boots while the steps below set up; "Wait for the device" waits.
+      - name: "Start emulator.wtf ADB session"
+        shell: "bash"
+        env:
+          EW_API_TOKEN: ${{ secrets.EW_API_TOKEN }}
+        run: |
+          ew-cli start-session \
+            --device model=Pixel2,version=33 \
+            --adb \
+            --max-time-limit 20m &
+          echo "EW_SESSION_PID=$!" >> "$GITHUB_ENV"
+
+      - name: "Setup Bun"
+        uses: oven-sh/setup-bun@v2
+
+      - name: "Install auto-mobile"
+        shell: "bash"
+        # Pin to match auto-mobile-junit-runner in gradle/libs.versions.toml and @maven_automobile
+        # in MODULE.bazel.
+        # The daemon/CLI and the runner must be the same version: a mismatch makes
+        # the daemon disable the executePlan tool (version-compatibility gate) and
+        # every AutoMobile plan fails. Bump both together.
+        run: npm install -g @kaeawc/auto-mobile@0.0.67 --ignore-scripts
+
+      - name: "Copy auto-mobile schema to workspace"
+        shell: "bash"
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/schemas"
+          cp /usr/local/lib/node_modules/@kaeawc/auto-mobile/schemas/test-plan.schema.json \
+            "$GITHUB_WORKSPACE/schemas/test-plan.schema.json"
+
+      - name: "Download app APK"
+        uses: actions/download-artifact@v8
+        with:
+          name: apk
+
+      # //app:automobile_tests as a deploy jar (Build APK builds it), with Bazel's JUnit runner.
+      - name: "Download AutoMobile tests"
+        uses: actions/download-artifact@v8
+        with:
+          name: automobile-tests
+
+      # The JDK Bazel runs tests on.
       - uses: actions/setup-java@v6
         with:
           distribution: "zulu"
           java-version: "27"
 
-      - uses: gradle/actions/setup-gradle@v6
-        with:
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
+      - name: "Wait for the device"
+        shell: "bash"
+        run: |
+          adb wait-for-device
+          # Single quotes on purpose: the loop runs in the device's shell.
+          # shellcheck disable=SC2016
+          adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done'
 
-      # Bazel must resolve the versions Gradle does (bazel/scripts/repin.py): fails when an
-      # artifact resolves older in maven_install.json, or MODULE.bazel and the catalog drifted.
-      - name: "Bazel and Gradle resolve the same versions"
-        run: python3 bazel/scripts/repin.py --check
+      - name: "Install app APK on emulator"
+        shell: "bash"
+        run: adb install app-debug.apk
 
-  android-platform:
-    name: "Android Platform"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
+      - name: "Start auto-mobile daemon"
+        shell: "bash"
+        run: |
+          auto-mobile --daemon-mode &
+          echo "AUTOMOBILE_DAEMON_PID=$!" >> "$GITHUB_ENV"
+          sleep 3
 
-      # The Gradle build is what Android Studio syncs: realizing every task proves it still
-      # configures on the current AGP / Kotlin / JDK.
-      - uses: ./.github/actions/gradle-task-run
-        with:
-          gradle-tasks: "tasks"
-          reuse-configuration-cache: true
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - name: "Pre-install CtrlProxy via observe"
+        shell: "bash"
+        run: auto-mobile --cli observe --platform android
 
-  krit:
-    name: "Krit"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      # Kotlin, Compose, coroutines, manifest and resource rules (krit.yml) in a few seconds; fails
-      # on findings not in ci/krit-baseline.xml.
-      - name: "Run Krit"
+      # Launch, lifecycle, and tab-navigation plans exercise the Nav3 shell of the jasonpearson.dev app.
+      # Assertions target the bottom-nav chrome, not network content (CI has no Ghost key).
+      # What `bazel test --config=device //app:automobile_tests` runs: the runner opens the plans
+      # relative to the working directory (test-plans/), and writes the report to XML_OUTPUT_FILE.
+      - name: "Run AutoMobile JUnit Tests"
+        working-directory: app/src/test/resources
         env:
-          KRIT_SARIF: build/reports/krit.sarif
-        run: ci/validate_krit.sh
+          XML_OUTPUT_FILE: ${{ github.workspace }}/build/test-results/automobile/test.xml
+        run: |
+          mkdir -p "$(dirname "$XML_OUTPUT_FILE")"
+          java -Djunit.parallel.forks=1 \
+            -Dbazel.test_suite=dev.jasonpearson.android.automobiletest.AutoMobileTests \
+            -jar "$GITHUB_WORKSPACE/automobile-tests.jar"
 
-      # Findings as code scanning alerts and pull request annotations. Dependabot's token can't
-      # upload them.
-      - name: "Upload Krit SARIF"
-        if: ${{ !cancelled() && github.secret_source == 'Actions' && hashFiles('build/reports/krit.sarif') != '' }}
-        uses: github/codeql-action/upload-sarif@v4
+      - name: "Dump app launch diagnostics on failure"
+        if: failure()
+        shell: "bash"
+        run: |
+          echo "::group::crash buffer"
+          adb logcat -d -b crash || true
+          echo "::endgroup::"
+          echo "::group::direct launch"
+          adb shell am start -W -n dev.jasonpearson.android/.MainActivity || true
+          sleep 5
+          adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
+          echo "::endgroup::"
+          echo "::group::logcat (AndroidRuntime / app)"
+          adb logcat -d -b main,system,crash | grep -iE "AndroidRuntime|FATAL|jasonpearson|ActivityTaskManager" | tail -n 300 || true
+          echo "::endgroup::"
+
+      - name: "Stop emulator.wtf session and daemon"
+        if: always()
+        shell: "bash"
+        run: |
+          kill "$AUTOMOBILE_DAEMON_PID" 2>/dev/null || true
+          kill "$EW_SESSION_PID" 2>/dev/null || true
+
+      - name: "Publish Test Report"
+        uses: mikepenz/action-junit-report@v6
+        if: always()
         with:
-          sarif_file: build/reports/krit.sarif
-          category: krit
-
-  ktfmt:
-    name: "ktfmt"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - name: "Run ktfmt"
-        shell: "bash"
-        run: |
-          INSTALL_KTFMT_WHEN_MISSING=true ONLY_TOUCHED_FILES=false ci/validate_ktfmt.sh
-
-  validate-xml:
-    name: "Validate XML"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - name: "Run XMLStarlet"
-        shell: "bash"
-        run: |
-          sudo apt-get update
-          sudo apt-get install xmlstarlet
-          ci/validate_xml.sh
-
-  validate-shell-scripts:
-    name: "Validate Shell Scripts"
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Git Checkout"
-        uses: actions/checkout@v7
-
-      - name: "Run ShellCheck"
-        shell: "bash"
-        run: |
-          ci/validate_shell_scripts.sh
+          check_name: "AutoMobile Test Report"
+          report_paths: 'build/test-results/automobile/test.xml'
