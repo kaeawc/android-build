@@ -60,9 +60,9 @@ runs:
 
     # rules_android's tools are Go programs: analyzing an Android target fetches the Go SDK and
     # Gazelle's go_repository modules, which Gazelle builds its fetch tool for with `go build`
-    # (~13 s of a CI job's analysis, and the repository cache doesn't help). setup-bazel puts the output base
-    # in ~/.bazel, the same path in every job, so Bazel reuses these restored repositories as long
-    # as their markers match, and refetches any that don't.
+    # (~13 s of a CI job's analysis, which the repository cache doesn't save). setup-bazel puts the
+    # output base in ~/.bazel, the same path in every job, so Bazel reuses these restored
+    # repositories as long as their markers match, and refetches any that don't.
     - name: "Restore Go repositories"
       id: go-repos-cache
       uses: actions/cache/restore@v5
