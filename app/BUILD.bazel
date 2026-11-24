@@ -1,4 +1,7 @@
-load("//bazel:defs.bzl", "kt_android_application")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@rules_java//java:defs.bzl", "java_test")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("//bazel:defs.bzl", "kt_android_application", "workspace_runfiles")
 
 # The application id and app name are the template's placeholders; see the README's
 # "Start a new project" section for renaming them.
@@ -22,7 +25,7 @@ kt_android_application(
     plugins = ["metro"],
     proguard_specs = ["proguard-rules.pro"],
     target_sdk = 37,
-    # AutoMobile tests drive a device through the AutoMobile daemon; CI runs them with Gradle.
+    # AutoMobile tests drive a device; they're the targets below.
     test_excludes = ["src/test/java/dev/jasonpearson/android/automobiletest/**"],
     version_code = 1,
     version_name = "1.0",
@@ -71,5 +74,71 @@ kt_android_application(
         "@maven//:dev_zacsweers_metro_runtime_jvm",
         "@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core",
         "@maven//:org_jetbrains_kotlinx_kotlinx_datetime_jvm",
+    ],
+)
+
+# AutoMobile tests run plans (src/test/resources/test-plans) on a device through the AutoMobile
+# daemon. They use none of the app's code, so an app change doesn't rebuild them. Tagged "device":
+# `bazel test //...` skips them (.bazelrc). With a device and the daemon running:
+#   bazel test --config=device //app:automobile_tests
+_AUTOMOBILE_TESTS = glob(["src/test/java/dev/jasonpearson/android/automobiletest/*Test.kt"])
+
+kt_jvm_library(
+    name = "automobile_test_lib",
+    testonly = True,
+    srcs = _AUTOMOBILE_TESTS,
+    deps = [
+        "@maven_automobile//:dev_jasonpearson_auto_mobile_auto_mobile_junit_runner",
+        "@maven_automobile//:junit_junit",
+    ],
+)
+
+# The runner opens a plan as a file: the classpath resource's path, which a resource in a jar
+# doesn't have, or else the path relative to the working directory. So the plans aren't resources
+# here but files at test-plans/ in the runfiles, where a test starts.
+workspace_runfiles(
+    name = "automobile_test_plans",
+    testonly = True,
+    srcs = glob(["src/test/resources/test-plans/**"]),
+    strip_prefix = "app/src/test/resources/",
+)
+
+_AUTOMOBILE_PACKAGE = "dev.jasonpearson.android.automobiletest"
+
+# One JVM for all the classes, as Gradle runs them: the runner's per-JVM startup (device check,
+# daemon connection) took ~10 s a class.
+write_file(
+    name = "automobile_suite_src",
+    out = "AutoMobileTests.java",
+    content = [
+        "package %s;" % _AUTOMOBILE_PACKAGE,
+        "",
+        "@org.junit.runner.RunWith(org.junit.runners.Suite.class)",
+        "@org.junit.runners.Suite.SuiteClasses({",
+    ] + ["    %s.class," % src.split("/")[-1][:-len(".kt")] for src in _AUTOMOBILE_TESTS] + [
+        "})",
+        "public class AutoMobileTests {}",
+    ],
+)
+
+java_test(
+    name = "automobile_tests",
+    size = "medium",
+    srcs = [":automobile_suite_src"],
+    data = [":automobile_test_plans"],
+    # One device: the runner must not run plans in parallel (as in app/build.gradle.kts).
+    jvm_flags = ["-Djunit.parallel.forks=1"],
+    # Unsandboxed: the runner reaches the daemon through /tmp and ~/.auto-mobile. Exclusive: one
+    # test on the device at a time. External: results depend on the device, never cached.
+    tags = [
+        "device",
+        "exclusive",
+        "external",
+        "no-sandbox",
+    ],
+    test_class = _AUTOMOBILE_PACKAGE + ".AutoMobileTests",
+    deps = [
+        ":automobile_test_lib",
+        "@maven_automobile//:junit_junit",
     ],
 )

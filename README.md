@@ -124,14 +124,17 @@ Dependabot opens update PRs for the Gradle catalog, Bazel modules and GitHub Act
 | ktfmt, Validate XML, Validate Shell Scripts | formatting and static checks |
 | Diff APK from Base | [Diffuse](https://github.com/JakeWharton/diffuse) report commented on the PR, against the APK `main`'s run built for the PR's base commit |
 | Android UI Tests | the instrumentation tests on [emulator.wtf](https://emulator.wtf) |
-| AutoMobile JUnit Tests | [AutoMobile](https://github.com/kaeawc/auto-mobile) device tests |
+| AutoMobile JUnit Tests | [AutoMobile](https://github.com/kaeawc/auto-mobile) device tests (`//app:automobile_tests`, built by Build APK) on emulator.wtf |
 
 Every Bazel job restores the disk cache (action outputs) and the repository cache (downloads) that
 the last `main` run saved, so a pull request rebuilds only what it changed. On each push to `main`
 the Unit Tests job builds all of `//...`, saves a fresh disk cache, and a fresh repository cache
 when the files pinning the downloads changed, each pruned to the entries that build used, then
 deletes the entries they replace: GitHub keeps 10 GB of Actions cache per repository, and the two
-come to about 2.3 GB. protoc comes prebuilt rather than compiled from C++ sources. A new push to a pull request cancels its previous run. Jobs that need the `EW_API_TOKEN` secret skip themselves where it isn't available
+come to about 2.3 GB. They also restore the Go repositories rules_android's tools need (the Go
+SDK and Gazelle's modules, ~110 MB), which Bazel would otherwise refetch, and build Gazelle's
+fetch tool for, in every job: about 13 s of each job's analysis. protoc comes prebuilt
+rather than compiled from C++ sources. A new push to a pull request cancels its previous run. Jobs that need the `EW_API_TOKEN` secret skip themselves where it isn't available
 (Dependabot runs, forks).
 
 ## Build and IDE tuning notes

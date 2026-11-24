@@ -21,8 +21,8 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Bazel builds, tests and packages the app; Gradle stays for Android Studio (Android Platform)
-  # and the AutoMobile device tests; Krit is the static analysis. Job names are the required
+  # Bazel builds, tests and packages the app, and runs the AutoMobile device tests; Gradle stays
+  # for Android Studio (Android Platform); Krit is the static analysis. Job names are the required
   # checks of the "Green Main" ruleset, so they stay stable.
   #
   # Every Bazel job restores the caches main last saved (.github/actions/bazel-setup), so a pull
@@ -187,12 +187,15 @@ jobs:
 
       - uses: ./.github/actions/bazel-setup
 
-      - name: "bazel build //app //app:instrumentation_tests_apk"
+      # Also the AutoMobile tests, as one jar the AutoMobile job runs with java: that job then needs
+      # no Bazel of its own (setup, analysis), which would delay the device tests by over a minute.
+      - name: "bazel build //app //app:instrumentation_tests_apk //app:automobile_tests_deploy.jar"
         run: |
-          bazel build --config=ci //app //app:instrumentation_tests_apk
+          bazel build --config=ci //app //app:instrumentation_tests_apk //app:automobile_tests_deploy.jar
           mkdir -p out
           cp bazel-bin/app/app.apk out/app-debug.apk
           cp bazel-bin/app/instrumentation_tests_apk.apk out/app-debug-androidTest.apk
+          cp bazel-bin/app/automobile_tests_deploy.jar out/automobile-tests.jar
 
       - name: "Store APK"
         uses: actions/upload-artifact@v7
@@ -205,6 +208,13 @@ jobs:
         with:
           name: test-apk
           path: out/app-debug-androidTest.apk
+
+      - name: "Store AutoMobile tests"
+        if: github.secret_source == 'Actions'
+        uses: actions/upload-artifact@v7
+        with:
+          name: automobile-tests
+          path: out/automobile-tests.jar
 
   # The base APK isn't rebuilt: it's the apk artifact of the Commit run on main for the pull
   # request's base commit.
@@ -344,7 +354,8 @@ jobs:
 
       - name: "Install auto-mobile"
         shell: "bash"
-        # Pin to match auto-mobile-junit-runner in gradle/libs.versions.toml.
+        # Pin to match auto-mobile-junit-runner in gradle/libs.versions.toml and @maven_automobile
+        # in MODULE.bazel.
         # The daemon/CLI and the runner must be the same version: a mismatch makes
         # the daemon disable the executePlan tool (version-compatibility gate) and
         # every AutoMobile plan fails. Bump both together.
@@ -361,6 +372,18 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: apk
+
+      # //app:automobile_tests as a deploy jar (Build APK builds it), with Bazel's JUnit runner.
+      - name: "Download AutoMobile tests"
+        uses: actions/download-artifact@v8
+        with:
+          name: automobile-tests
+
+      # The JDK Bazel runs tests on.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: "zulu"
+          java-version: "27"
 
       - name: "Add Android platform tools to PATH"
         shell: "bash"
@@ -402,18 +425,19 @@ jobs:
         shell: "bash"
         run: auto-mobile --cli observe --platform android
 
+      # Launch, lifecycle, and tab-navigation plans exercise the Nav3 shell of the jasonpearson.dev app.
+      # Assertions target the bottom-nav chrome, not network content (CI has no Ghost key).
+      # What `bazel test --config=device //app:automobile_tests` runs: the runner opens the plans
+      # relative to the working directory (test-plans/), and writes the report to XML_OUTPUT_FILE.
       - name: "Run AutoMobile JUnit Tests"
-        uses: ./.github/actions/gradle-task-run
-        with:
-          # Launch, lifecycle, and tab-navigation plans exercise the Nav3 shell of the jasonpearson.dev app.
-          # Assertions target the bottom-nav chrome, not network content (CI has no Ghost key).
-          # A package wildcard (rather than one --tests per class) keeps the artifact name this
-          # action derives from gradle-tasks under GitHub's 256-character limit.
-          gradle-tasks: >-
-            :app:testDebugUnitTest
-            --tests 'dev.jasonpearson.android.automobiletest.*'
-          reuse-configuration-cache: false
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+        working-directory: app/src/test/resources
+        env:
+          XML_OUTPUT_FILE: ${{ github.workspace }}/build/test-results/automobile/test.xml
+        run: |
+          mkdir -p "$(dirname "$XML_OUTPUT_FILE")"
+          java -Djunit.parallel.forks=1 \
+            -Dbazel.test_suite=dev.jasonpearson.android.automobiletest.AutoMobileTests \
+            -jar "$GITHUB_WORKSPACE/automobile-tests.jar"
 
       - name: "Dump app launch diagnostics on failure"
         if: failure()
@@ -443,4 +467,4 @@ jobs:
         if: always()
         with:
           check_name: "AutoMobile Test Report"
-          report_paths: 'app/build/test-results/**/*.xml'
+          report_paths: 'build/test-results/automobile/test.xml'

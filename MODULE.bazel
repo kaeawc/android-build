@@ -16,6 +16,17 @@ bazel_dep(name = "protobuf", version = "33.4")
 bazel_dep(name = "rules_java", version = "9.9.0")
 bazel_dep(name = "rules_jvm_external", version = "7.2")
 bazel_dep(name = "rules_android", version = "0.8.1")
+
+# rules_android's Java toolchains (its tools' and the Android-only one aar_import and
+# android_library compile with) run javac on rules_java's default runtime, JDK 25, which nothing
+# else here uses: every build extracted that JDK (~400 MB) for them. The patch runs them on the
+# tool runtime (--tool_java_runtime_version, JDK 27) like //bazel/jdk's toolchain.
+single_version_override(
+    module_name = "rules_android",
+    patch_strip = 1,
+    patches = ["//bazel/patches:rules_android-resolved-java-toolchain.patch"],
+)
+
 bazel_dep(name = "rules_kotlin", version = "2.4.21")
 
 bazel_dep(name = "buildifier_prebuilt", version = "10.2.0", dev_dependency = True)
@@ -377,6 +388,23 @@ maven.install(
     resolver = "maven",
 )
 use_repo(maven, "maven_jvm_test_variants")
+
+# The AutoMobile JUnit runner, for //app's AutoMobile device tests. A repository of its own: the
+# tests don't touch the app's code, and the runner's dependencies (Koog, JUnit 5) stay out of the
+# APK's resolution and the Gradle alignment above. The version must match auto-mobile-junit-runner
+# in gradle/libs.versions.toml and the auto-mobile CLI the CI job installs. Repin with
+#   REPIN=1 bazel run @maven_automobile//:pin
+maven.install(
+    name = "maven_automobile",
+    artifacts = ["dev.jasonpearson.auto-mobile:auto-mobile-junit-runner:0.0.67"],
+    # rules_kotlin's toolchain puts its own (newer) standard library on the classpath.
+    excluded_artifacts = ["org.jetbrains.kotlin:kotlin-stdlib"],
+    fail_if_repin_required = True,
+    lock_file = "//:maven_automobile_install.json",
+    repositories = ["https://repo1.maven.org/maven2"],
+    resolver = "maven",
+)
+use_repo(maven, "maven_automobile")
 
 # rules_android's desugarer reads class files with ASM 9.7, which stops at Java 24. Point it at
 # ASM 9.11 so the project can emit Java 25 bytecode.

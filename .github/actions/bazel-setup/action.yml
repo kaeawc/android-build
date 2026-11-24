@@ -1,5 +1,5 @@
 name: "Bazel setup"
-description: "Installs the Android SDK packages the Bazel build needs and Bazelisk, and restores the repository cache and the disk cache main saved."
+description: "Installs the Android SDK packages the Bazel build needs and Bazelisk, and restores the repository cache, the Go repositories and the disk cache main saved."
 
 inputs:
   disk-cache:
@@ -33,8 +33,9 @@ runs:
     - name: "Cache keys"
       shell: bash
       run: |
-        echo "BAZEL_REPOSITORY_CACHE_KEY=bazel-repo-v1-$RUNNER_OS-${{ hashFiles('MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', 'maven_jvm_test_variants_install.json', 'bazel/jdk/extensions.bzl') }}" >> "$GITHUB_ENV"
+        echo "BAZEL_REPOSITORY_CACHE_KEY=bazel-repo-v1-$RUNNER_OS-${{ hashFiles('MODULE.bazel', 'MODULE.bazel.lock', 'maven_install.json', 'maven_jvm_test_variants_install.json', 'maven_automobile_install.json', 'bazel/jdk/extensions.bzl') }}" >> "$GITHUB_ENV"
         echo "BAZEL_DISK_CACHE_KEY=bazel-disk-v1-$RUNNER_OS-$GITHUB_SHA" >> "$GITHUB_ENV"
+        echo "BAZEL_GO_REPOS_CACHE_KEY=bazel-go-repos-v1-$RUNNER_OS-${{ hashFiles('MODULE.bazel.lock') }}" >> "$GITHUB_ENV"
 
     # Downloads only: Bazel 9 also keeps every fetched repository extracted in <repository
     # cache>/contents, which doubles the cache (2.2 GB instead of 1.3 GB) to save ~7 s of unpacking
@@ -56,6 +57,27 @@ runs:
     - name: "Record repository cache hit"
       shell: bash
       run: echo "BAZEL_REPOSITORY_CACHE_HIT=${{ steps.repository-cache.outputs.cache-hit }}" >> "$GITHUB_ENV"
+
+    # rules_android's tools are Go programs: analyzing an Android target fetches the Go SDK and
+    # Gazelle's go_repository modules, which Gazelle builds its fetch tool for with `go build`
+    # (~13 s of a CI job's analysis, which the repository cache doesn't save). setup-bazel puts the
+    # output base in ~/.bazel, the same path in every job, so Bazel reuses these restored
+    # repositories as long as their markers match, and refetches any that don't.
+    - name: "Restore Go repositories"
+      id: go-repos-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          ~/.bazel/external/gazelle++*
+          ~/.bazel/external/@gazelle++*.marker
+          ~/.bazel/external/rules_go++go_sdk+*
+          ~/.bazel/external/@rules_go++go_sdk+*.marker
+        key: ${{ env.BAZEL_GO_REPOS_CACHE_KEY }}
+        restore-keys: bazel-go-repos-v1-${{ runner.os }}-
+
+    - name: "Record Go repositories cache hit"
+      shell: bash
+      run: echo "BAZEL_GO_REPOS_CACHE_HIT=${{ steps.go-repos-cache.outputs.cache-hit }}" >> "$GITHUB_ENV"
 
     - name: "Point Bazel at the disk cache"
       if: inputs.disk-cache == 'true'

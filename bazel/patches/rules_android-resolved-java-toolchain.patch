@@ -1,0 +1,19 @@
+--- a/tools/jdk/BUILD
++++ b/tools/jdk/BUILD
+@@ -88,6 +88,7 @@
+         bootclasspath = [
+             ":bootclasspath_android_only",
+         ],
++        java_runtime = "@rules_java//toolchains:current_host_java_runtime",
+         source_version = str(ver),
+         target_version = str(ver),
+         visibility = ["//visibility:public"],
+@@ -103,7 +104,7 @@
+ 
+ alias(
+     name = "toolchain",
+-    actual = "@rules_java//toolchains:toolchain",
++    actual = ":current_java_toolchain",
+     visibility = ["//visibility:public"],
+ )
+ 

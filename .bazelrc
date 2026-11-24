@@ -43,6 +43,19 @@ build --incompatible_strict_action_env
 build --experimental_reuse_sandbox_directories
 test --test_output=errors
 
+# --- Device tests --------------------------------------------------------------------------------
+# Tests tagged "device" need a connected device (and, for AutoMobile, its daemon): plain
+# `bazel test` builds them but doesn't run them. --config=device runs only them, with the shell's
+# HOME, PATH (adb, auto-mobile), ANDROID_HOME and CI (the AutoMobile runner tells the daemon it
+# runs on CI, which runs plans in its CI mode).
+test --test_tag_filters=-device
+test:device --test_tag_filters=device
+test:device --test_env=CI
+test:device --test_env=HOME
+test:device --test_env=PATH
+test:device --test_env=ANDROID_HOME
+test:device --test_output=streamed
+
 # CI: compact, colored logs. (CI compiles each target once, so incremental state is never created.)
 build:ci --show_progress_rate_limit=30
 build:ci --color=yes

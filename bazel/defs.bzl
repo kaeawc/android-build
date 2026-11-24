@@ -341,3 +341,27 @@ EOF""" % (application_id, min_sdk, custom_package, application_id),
             debug_key = debug_key,
             deps = [":instrumentation_lib"],
         )
+
+def _workspace_runfiles_impl(ctx):
+    symlinks = {}
+    for f in ctx.files.srcs:
+        if not f.short_path.startswith(ctx.attr.strip_prefix):
+            fail("%s isn't under strip_prefix %s" % (f.short_path, ctx.attr.strip_prefix))
+        symlinks[f.short_path[len(ctx.attr.strip_prefix):]] = f
+    return [DefaultInfo(runfiles = ctx.runfiles(symlinks = symlinks))]
+
+workspace_runfiles = rule(
+    implementation = _workspace_runfiles_impl,
+    doc = """Puts files in the runfiles relative to the workspace root, a test's working directory.
+
+    For code that opens files by a path relative to the working directory, as Gradle's test
+    resources directory allows, where Bazel would package them in a jar.
+    """,
+    attrs = {
+        "srcs": attr.label_list(allow_files = True),
+        "strip_prefix": attr.string(
+            doc = "Removed from each file's workspace-relative path, e.g. \"app/src/test/resources/\".",
+            mandatory = True,
+        ),
+    },
+)

@@ -22,6 +22,7 @@ syncs Gradle projects. Both builds read the same sources (the Gradle
 | All unit tests | `bazel test //...` |
 | One module's tests | `bazel test //data/articles:tests` |
 | One test class | `bazel test //data/articles:CacheModelsTest` |
+| AutoMobile device tests (device connected, AutoMobile daemon running) | `bazel test --config=device //app:automobile_tests` |
 | Everything CI builds | `bazel build //... && bazel test //...` |
 | Format and lint BUILD / .bzl / MODULE.bazel | `bazel run //bazel:buildifier` (CI runs `//bazel:buildifier_check`) |
 
@@ -141,11 +142,15 @@ Notes on how dependencies resolve differently from Gradle:
   classpath.
 - **Unit tests of Android modules** run on the plain JVM against `android.jar`, like Gradle's
   local unit tests without Robolectric.
+- **AutoMobile tests** (`app/src/test/.../automobiletest`) run plans on a device through the
+  AutoMobile daemon. They only use the AutoMobile JUnit runner, which has a repository of its own
+  (`@maven_automobile`, `maven_automobile_install.json`) so its dependencies stay out of the app's
+  resolution; keep its version equal to `auto-mobile-junit-runner` in `gradle/libs.versions.toml`.
+  They're tagged `device`, so `bazel test //...` builds them without running them. With a device
+  connected and the daemon running: `bazel test --config=device //app:automobile_tests`.
 
 ## Not covered by Bazel
 
-- **AutoMobile tests** (`app/src/test/.../automobiletest`) drive a device through the AutoMobile
-  daemon; CI runs them with Gradle against the Bazel-built APK.
 - **Static analysis** is [Krit](https://github.com/kaeawc/krit) (`ci/validate_krit.sh`), which reads
   the sources directly: no build needed.
 - **Android Studio** syncs the Gradle build. The [Bazel plugin for IntelliJ](https://github.com/bazelbuild/intellij)
