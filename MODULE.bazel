@@ -27,6 +27,18 @@ single_version_override(
     patches = ["//bazel/patches:rules_android-resolved-java-toolchain.patch"],
 )
 
+# protobuf depends on rules_apple, whose rules_swift registers an autoconfigured Swift toolchain.
+# Toolchain resolution loads every registered toolchain, so each build ran that autoconfiguration,
+# which compiles feature probes when swiftc is installed: 28 s of analysis on GitHub's runners,
+# and Xcode probing on macOS. Nothing here builds Swift; the patch drops the registration.
+single_version_override(
+    module_name = "rules_swift",
+    patch_strip = 1,
+    patches = ["//bazel/patches:rules_swift-no-local-toolchain.patch"],
+    # The version resolution selects; the patch fits its MODULE.bazel.
+    version = "3.1.2",
+)
+
 bazel_dep(name = "rules_kotlin", version = "2.4.21")
 
 bazel_dep(name = "buildifier_prebuilt", version = "10.2.0", dev_dependency = True)
