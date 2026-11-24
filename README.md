@@ -92,6 +92,20 @@ sources of a module recompile. `bazel build --config=ic-summary //app` prints wh
 compilation did. [docs/bazel.md](docs/bazel.md) covers the Bazel setup, the module macros,
 adding dependencies and modules, and the trade-offs behind them.
 
+### Git hooks
+
+Enable the repository's hooks once per clone:
+
+```
+git config core.hooksPath .githooks
+```
+
+`pre-commit` formats the Kotlin files you changed (ktfmt) and runs ShellCheck. `pre-push` runs CI's
+fast checks in parallel, in about two seconds: ktfmt on the Kotlin files the push changes, Krit,
+ShellCheck, XML validation, and buildifier and actionlint when BUILD/.bzl or workflow files
+changed. A check whose tool isn't installed (`brew install ktfmt shellcheck xmlstarlet
+actionlint`) is skipped with a note, and CI still runs it. `git push --no-verify` skips them once.
+
 ### Adding a module
 
 Create the directory with the usual `src/main/kotlin` layout, then:

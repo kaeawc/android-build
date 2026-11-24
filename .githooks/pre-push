@@ -1,3 +1,120 @@
-#!/bin/sh
-command -v git-lfs >/dev/null 2>&1 || { echo >&2 "\nThis repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'pre-push' file in the hooks directory (set by 'core.hookspath'; usually '.git/hooks').\n"; exit 2; }
-git lfs pre-push "$@"
+#!/usr/bin/env bash
+# Runs CI's fast checks on what's being pushed, in parallel (about 2 s):
+#
+#   ktfmt        Kotlin files changed since the remote branch (or its merge base with main)
+#   Krit         static analysis, new findings only (ci/krit-baseline.xml)
+#   ShellCheck   shell scripts
+#   XML          well-formed XML
+#   buildifier   BUILD / .bzl / MODULE.bazel files, when any changed
+#   actionlint   workflows and actions, when any changed
+#
+# A check whose tool isn't installed is skipped with a note; CI still runs it. The checks read the
+# working tree. Skip them for one push with `git push --no-verify`.
+#
+# Enable this repository's hooks once per clone: git config core.hooksPath .githooks
+
+set -uo pipefail
+
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+refs=$(cat)
+
+# No files are stored in Git LFS; still hand the push to LFS where it's installed.
+if command -v git-lfs >/dev/null 2>&1; then
+  printf '%s\n' "$refs" | git lfs pre-push "$@" || exit $?
+fi
+
+zero=0000000000000000000000000000000000000000
+bases=()
+changed=""
+while read -r _ local_sha _ remote_sha; do
+  [[ -z "${local_sha:-}" || "$local_sha" == "$zero" ]] && continue # deleting a branch
+  if [[ "$remote_sha" == "$zero" ]] || ! git cat-file -e "$remote_sha" 2>/dev/null; then
+    remote_sha=$(git merge-base "$local_sha" origin/main 2>/dev/null) || continue
+  fi
+  bases+=("$remote_sha")
+  changed+=$(git diff --name-only --diff-filter=ACMRT "$remote_sha" "$local_sha")$'\n'
+done <<<"$refs"
+[[ ${#bases[@]} -eq 0 ]] && exit 0
+
+changed_matching() { grep -qE "$1" <<<"$changed"; }
+
+logs=$(mktemp -d)
+trap 'rm -rf "$logs"' EXIT
+names=()
+pids=()
+skipped=()
+
+run() { # run <name> <command...>
+  names+=("$1")
+  "${@:2}" >"$logs/$1.log" 2>&1 &
+  pids+=($!)
+}
+
+has() { command -v "$1" >/dev/null 2>&1; }
+
+if changed_matching '\.kts?$'; then
+  if has ktfmt; then
+    ktfmt_all() {
+      local base
+      for base in $(printf '%s\n' "${bases[@]}" | sort -u); do
+        ONLY_CHANGED_SINCE_SHA="$base" ci/validate_ktfmt.sh || return 1
+      done
+    }
+    run ktfmt ktfmt_all
+  else
+    skipped+=("ktfmt (not installed: brew install ktfmt)")
+  fi
+fi
+
+run krit ci/validate_krit.sh
+
+if has shellcheck; then
+  run shellcheck ci/validate_shell_scripts.sh
+else
+  skipped+=("ShellCheck (not installed)")
+fi
+
+if has xmlstarlet || has xml; then
+  run xml ci/validate_xml.sh
+else
+  skipped+=("XML (xmlstarlet not installed)")
+fi
+
+if changed_matching '(^|/)(BUILD\.bazel|MODULE\.bazel)$|\.bzl$'; then
+  if has bazel; then
+    run buildifier bazel run --ui_event_filters=-info,-stdout --noshow_progress //bazel:buildifier_check
+  else
+    skipped+=("buildifier (bazel not installed)")
+  fi
+fi
+
+if changed_matching '^\.github/(workflows|actions)/'; then
+  if has actionlint; then
+    run actionlint actionlint
+  else
+    skipped+=("actionlint (not installed)")
+  fi
+fi
+
+failed=()
+for i in "${!pids[@]}"; do
+  if ! wait "${pids[$i]}"; then
+    failed+=("${names[$i]}")
+  fi
+done
+
+for s in "${skipped[@]+"${skipped[@]}"}"; do
+  echo "pre-push: skipped $s"
+done
+
+if [[ ${#failed[@]} -gt 0 ]]; then
+  for name in "${failed[@]}"; do
+    echo "pre-push: $name failed:"
+    sed 's/^/  /' "$logs/$name.log"
+  done
+  echo "pre-push: fix the above, or push with --no-verify to skip these checks."
+  exit 1
+fi
+
+echo "pre-push: ${names[*]} passed."

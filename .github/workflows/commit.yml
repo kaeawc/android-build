@@ -408,6 +408,8 @@ jobs:
             --max-time-limit 20m &
           echo "EW_SESSION_PID=$!" >> "$GITHUB_ENV"
           adb wait-for-device
+          # Single quotes on purpose: the loop runs in the device's shell.
+          # shellcheck disable=SC2016
           adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done'
 
       - name: "Install app APK on emulator"
