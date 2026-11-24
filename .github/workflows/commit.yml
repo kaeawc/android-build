@@ -187,12 +187,15 @@ jobs:
 
       - uses: ./.github/actions/bazel-setup
 
-      - name: "bazel build //app //app:instrumentation_tests_apk"
+      # Also the AutoMobile tests, as one jar the AutoMobile job runs with java: that job then needs
+      # no Bazel of its own (setup, analysis), which would delay the device tests by over a minute.
+      - name: "bazel build //app //app:instrumentation_tests_apk //app:automobile_tests_deploy.jar"
         run: |
-          bazel build --config=ci //app //app:instrumentation_tests_apk
+          bazel build --config=ci //app //app:instrumentation_tests_apk //app:automobile_tests_deploy.jar
           mkdir -p out
           cp bazel-bin/app/app.apk out/app-debug.apk
           cp bazel-bin/app/instrumentation_tests_apk.apk out/app-debug-androidTest.apk
+          cp bazel-bin/app/automobile_tests_deploy.jar out/automobile-tests.jar
 
       - name: "Store APK"
         uses: actions/upload-artifact@v7
@@ -205,6 +208,13 @@ jobs:
         with:
           name: test-apk
           path: out/app-debug-androidTest.apk
+
+      - name: "Store AutoMobile tests"
+        if: github.secret_source == 'Actions'
+        uses: actions/upload-artifact@v7
+        with:
+          name: automobile-tests
+          path: out/automobile-tests.jar
 
   # The base APK isn't rebuilt: it's the apk artifact of the Commit run on main for the pull
   # request's base commit.
@@ -363,14 +373,17 @@ jobs:
         with:
           name: apk
 
-      # The tests use none of the app's code (app/BUILD.bazel), so this is a disk cache hit unless
-      # they changed. Built before the device session starts, so the session isn't kept waiting.
-      - uses: ./.github/actions/bazel-setup
+      # //app:automobile_tests as a deploy jar (Build APK builds it), with Bazel's JUnit runner.
+      - name: "Download AutoMobile tests"
+        uses: actions/download-artifact@v8
         with:
-          android: "false"
+          name: automobile-tests
 
-      - name: "Build AutoMobile tests"
-        run: bazel build --config=ci //app:automobile_tests
+      # The JDK Bazel runs tests on.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: "zulu"
+          java-version: "27"
 
       - name: "Add Android platform tools to PATH"
         shell: "bash"
@@ -414,8 +427,17 @@ jobs:
 
       # Launch, lifecycle, and tab-navigation plans exercise the Nav3 shell of the jasonpearson.dev app.
       # Assertions target the bottom-nav chrome, not network content (CI has no Ghost key).
+      # What `bazel test --config=device //app:automobile_tests` runs: the runner opens the plans
+      # relative to the working directory (test-plans/), and writes the report to XML_OUTPUT_FILE.
       - name: "Run AutoMobile JUnit Tests"
-        run: bazel test --config=ci --config=device //app:automobile_tests
+        working-directory: app/src/test/resources
+        env:
+          XML_OUTPUT_FILE: ${{ github.workspace }}/build/test-results/automobile/test.xml
+        run: |
+          mkdir -p "$(dirname "$XML_OUTPUT_FILE")"
+          java -Djunit.parallel.forks=1 \
+            -Dbazel.test_suite=dev.jasonpearson.android.automobiletest.AutoMobileTests \
+            -jar "$GITHUB_WORKSPACE/automobile-tests.jar"
 
       - name: "Dump app launch diagnostics on failure"
         if: failure()
@@ -445,4 +467,4 @@ jobs:
         if: always()
         with:
           check_name: "AutoMobile Test Report"
-          report_paths: 'bazel-testlogs/app/automobile_tests/test.xml'
+          report_paths: 'build/test-results/automobile/test.xml'

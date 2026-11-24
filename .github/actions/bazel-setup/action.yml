@@ -6,17 +6,12 @@ inputs:
     description: "Restore the disk cache (action outputs). Analysis-only jobs don't need it."
     required: false
     default: "true"
-  android:
-    description: "The job builds Android targets: install the SDK packages and restore the Go repositories rules_android's tools need."
-    required: false
-    default: "true"
 
 runs:
   using: "composite"
   steps:
     # The runner image's SDK lacks the minor platform (compileSdk 37.2) and build-tools 37.
     - name: "Install Android SDK packages"
-      if: inputs.android == 'true'
       shell: bash
       run: |
         # `yes` exits on SIGPIPE once sdkmanager stops reading, which pipefail would report.
@@ -65,11 +60,10 @@ runs:
 
     # rules_android's tools are Go programs: analyzing an Android target fetches the Go SDK and
     # Gazelle's go_repository modules, which Gazelle builds its fetch tool for with `go build`
-    # (~25 s of analysis, and the repository cache doesn't help). setup-bazel puts the output base
+    # (~13 s of a CI job's analysis, and the repository cache doesn't help). setup-bazel puts the output base
     # in ~/.bazel, the same path in every job, so Bazel reuses these restored repositories as long
     # as their markers match, and refetches any that don't.
     - name: "Restore Go repositories"
-      if: inputs.android == 'true'
       id: go-repos-cache
       uses: actions/cache/restore@v5
       with:
@@ -82,7 +76,6 @@ runs:
         restore-keys: bazel-go-repos-v1-${{ runner.os }}-
 
     - name: "Record Go repositories cache hit"
-      if: inputs.android == 'true'
       shell: bash
       run: echo "BAZEL_GO_REPOS_CACHE_HIT=${{ steps.go-repos-cache.outputs.cache-hit }}" >> "$GITHUB_ENV"
 
