@@ -62,7 +62,7 @@ class TalksViewModel(private val repository: TalksRepository) : ViewModel() {
                     is NetworkResult.Success -> _uiState.value = TalksUiState.Content(result.data)
                     is NetworkResult.Failure -> {
                         if (_uiState.value is TalksUiState.Content) {
-                            messages.send("Couldn't refresh talks")
+                            messages.send("Couldn't refresh the talks")
                         } else {
                             _uiState.value =
                                 TalksUiState.Error(result.error.message ?: "Failed to load")
