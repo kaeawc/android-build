@@ -194,6 +194,19 @@ jobs:
           cp bazel-bin/app/app.apk out/app-debug.apk
           cp bazel-bin/app/instrumentation_tests_apk.apk out/app-debug-androidTest.apk
 
+      # TEMPORARY (to be reverted before merging): saves the Go repositories from this pull
+      # request, so a re-run of this job measures restoring them.
+      - name: "Save Go repositories (temporary measurement)"
+        if: github.event_name == 'pull_request' && env.BAZEL_GO_REPOS_CACHE_HIT != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.bazel/external/gazelle++*
+            ~/.bazel/external/@gazelle++*.marker
+            ~/.bazel/external/rules_go++go_sdk+*
+            ~/.bazel/external/@rules_go++go_sdk+*.marker
+          key: ${{ env.BAZEL_GO_REPOS_CACHE_KEY }}
+
       - name: "Store APK"
         uses: actions/upload-artifact@v7
         with:
