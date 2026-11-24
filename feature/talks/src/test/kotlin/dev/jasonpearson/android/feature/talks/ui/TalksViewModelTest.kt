@@ -88,7 +88,7 @@ class TalksViewModelTest {
             advanceUntilIdle()
 
             assertEquals(TalksUiState.Content(initial), viewModel.uiState.value)
-            assertEquals("Couldn't refresh talks", message.await())
+            assertEquals("Couldn't refresh talks.", message.await())
             assertFalse(viewModel.isRefreshing.value)
         }
 
