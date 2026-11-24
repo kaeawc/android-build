@@ -16,10 +16,21 @@ kt_kotlinc_options(
 
 # Kotlin 2.4 targeting Java 25 bytecode (see .bazelrc), compiled through the Build Tools API so the persistent
 # worker can compile incrementally (enabled in .bazelrc).
+#
+# Dependents compile against each module's ABI jar (jvm-abi-gen: declarations without bodies), so
+# an edit that leaves it identical doesn't recompile them. Without experimental_use_abi_jars, a
+# module's "ABI jar" was its full class jar, and any edit recompiled every module above it. The
+# other options keep implementation details out of it: private and synthetic classes (a coroutine
+# or lambda body is one), internal declarations (unit tests, the module's associates, compile
+# against its class jar instead), and debug info (line numbers moved by an edit above a function).
 define_kt_toolchain(
     name = "kotlin_toolchain",
     api_version = "2.4",
     experimental_build_tools_api = True,
+    experimental_remove_debug_info_in_abi_jars = True,
+    experimental_remove_private_classes_in_abi_jars = True,
+    experimental_treat_internal_as_private_in_abi_jars = True,
+    experimental_use_abi_jars = True,
     jvm_target = "25",
     kotlinc_options = ":kotlinc_options",
     language_version = "2.4",
