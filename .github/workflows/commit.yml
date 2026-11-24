@@ -21,8 +21,8 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Bazel builds, tests and packages the app; Gradle stays for Android Studio (Android Platform)
-  # and the AutoMobile device tests; Krit is the static analysis. Job names are the required
+  # Bazel builds, tests and packages the app, and runs the AutoMobile device tests; Gradle stays
+  # for Android Studio (Android Platform); Krit is the static analysis. Job names are the required
   # checks of the "Green Main" ruleset, so they stay stable.
   #
   # Every Bazel job restores the caches main last saved (.github/actions/bazel-setup), so a pull
@@ -344,7 +344,8 @@ jobs:
 
       - name: "Install auto-mobile"
         shell: "bash"
-        # Pin to match auto-mobile-junit-runner in gradle/libs.versions.toml.
+        # Pin to match auto-mobile-junit-runner in gradle/libs.versions.toml and @maven_automobile
+        # in MODULE.bazel.
         # The daemon/CLI and the runner must be the same version: a mismatch makes
         # the daemon disable the executePlan tool (version-compatibility gate) and
         # every AutoMobile plan fails. Bump both together.
@@ -361,6 +362,15 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: apk
+
+      # The tests use none of the app's code (app/BUILD.bazel), so this is a disk cache hit unless
+      # they changed. Built before the device session starts, so the session isn't kept waiting.
+      - uses: ./.github/actions/bazel-setup
+        with:
+          android: "false"
+
+      - name: "Build AutoMobile tests"
+        run: bazel build --config=ci //app:automobile_tests
 
       - name: "Add Android platform tools to PATH"
         shell: "bash"
@@ -402,18 +412,10 @@ jobs:
         shell: "bash"
         run: auto-mobile --cli observe --platform android
 
+      # Launch, lifecycle, and tab-navigation plans exercise the Nav3 shell of the jasonpearson.dev app.
+      # Assertions target the bottom-nav chrome, not network content (CI has no Ghost key).
       - name: "Run AutoMobile JUnit Tests"
-        uses: ./.github/actions/gradle-task-run
-        with:
-          # Launch, lifecycle, and tab-navigation plans exercise the Nav3 shell of the jasonpearson.dev app.
-          # Assertions target the bottom-nav chrome, not network content (CI has no Ghost key).
-          # A package wildcard (rather than one --tests per class) keeps the artifact name this
-          # action derives from gradle-tasks under GitHub's 256-character limit.
-          gradle-tasks: >-
-            :app:testDebugUnitTest
-            --tests 'dev.jasonpearson.android.automobiletest.*'
-          reuse-configuration-cache: false
-          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+        run: bazel test --config=ci --config=device //app:automobile_tests
 
       - name: "Dump app launch diagnostics on failure"
         if: failure()
@@ -443,4 +445,4 @@ jobs:
         if: always()
         with:
           check_name: "AutoMobile Test Report"
-          report_paths: 'app/build/test-results/**/*.xml'
+          report_paths: 'bazel-testlogs/app/*AutoMobileTest/test.xml'

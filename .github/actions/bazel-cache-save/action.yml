@@ -38,6 +38,19 @@ runs:
         path: ~/.cache/bazel-repo
         key: ${{ env.BAZEL_REPOSITORY_CACHE_KEY }}
 
+    # Saved as Bazel left them (it refetched any whose marker no longer matched). Main's Unit Tests
+    # job builds the APK too, so it fetches every Go repository the Android jobs need.
+    - name: "Save Go repositories"
+      if: env.BAZEL_GO_REPOS_CACHE_HIT != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: |
+          ~/.bazel/external/gazelle++*
+          ~/.bazel/external/@gazelle++*.marker
+          ~/.bazel/external/rules_go++go_sdk+*
+          ~/.bazel/external/@rules_go++go_sdk+*.marker
+        key: ${{ env.BAZEL_GO_REPOS_CACHE_KEY }}
+
     # Each save is a new entry (a cache key can't be overwritten), so the previous ones would
     # otherwise stay until the Actions cache evicts them, taking the 10 GB other caches need.
     # Main's runs don't overlap (the workflow's concurrency group), so no other run is saving.
@@ -47,7 +60,7 @@ runs:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
       run: |
-        for key in "$BAZEL_DISK_CACHE_KEY" "$BAZEL_REPOSITORY_CACHE_KEY"; do
+        for key in "$BAZEL_DISK_CACHE_KEY" "$BAZEL_REPOSITORY_CACHE_KEY" "$BAZEL_GO_REPOS_CACHE_KEY"; do
           prefix="${key%-*}-"
           # Nothing is deleted unless the new entry exists: a failed save is only a warning.
           gh cache list --ref "$GITHUB_REF" --key "$prefix" --limit 100 --json id,key \
