@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_test")
 load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
-load("//bazel:defs.bzl", "kt_android_application")
+load("//bazel:defs.bzl", "kt_android_application", "workspace_runfiles")
 
 # The application id and app name are the template's placeholders; see the README's
 # "Start a new project" section for renaming them.
@@ -86,18 +86,27 @@ kt_jvm_library(
     name = "automobile_test_lib",
     testonly = True,
     srcs = _AUTOMOBILE_TESTS,
-    resource_strip_prefix = "app/src/test/resources",
-    resources = glob(["src/test/resources/test-plans/**"]),
     deps = [
         "@maven_automobile//:dev_jasonpearson_auto_mobile_auto_mobile_junit_runner",
         "@maven_automobile//:junit_junit",
     ],
 )
 
+# The runner opens a plan as a file: the classpath resource's path, which a resource in a jar
+# doesn't have, or else the path relative to the working directory. So the plans aren't resources
+# here but files at test-plans/ in the runfiles, where a test starts.
+workspace_runfiles(
+    name = "automobile_test_plans",
+    testonly = True,
+    srcs = glob(["src/test/resources/test-plans/**"]),
+    strip_prefix = "app/src/test/resources/",
+)
+
 [
     java_test(
         name = src.split("/")[-1][:-len(".kt")],
         size = "medium",
+        data = [":automobile_test_plans"],
         # One device: the runner must not run plans in parallel (as in app/build.gradle.kts).
         jvm_flags = ["-Djunit.parallel.forks=1"],
         # Unsandboxed: the runner reaches the daemon through /tmp and ~/.auto-mobile. Exclusive:
