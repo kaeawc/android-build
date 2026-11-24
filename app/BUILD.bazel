@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_java//java:defs.bzl", "java_test")
 load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("//bazel:defs.bzl", "kt_android_application", "workspace_runfiles")
@@ -102,29 +103,42 @@ workspace_runfiles(
     strip_prefix = "app/src/test/resources/",
 )
 
-[
-    java_test(
-        name = src.split("/")[-1][:-len(".kt")],
-        size = "medium",
-        data = [":automobile_test_plans"],
-        # One device: the runner must not run plans in parallel (as in app/build.gradle.kts).
-        jvm_flags = ["-Djunit.parallel.forks=1"],
-        # Unsandboxed: the runner reaches the daemon through /tmp and ~/.auto-mobile. Exclusive:
-        # one test on the device at a time. External: results depend on the device, never cached.
-        tags = [
-            "device",
-            "exclusive",
-            "external",
-            "no-sandbox",
-        ],
-        test_class = src[len("src/test/java/"):-len(".kt")].replace("/", "."),
-        runtime_deps = [":automobile_test_lib"],
-    )
-    for src in _AUTOMOBILE_TESTS
-]
+_AUTOMOBILE_PACKAGE = "dev.jasonpearson.android.automobiletest"
 
-test_suite(
+# One JVM for all the classes, as Gradle runs them: the runner's per-JVM startup (device check,
+# daemon connection) took ~10 s a class.
+write_file(
+    name = "automobile_suite_src",
+    out = "AutoMobileTests.java",
+    content = [
+        "package %s;" % _AUTOMOBILE_PACKAGE,
+        "",
+        "@org.junit.runner.RunWith(org.junit.runners.Suite.class)",
+        "@org.junit.runners.Suite.SuiteClasses({",
+    ] + ["    %s.class," % src.split("/")[-1][:-len(".kt")] for src in _AUTOMOBILE_TESTS] + [
+        "})",
+        "public class AutoMobileTests {}",
+    ],
+)
+
+java_test(
     name = "automobile_tests",
-    tags = ["device"],
-    tests = [":" + src.split("/")[-1][:-len(".kt")] for src in _AUTOMOBILE_TESTS],
+    size = "medium",
+    srcs = [":automobile_suite_src"],
+    data = [":automobile_test_plans"],
+    # One device: the runner must not run plans in parallel (as in app/build.gradle.kts).
+    jvm_flags = ["-Djunit.parallel.forks=1"],
+    # Unsandboxed: the runner reaches the daemon through /tmp and ~/.auto-mobile. Exclusive: one
+    # test on the device at a time. External: results depend on the device, never cached.
+    tags = [
+        "device",
+        "exclusive",
+        "external",
+        "no-sandbox",
+    ],
+    test_class = _AUTOMOBILE_PACKAGE + ".AutoMobileTests",
+    deps = [
+        ":automobile_test_lib",
+        "@maven_automobile//:junit_junit",
+    ],
 )

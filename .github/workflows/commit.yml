@@ -458,4 +458,4 @@ jobs:
         if: always()
         with:
           check_name: "AutoMobile Test Report"
-          report_paths: 'bazel-testlogs/app/*AutoMobileTest/test.xml'
+          report_paths: 'bazel-testlogs/app/automobile_tests/test.xml'

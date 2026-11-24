@@ -16,6 +16,17 @@ bazel_dep(name = "protobuf", version = "33.4")
 bazel_dep(name = "rules_java", version = "9.9.0")
 bazel_dep(name = "rules_jvm_external", version = "7.2")
 bazel_dep(name = "rules_android", version = "0.8.1")
+
+# rules_android's Java toolchains (its tools' and the Android-only one aar_import and
+# android_library compile with) run javac on rules_java's default runtime, JDK 25, which nothing
+# else here uses: every build extracted that JDK (~400 MB) for them. The patch runs them on the
+# tool runtime (--tool_java_runtime_version, JDK 27) like //bazel/jdk's toolchain.
+single_version_override(
+    module_name = "rules_android",
+    patch_strip = 1,
+    patches = ["//bazel/patches:rules_android-resolved-java-toolchain.patch"],
+)
+
 bazel_dep(name = "rules_kotlin", version = "2.4.21")
 
 bazel_dep(name = "buildifier_prebuilt", version = "10.2.0", dev_dependency = True)
