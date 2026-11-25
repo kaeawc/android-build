@@ -43,7 +43,7 @@ plugins {
     // Krit (krit.yml) on every module. CI runs its kritExportModel task: each module's source
     // sets, compile classpath and Kotlin compiler plugins, which Krit's FIR checks compile
     // against. Keep the version in step with kaeawc/krit in .github/workflows/commit.yml.
-    id("dev.jasonpearson.krit.settings") version "0.4.0"
+    id("dev.jasonpearson.krit.settings") version "0.5.0"
 }
 
 krit {

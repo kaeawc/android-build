@@ -39,9 +39,9 @@ require_model() {
 }
 
 # The baseline lists the findings of both passes, so the source-only check (no Gradle needed)
-# and CI's FIR check both pass on findings that predate them. It also lists each finding under
-# both of the file names Krit 0.4.0 writes: run in-process (CI), it names Kotlin files by base
-# name and manifests by repository path, and through its daemon (local runs) the other way round.
+# and CI's FIR check both pass on findings that predate them. Its IDs name files by base name
+# only: Krit 0.5.0 writes a finding's file as a repository path or a base name depending on how
+# it ran (daemon or in-process, cached or not), and it matches the base-name form either way.
 if [[ "${1:-}" == "--update-baseline" ]]; then
   require_model
   tmp_dir=$(mktemp -d)
@@ -49,13 +49,12 @@ if [[ "${1:-}" == "--update-baseline" ]]; then
   in_process=(--base-path . --no-daemon --no-fir-daemon)
   "$KRIT" "${in_process[@]}" --no-fir --create-baseline "$tmp_dir/source.xml" -q . || true
   "$KRIT" "${in_process[@]}" --fail-on-degraded --create-baseline "$tmp_dir/fir.xml" -q . || true
-  "$KRIT" --base-path . --no-fir --create-baseline "$tmp_dir/daemon.xml" -q . || true
   {
     echo '<?xml version="1.0" encoding="UTF-8"?>'
     echo '<SmellBaseline>'
     echo '  <ManuallySuppressedIssues></ManuallySuppressedIssues>'
     echo '  <CurrentIssues>'
-    grep -h '^ *<ID>' "$tmp_dir"/*.xml | LC_ALL=C sort -u
+    grep -h '^ *<ID>' "$tmp_dir"/*.xml | sed -E 's#^( *<ID>[^:]+:)[^:]*/#\1#' | LC_ALL=C sort -u
     echo '  </CurrentIssues>'
     echo '</SmellBaseline>'
   } >"$BASELINE"

@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-KRIT_VERSION="0.4.0"
+KRIT_VERSION="0.5.0"
 KRIT_INSTALL_DIR=${KRIT_INSTALL_DIR:-"$HOME/.cache/krit/$KRIT_VERSION"}
 
 libc=""
@@ -21,11 +21,11 @@ if [[ "$(uname -s)" == "Linux" ]] && ldd --version 2>&1 | grep -qi musl; then
 fi
 
 case "$(uname -s)$libc-$(uname -m)" in
-  Linux-musl-x86_64) platform="linux_musl_amd64"; sha256="8a3d61da217d77297b13ca61d248918ad53103bcecdfe5647d876633975220ab" ;;
-  Linux-x86_64) platform="linux_amd64"; sha256="4720196534b41a41a211103382289eeff1cabbd65522d6055fb81fe9d42944a7" ;;
-  Linux-aarch64 | Linux-arm64) platform="linux_arm64"; sha256="843849a0f1aca85279b40cc6020eb7d9fc1302f2585e5da5050b597edffa59b1" ;;
-  Darwin-arm64) platform="darwin_arm64"; sha256="0f34caa35c36a2d188e65d7138bf6fedae272dc414b825835ae924744d8b8cef" ;;
-  Darwin-x86_64) platform="darwin_amd64"; sha256="40407614695e9c01176cb4f7006a583d824c489ebe1b8a7eeef68c75a8aed44e" ;;
+  Linux-musl-x86_64) platform="linux_musl_amd64"; sha256="5cd97737b642ace7742ff4cd05ad3d15d5e22471fc9e4ec0e81ccfadba3c7955" ;;
+  Linux-x86_64) platform="linux_amd64"; sha256="e75a2a75cac8b40313f2b2b997ab769da7e1b324ae3ec38386854fdbd9588d42" ;;
+  Linux-aarch64 | Linux-arm64) platform="linux_arm64"; sha256="a28c8f7ecd6e03f28f2091dc5c31518210a8349229807ca53e3a8d46abf914c6" ;;
+  Darwin-arm64) platform="darwin_arm64"; sha256="9345eaac79ed50c50873f7b1fe14dd1d667259226a01a06ff7ee3d6dddc134f1" ;;
+  Darwin-x86_64) platform="darwin_amd64"; sha256="d7785157c7d80da803e4a53e4ea674a04795f24c6bbed7e40598ff36eaa746c9" ;;
   *)
     echo "No Krit $KRIT_VERSION release for $(uname -s) $(uname -m)" >&2
     exit 1
