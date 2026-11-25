@@ -4,9 +4,10 @@
 # in ci/krit-baseline.xml, so CI fails only on new ones.
 # Options: https://kaeawc.github.io/krit/configuration/ (krit --generate-schema prints them all).
 
-# Source-only analysis, like detekt's default: the JVM type oracle and FIR checks need the compile
-# classpath (Gradle's kritExportModel), which the Bazel build doesn't export. On this codebase they
-# change one finding and take ~20 s instead of ~2 s. ci/validate_krit.sh also passes --no-fir.
+# CI runs the FIR checks (KRIT_FIR=1 ci/validate_krit.sh) against the Gradle model that
+# `./gradlew kritExportModel` writes; local runs and the pre-push hook are source-only. `fast`
+# skips the separate JVM type oracle: on this codebase it found nothing the FIR checks didn't and
+# added ~16 s to a cold run.
 analysis:
   depth: fast
 
