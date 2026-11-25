@@ -10,13 +10,19 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # The runner image's SDK lacks the minor platform (compileSdk 37.2) and build-tools 37.
-    - name: "Install Android SDK packages"
+    # The runner image's SDK lacks the minor platform (compileSdk 37.2) and build-tools 37. The
+    # download (~9 s) runs in the background while the caches restore; the last step waits for it.
+    - name: "Install Android SDK packages (in the background)"
       shell: bash
       run: |
-        # `yes` exits on SIGPIPE once sdkmanager stops reading, which pipefail would report.
-        (yes || true) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
-        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"
+        sdk_log="$RUNNER_TEMP/sdkmanager.log"
+        echo "SDKMANAGER_LOG=$sdk_log" >> "$GITHUB_ENV"
+        nohup bash -c '
+          # `yes` exits on SIGPIPE once sdkmanager stops reading.
+          (yes || true) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null &&
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"
+          echo $? > "$0.exit"
+        ' "$sdk_log" > "$sdk_log" 2>&1 &
 
     # Bazelisk reads .bazelversion. Its cache is saved only from main.
     - uses: bazel-contrib/setup-bazel@0.19.2
@@ -97,3 +103,13 @@ runs:
     - name: "Mark the start of the build"
       shell: bash
       run: touch "$RUNNER_TEMP/bazel-cache-marker"
+
+    - name: "Wait for the Android SDK packages"
+      shell: bash
+      run: |
+        while [[ ! -f "$SDKMANAGER_LOG.exit" ]]; do sleep 0.2; done
+        status=$(cat "$SDKMANAGER_LOG.exit")
+        if [[ "$status" != 0 ]]; then
+          cat "$SDKMANAGER_LOG"
+          exit "$status"
+        fi

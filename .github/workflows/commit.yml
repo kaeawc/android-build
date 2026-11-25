@@ -64,6 +64,13 @@ jobs:
       - name: "bazel test //..."
         run: bazel test --config=ci ${{ github.event_name == 'pull_request' && '--build_tests_only' || '' }} //...
 
+      - name: "Store Bazel profile"
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-profile-unit-tests
+          path: ~/.bazel/command.profile.gz
+
       - uses: ./.github/actions/bazel-cache-save
         if: github.event_name == 'push'
 
@@ -216,6 +223,14 @@ jobs:
           name: automobile-tests
           path: out/automobile-tests.jar
 
+      # Bazel's JSON trace of the build (open in chrome://tracing or `bazel analyze-profile`).
+      - name: "Store Bazel profile"
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: bazel-profile-build-apk
+          path: ~/.bazel/command.profile.gz
+
   # The base APK isn't rebuilt: it's the apk artifact of the Commit run on main for the pull
   # request's base commit.
   diff-apk-from-base:
@@ -349,6 +364,30 @@ jobs:
       - name: "Git Checkout"
         uses: actions/checkout@v7
 
+      - name: "Add Android platform tools to PATH"
+        shell: "bash"
+        run: echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+
+      - name: "Install ew-cli"
+        shell: "bash"
+        run: |
+          curl -fsSL \
+            https://maven.emulator.wtf/releases/ew-cli \
+            -o /usr/local/bin/ew-cli
+          chmod +x /usr/local/bin/ew-cli
+
+      # First, so the device boots while the steps below set up; "Wait for the device" waits.
+      - name: "Start emulator.wtf ADB session"
+        shell: "bash"
+        env:
+          EW_API_TOKEN: ${{ secrets.EW_API_TOKEN }}
+        run: |
+          ew-cli start-session \
+            --device model=Pixel2,version=33 \
+            --adb \
+            --max-time-limit 20m &
+          echo "EW_SESSION_PID=$!" >> "$GITHUB_ENV"
+
       - name: "Setup Bun"
         uses: oven-sh/setup-bun@v2
 
@@ -385,29 +424,12 @@ jobs:
           distribution: "zulu"
           java-version: "27"
 
-      - name: "Add Android platform tools to PATH"
-        shell: "bash"
-        run: echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-
-      - name: "Install ew-cli"
+      - name: "Wait for the device"
         shell: "bash"
         run: |
-          curl -fsSL \
-            https://maven.emulator.wtf/releases/ew-cli \
-            -o /usr/local/bin/ew-cli
-          chmod +x /usr/local/bin/ew-cli
-
-      - name: "Start emulator.wtf ADB session"
-        shell: "bash"
-        env:
-          EW_API_TOKEN: ${{ secrets.EW_API_TOKEN }}
-        run: |
-          ew-cli start-session \
-            --device model=Pixel2,version=33 \
-            --adb \
-            --max-time-limit 20m &
-          echo "EW_SESSION_PID=$!" >> "$GITHUB_ENV"
           adb wait-for-device
+          # Single quotes on purpose: the loop runs in the device's shell.
+          # shellcheck disable=SC2016
           adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done'
 
       - name: "Install app APK on emulator"

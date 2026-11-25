@@ -1,15 +1,25 @@
 #!/usr/bin/env bash
+# ShellCheck, and ktfmt on the Kotlin files being committed. A tool that isn't installed is skipped
+# with a note (CI and the pre-push hook still check). Skip once with `git commit --no-verify`.
 
-# Check if any shell scripts were changed
-if ! ci/validate_shell_scripts.sh; then
+if command -v shellcheck >/dev/null 2>&1; then
+  if ! ci/validate_shell_scripts.sh; then
     echo "Shell script validation failed. Please fix the issues before committing."
     exit 1
+  fi
+else
+  echo "pre-commit: skipped ShellCheck (not installed)"
 fi
 
-# Check if any Kotlin files were changed
-if ! ci/apply_ktfmt.sh; then
-    echo "Kotlin formatting validation failed. Please fix the issues before committing."
-    exit 1
+if git diff --cached --name-only --diff-filter=ACMRT -- '*.kt' '*.kts' | grep -q .; then
+  if command -v ktfmt >/dev/null 2>&1; then
+    if ! ci/apply_ktfmt.sh; then
+      echo "Kotlin formatting validation failed. Please fix the issues before committing."
+      exit 1
+    fi
+  else
+    echo "pre-commit: skipped ktfmt (not installed: brew install ktfmt)"
+  fi
 fi
 
 exit 0

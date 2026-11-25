@@ -1,53 +1,51 @@
 #file: noinspection YAMLSchemaValidation
 name: "gradle-task-run"
-description: ""
+description: "Sets up the JDK, Gradle (with its caches) and the Android SDK, runs Gradle tasks, and publishes their test and configuration cache reports."
 inputs:
   gradle-flags:
-    description: "Set of options we will pass to ./gradlew"
-    example: '["--continue", "--stacktrace"]'
-    required: "true"
+    description: 'Set of options we will pass to ./gradlew, e.g. ["--continue", "--stacktrace"]'
+    required: true
     default: "[]"
   gradle-tasks:
-    description: "Set of tasks to be executed by ./gradlew"
-    example: '["assembleDebug", "check"]'
-    required: "true"
+    description: 'Set of tasks to be executed by ./gradlew, e.g. ["assembleDebug", "check"]'
+    required: true
   gradle-version:
     description: "Version of Gradle to run build and cache results with"
-    required: "true"
+    required: true
     default: ""
   gradle-encryption-key:
     description: "Encryption key used for this project"
-    required: "true"
+    required: true
   gradle-home-directory:
     description: "The directory to use for Gradle User Home"
-    required: "true"
+    required: true
     default: "~/.gradle"
   gradle-project-directory:
     description: "The directory in which the Gradle project exists"
-    required: "true"
+    required: true
     default: "."
   reuse-configuration-cache:
     description: "Whether to allow Configuration Cache reuse"
-    required: "true"
+    required: true
   reuse-build-cache:
     description: "Whether to allow Gradle Build Cache reuse"
-    required: "false"
+    required: false
     default: true
   malloc-replacement:
     description: "Which implementation to replace malloc with"
-    required: "true"
+    required: true
     default: "jemalloc"
   debug:
     description: "Whether to show debug logging"
-    required: "true"
+    required: true
     default: false
   shell:
     description: "The shell to use for any steps that use shells"
     default: "bash"
-    required: "true"
+    required: true
   optional-suffix:
     description: "Optional suffix to add to file names"
-    required: "true"
+    required: true
     default: ""
 
 outputs:
