@@ -217,14 +217,14 @@ jobs:
       # The built AOT cache, or else the training configuration to build it from.
       - name: "Restore Krit's JVM caches"
         id: krit-jvm-caches
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: ${{ env.KRIT_JVM_CACHES }}
           key: krit-jvm-${{ runner.os }}-${{ steps.krit.outputs.version }}-java-${{ steps.java.outputs.version }}-aot
           restore-keys: krit-jvm-${{ runner.os }}-${{ steps.krit.outputs.version }}-java-${{ steps.java.outputs.version }}-
 
       - name: "Restore Krit's analysis caches"
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: ${{ env.KRIT_ANALYSIS_CACHES }}
           key: krit-analysis-${{ runner.os }}-${{ steps.krit.outputs.version }}-${{ github.sha }}
@@ -257,14 +257,14 @@ jobs:
 
       - name: "Save Krit's JVM caches"
         if: ${{ !cancelled() && steps.krit-jvm-stage.outputs.stage != '' }}
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: ${{ env.KRIT_JVM_CACHES }}
           key: krit-jvm-${{ runner.os }}-${{ steps.krit.outputs.version }}-java-${{ steps.java.outputs.version }}-${{ steps.krit-jvm-stage.outputs.stage }}
 
       - name: "Save Krit's analysis caches"
         if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: ${{ env.KRIT_ANALYSIS_CACHES }}
           key: krit-analysis-${{ runner.os }}-${{ steps.krit.outputs.version }}-${{ github.sha }}
